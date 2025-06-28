@@ -6,3 +6,4 @@ authors = ["Justin Chen oosquare@outlook.com"]
 description = "Minimal Raytracing Implementation"
 
 [dependencies]
+snafu = "0.8.6"
