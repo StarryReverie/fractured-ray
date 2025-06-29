@@ -8,6 +8,18 @@ use super::{Product, Vector};
 pub struct UnitVector(Vector);
 
 impl UnitVector {
+    pub fn x_direction() -> Self {
+        Self(Vector::new(1.0, 0.0, 0.0))
+    }
+
+    pub fn y_direction() -> Self {
+        Self(Vector::new(0.0, 1.0, 0.0))
+    }
+
+    pub fn z_direction() -> Self {
+        Self(Vector::new(0.0, 0.0, 1.0))
+    }
+
     pub fn x(&self) -> f32 {
         self.0.x()
     }
