@@ -6,19 +6,19 @@ use super::{UnitVector, Vector};
 pub struct Point(Vector);
 
 impl Point {
-    pub fn new(x: f32, y: f32, z: f32) -> Self {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vector::new(x, y, z).into()
     }
 
-    pub fn x(&self) -> f32 {
+    pub fn x(&self) -> f64 {
         self.0.x()
     }
 
-    pub fn y(&self) -> f32 {
+    pub fn y(&self) -> f64 {
         self.0.y()
     }
 
-    pub fn z(&self) -> f32 {
+    pub fn z(&self) -> f64 {
         self.0.z()
     }
 

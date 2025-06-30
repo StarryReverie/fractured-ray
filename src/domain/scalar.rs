@@ -2,16 +2,16 @@ use std::fmt::{Debug, Display, Formatter, Pointer, Result as FmtResult};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, PartialOrd)]
-pub struct Scalar(f32);
+pub struct Scalar(f64);
 
 impl Scalar {
     #[inline]
-    pub fn new(value: f32) -> Self {
+    pub fn new(value: f64) -> Self {
         Self(value)
     }
 
     #[inline]
-    pub fn value(&self) -> f32 {
+    pub fn value(&self) -> f64 {
         self.0
     }
 
@@ -21,14 +21,14 @@ impl Scalar {
     }
 }
 
-impl From<f32> for Scalar {
+impl From<f64> for Scalar {
     #[inline]
-    fn from(value: f32) -> Self {
+    fn from(value: f64) -> Self {
         Self::new(value)
     }
 }
 
-impl From<Scalar> for f32 {
+impl From<Scalar> for f64 {
     #[inline]
     fn from(value: Scalar) -> Self {
         value.0

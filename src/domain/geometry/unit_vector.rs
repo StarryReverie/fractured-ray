@@ -20,23 +20,23 @@ impl UnitVector {
         Self(Vector::new(0.0, 0.0, 1.0))
     }
 
-    pub fn x(&self) -> f32 {
+    pub fn x(&self) -> f64 {
         self.0.x()
     }
 
-    pub fn y(&self) -> f32 {
+    pub fn y(&self) -> f64 {
         self.0.y()
     }
 
-    pub fn z(&self) -> f32 {
+    pub fn z(&self) -> f64 {
         self.0.z()
     }
 
-    pub fn norm(&self) -> f32 {
+    pub fn norm(&self) -> f64 {
         1.0
     }
 
-    pub fn norm_squared(&self) -> f32 {
+    pub fn norm_squared(&self) -> f64 {
         1.0
     }
 
@@ -82,7 +82,7 @@ macro_rules! impl_operations {
         impl Product<$rhs_type> for $lhs_type {
             type Output = Vector;
 
-            fn dot(self, rhs: $rhs_type) -> f32 {
+            fn dot(self, rhs: $rhs_type) -> f64 {
                 Vector::from(self).dot(Vector::from(rhs))
             }
 
@@ -105,15 +105,15 @@ impl Neg for UnitVector {
     }
 }
 
-impl Mul<f32> for UnitVector {
+impl Mul<f64> for UnitVector {
     type Output = Vector;
 
-    fn mul(self, rhs: f32) -> Self::Output {
+    fn mul(self, rhs: f64) -> Self::Output {
         self.0 * rhs
     }
 }
 
-impl Mul<UnitVector> for f32 {
+impl Mul<UnitVector> for f64 {
     type Output = Vector;
 
     fn mul(self, rhs: UnitVector) -> Self::Output {
@@ -121,10 +121,10 @@ impl Mul<UnitVector> for f32 {
     }
 }
 
-impl Div<f32> for UnitVector {
+impl Div<f64> for UnitVector {
     type Output = Vector;
 
-    fn div(self, rhs: f32) -> Self::Output {
+    fn div(self, rhs: f64) -> Self::Output {
         self.0 / rhs
     }
 }

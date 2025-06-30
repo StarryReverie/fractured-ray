@@ -17,8 +17,8 @@ impl Renderer {
         for row in 0..image.resolution().height() {
             for column in 0..image.resolution().width() {
                 let color = Color::new(
-                    row as f32 / image.resolution().height() as f32,
-                    column as f32 / image.resolution().width() as f32,
+                    row as f64 / image.resolution().height() as f64,
+                    column as f64 / image.resolution().width() as f64,
                     0.0,
                 );
                 image.record(row, column, color);

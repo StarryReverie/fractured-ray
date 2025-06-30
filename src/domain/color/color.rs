@@ -2,9 +2,9 @@ use std::ops::{Add, Mul};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Color {
-    red: f32,
-    green: f32,
-    blue: f32,
+    red: f64,
+    green: f64,
+    blue: f64,
 }
 
 impl Color {
@@ -17,7 +17,7 @@ impl Color {
     pub const CYAN: Self = Color::new(0.0, 1.0, 1.0);
     pub const WHITE: Self = Color::new(1.0, 1.0, 1.0);
 
-    pub const fn new(red: f32, green: f32, blue: f32) -> Self {
+    pub const fn new(red: f64, green: f64, blue: f64) -> Self {
         Self {
             red: red.max(0.0),
             green: green.max(0.0),
@@ -25,15 +25,15 @@ impl Color {
         }
     }
 
-    pub fn red(&self) -> f32 {
+    pub fn red(&self) -> f64 {
         self.red
     }
 
-    pub fn green(&self) -> f32 {
+    pub fn green(&self) -> f64 {
         self.green
     }
 
-    pub fn blue(&self) -> f32 {
+    pub fn blue(&self) -> f64 {
         self.blue
     }
 }
@@ -62,15 +62,15 @@ impl Mul for Color {
     }
 }
 
-impl Mul<f32> for Color {
+impl Mul<f64> for Color {
     type Output = Self;
 
-    fn mul(self, rhs: f32) -> Self::Output {
+    fn mul(self, rhs: f64) -> Self::Output {
         Self::new(self.red * rhs, self.green * rhs, self.blue * rhs)
     }
 }
 
-impl Mul<Color> for f32 {
+impl Mul<Color> for f64 {
     type Output = Color;
 
     fn mul(self, rhs: Color) -> Self::Output {

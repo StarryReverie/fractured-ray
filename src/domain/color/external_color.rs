@@ -20,7 +20,7 @@ impl ExternalColor {
         self.blue
     }
 
-    fn encode_gamma(linear: f32) -> f32 {
+    fn encode_gamma(linear: f64) -> f64 {
         linear.sqrt()
     }
 }

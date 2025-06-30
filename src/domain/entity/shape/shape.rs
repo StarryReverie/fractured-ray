@@ -3,7 +3,7 @@ use std::ops::Bound;
 use crate::domain::geometry::{Point, UnitVector};
 use crate::domain::ray::RayTrace;
 
-pub type DisRange = (Bound<f32>, Bound<f32>);
+pub type DisRange = (Bound<f64>, Bound<f64>);
 
 pub trait Shape {
     fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection>;
@@ -11,14 +11,14 @@ pub trait Shape {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RayIntersection {
-    distance: f32,
+    distance: f64,
     position: Point,
     normal: UnitVector,
     side: SurfaceSide,
 }
 
 impl RayIntersection {
-    pub fn new(distance: f32, position: Point, normal: UnitVector, side: SurfaceSide) -> Self {
+    pub fn new(distance: f64, position: Point, normal: UnitVector, side: SurfaceSide) -> Self {
         Self {
             distance,
             position,
@@ -27,7 +27,7 @@ impl RayIntersection {
         }
     }
 
-    pub fn distance(&self) -> f32 {
+    pub fn distance(&self) -> f64 {
         self.distance
     }
 

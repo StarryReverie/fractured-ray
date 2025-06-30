@@ -28,7 +28,7 @@ impl Ray {
         self.color
     }
 
-    pub fn at(&self, distance: f32) -> Point {
+    pub fn at(&self, distance: f64) -> Point {
         self.trace.at(distance)
     }
 }

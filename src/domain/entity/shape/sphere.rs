@@ -10,11 +10,11 @@ use super::{DisRange, RayIntersection, Shape, SurfaceSide};
 #[derive(Debug, Clone, PartialEq)]
 pub struct Sphere {
     center: Point,
-    radius: f32,
+    radius: f64,
 }
 
 impl Sphere {
-    pub fn new(center: Point, radius: f32) -> Result<Self, TryNewSphereError> {
+    pub fn new(center: Point, radius: f64) -> Result<Self, TryNewSphereError> {
         ensure!(radius > 0.0, InvalidRadiusSnafu);
         Ok(Self { center, radius })
     }
@@ -30,7 +30,7 @@ impl Sphere {
         self.center
     }
 
-    pub fn radius(&self) -> f32 {
+    pub fn radius(&self) -> f64 {
         self.radius
     }
 }
@@ -110,7 +110,7 @@ mod tests {
         let intersection = sphere
             .hit(&ray, (Bound::Excluded(0.0), Bound::Unbounded))
             .unwrap();
-        assert!((intersection.distance() - 2f32.sqrt()).abs() < 1e-6);
+        assert!((intersection.distance() - 2f64.sqrt()).abs() < 1e-6);
         assert!((intersection.position() - Point::new(1.0, 1.0, 0.0)).norm() < 1e-6);
         assert!((intersection.normal() - UnitVector::x_direction()).norm() < 1e-6);
         assert_eq!(intersection.side(), SurfaceSide::Front);
@@ -126,7 +126,7 @@ mod tests {
         let intersection = sphere
             .hit(&ray, (Bound::Excluded(0.0), Bound::Unbounded))
             .unwrap();
-        assert!((intersection.distance() - 2f32.sqrt()).abs() < 1e-6);
+        assert!((intersection.distance() - 2f64.sqrt()).abs() < 1e-6);
         assert!((intersection.position() - Point::new(1.0, 1.0, 0.0)).norm() < 1e-6);
         assert!((intersection.normal() - -UnitVector::x_direction()).norm() < 1e-6);
         assert_eq!(intersection.side(), SurfaceSide::Back);

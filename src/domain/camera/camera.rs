@@ -8,7 +8,7 @@ use super::{Offset, Resolution, TryNewViewportError, Viewport};
 pub struct Camera {
     position: Point,
     orientation: UnitVector,
-    focal_length: f32,
+    focal_length: f64,
     viewport: Viewport,
     viewport_horizontal_edge: Vector,
     viewport_vertical_edge: Vector,
@@ -19,8 +19,8 @@ impl Camera {
         position: Point,
         orientation: UnitVector,
         resolution: Resolution,
-        height: f32,
-        focal_length: f32,
+        height: f64,
+        focal_length: f64,
     ) -> Result<Camera, TryNewCameraError> {
         ensure!(focal_length > 0.0, InvalidFocalLengthSnafu);
 
@@ -66,7 +66,7 @@ impl Camera {
         self.orientation
     }
 
-    pub fn focal_length(&self) -> f32 {
+    pub fn focal_length(&self) -> f64 {
         self.focal_length
     }
 
@@ -148,9 +148,11 @@ mod tests {
             1.0,
         )
         .unwrap();
-        assert_eq!(
-            camera.calc_point_in_pixel(0, 0, Offset::center()),
-            Some(Point::new(1.3172033, 1.6687435, 0.51014197))
+        assert!(
+            (camera.calc_point_in_pixel(0, 0, Offset::center()).unwrap()
+                - Point::new(1.3172033, 1.6687435, 0.51014197))
+            .norm()
+                < 1e-6
         );
     }
 }

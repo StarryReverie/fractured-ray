@@ -19,7 +19,7 @@ impl RayTrace {
         self.direction
     }
 
-    pub fn at(&self, distance: f32) -> Point {
+    pub fn at(&self, distance: f64) -> Point {
         self.start + distance * self.direction
     }
 }

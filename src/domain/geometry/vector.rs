@@ -3,30 +3,30 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use super::{Product, TryIntoUnitVectorError, UnitVector};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
-pub struct Vector(f32, f32, f32);
+pub struct Vector(f64, f64, f64);
 
 impl Vector {
-    pub fn new(x: f32, y: f32, z: f32) -> Self {
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
         Self(x, y, z)
     }
 
-    pub fn x(&self) -> f32 {
+    pub fn x(&self) -> f64 {
         self.0
     }
 
-    pub fn y(&self) -> f32 {
+    pub fn y(&self) -> f64 {
         self.1
     }
 
-    pub fn z(&self) -> f32 {
+    pub fn z(&self) -> f64 {
         self.2
     }
 
-    pub fn norm(&self) -> f32 {
+    pub fn norm(&self) -> f64 {
         self.norm_squared().sqrt()
     }
 
-    pub fn norm_squared(&self) -> f32 {
+    pub fn norm_squared(&self) -> f64 {
         self.dot(*self)
     }
 
@@ -59,15 +59,15 @@ impl Neg for Vector {
     }
 }
 
-impl Mul<f32> for Vector {
+impl Mul<f64> for Vector {
     type Output = Self;
 
-    fn mul(self, rhs: f32) -> Self::Output {
+    fn mul(self, rhs: f64) -> Self::Output {
         Self::new(self.x() * rhs, self.y() * rhs, self.z() * rhs)
     }
 }
 
-impl Mul<Vector> for f32 {
+impl Mul<Vector> for f64 {
     type Output = Vector;
 
     fn mul(self, rhs: Vector) -> Self::Output {
@@ -75,10 +75,10 @@ impl Mul<Vector> for f32 {
     }
 }
 
-impl Div<f32> for Vector {
+impl Div<f64> for Vector {
     type Output = Self;
 
-    fn div(self, rhs: f32) -> Self::Output {
+    fn div(self, rhs: f64) -> Self::Output {
         Self::new(self.x() / rhs, self.y() / rhs, self.z() / rhs)
     }
 }
@@ -86,7 +86,7 @@ impl Div<f32> for Vector {
 impl Product for Vector {
     type Output = Self;
 
-    fn dot(self, rhs: Self) -> f32 {
+    fn dot(self, rhs: Self) -> f64 {
         self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z()
     }
 

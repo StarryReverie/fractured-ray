@@ -5,18 +5,18 @@ use super::Resolution;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Viewport {
     resolution: Resolution,
-    width: f32,
-    height: f32,
-    pixel_size: f32,
+    width: f64,
+    height: f64,
+    pixel_size: f64,
 }
 
 impl Viewport {
-    pub fn new(resolution: Resolution, height: f32) -> Result<Self, TryNewViewportError> {
+    pub fn new(resolution: Resolution, height: f64) -> Result<Self, TryNewViewportError> {
         ensure!(height > 0.0, InvalidHeightSnafu);
 
-        let aspect_ratio = (resolution.width() as f32) / (resolution.height() as f32);
+        let aspect_ratio = (resolution.width() as f64) / (resolution.height() as f64);
         let width = height * aspect_ratio;
-        let pixel_size = height / (resolution.height() as f32);
+        let pixel_size = height / (resolution.height() as f64);
 
         Ok(Self {
             resolution,
@@ -30,15 +30,15 @@ impl Viewport {
         &self.resolution
     }
 
-    pub fn width(&self) -> f32 {
+    pub fn width(&self) -> f64 {
         self.width
     }
 
-    pub fn height(&self) -> f32 {
+    pub fn height(&self) -> f64 {
         self.height
     }
 
-    pub fn pixel_size(&self) -> f32 {
+    pub fn pixel_size(&self) -> f64 {
         self.pixel_size
     }
 
@@ -47,11 +47,11 @@ impl Viewport {
         row: usize,
         column: usize,
         offset: Offset,
-    ) -> Option<(f32, f32)> {
+    ) -> Option<(f64, f64)> {
         if self.contains_index(row, column) {
             Some((
-                (row as f32 + offset.row()) / (self.resolution.height() as f32),
-                (column as f32 + offset.column()) / (self.resolution.width() as f32),
+                (row as f64 + offset.row()) / (self.resolution.height() as f64),
+                (column as f64 + offset.column()) / (self.resolution.width() as f64),
             ))
         } else {
             None
@@ -73,12 +73,12 @@ pub enum TryNewViewportError {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Offset {
-    row: f32,
-    column: f32,
+    row: f64,
+    column: f64,
 }
 
 impl Offset {
-    pub fn new(row: f32, column: f32) -> Result<Self, TryNewOffsetError> {
+    pub fn new(row: f64, column: f64) -> Result<Self, TryNewOffsetError> {
         ensure!(
             (0.0..=1.0).contains(&row) && (0.0..=1.0).contains(&column),
             InvalidOffsetSnafu
@@ -93,11 +93,11 @@ impl Offset {
         }
     }
 
-    pub fn row(&self) -> f32 {
+    pub fn row(&self) -> f64 {
         self.row
     }
 
-    pub fn column(&self) -> f32 {
+    pub fn column(&self) -> f64 {
         self.column
     }
 }
