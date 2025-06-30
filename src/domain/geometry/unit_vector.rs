@@ -32,6 +32,14 @@ impl UnitVector {
         self.0.z()
     }
 
+    pub fn norm(&self) -> f32 {
+        1.0
+    }
+
+    pub fn norm_squared(&self) -> f32 {
+        1.0
+    }
+
     pub fn to_vector(&self) -> Vector {
         self.0
     }
