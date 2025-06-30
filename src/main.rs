@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         1.0,
     )
     .unwrap();
-    let renderer = Renderer::new(camera);
+    let renderer = Renderer::new(camera, 4);
     let image = renderer.render();
     PpmWriter::new(File::create("output/image.ppm")?).write(image)?;
     Ok(())

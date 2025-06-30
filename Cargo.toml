@@ -6,4 +6,5 @@ authors = ["Justin Chen oosquare@outlook.com"]
 description = "Minimal Raytracing Implementation"
 
 [dependencies]
+rand = "0.9.1"
 snafu = "0.8.6"
