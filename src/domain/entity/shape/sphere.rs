@@ -86,8 +86,6 @@ pub enum TryNewSphereError {
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Bound;
-
     use crate::domain::geometry::{UnitVector, Vector};
 
     use super::*;
@@ -107,9 +105,7 @@ mod tests {
             Point::new(2.0, 0.0, 0.0),
             Vector::new(-1.0, 1.0, 0.0).normalize().unwrap(),
         );
-        let intersection = sphere
-            .hit(&ray, (Bound::Excluded(0.0), Bound::Unbounded))
-            .unwrap();
+        let intersection = sphere.hit(&ray, DisRange::positive()).unwrap();
         assert!((intersection.distance() - 2f64.sqrt()).abs() < 1e-6);
         assert!((intersection.position() - Point::new(1.0, 1.0, 0.0)).norm() < 1e-6);
         assert!((intersection.normal() - UnitVector::x_direction()).norm() < 1e-6);
@@ -123,9 +119,7 @@ mod tests {
             Point::new(0.0, 0.0, 0.0),
             Vector::new(1.0, 1.0, 0.0).normalize().unwrap(),
         );
-        let intersection = sphere
-            .hit(&ray, (Bound::Excluded(0.0), Bound::Unbounded))
-            .unwrap();
+        let intersection = sphere.hit(&ray, DisRange::positive()).unwrap();
         assert!((intersection.distance() - 2f64.sqrt()).abs() < 1e-6);
         assert!((intersection.position() - Point::new(1.0, 1.0, 0.0)).norm() < 1e-6);
         assert!((intersection.normal() - -UnitVector::x_direction()).norm() < 1e-6);
@@ -136,10 +130,6 @@ mod tests {
     fn shpere_hit_succeeds_returning_none() {
         let sphere = Sphere::new(Point::new(0.0, 1.0, 0.0), 1.0).unwrap();
         let ray = RayTrace::new(Point::new(0.0, 0.0, 1.000001), UnitVector::y_direction());
-        assert!(
-            sphere
-                .hit(&ray, (Bound::Excluded(0.0), Bound::Unbounded))
-                .is_none()
-        );
+        assert!(sphere.hit(&ray, DisRange::positive()).is_none());
     }
 }
