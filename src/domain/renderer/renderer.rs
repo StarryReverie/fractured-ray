@@ -1,4 +1,5 @@
 use rand::prelude::*;
+use snafu::prelude::*;
 
 use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Color;
@@ -11,16 +12,22 @@ use crate::domain::ray::{Ray, RayTrace};
 pub struct Renderer {
     camera: Camera,
     scene: Scene,
-    ssaa_factor: usize,
+    config: Configuration,
 }
 
 impl Renderer {
-    pub fn new(camera: Camera, scene: Scene, ssaa_factor: usize) -> Self {
-        Self {
+    pub fn new(
+        camera: Camera,
+        scene: Scene,
+        config: Configuration,
+    ) -> Result<Self, ConfigurationError> {
+        ensure!(config.ssaa_samples > 0, InvalidSsaaSamplesSnafu);
+
+        Ok(Self {
             camera,
             scene,
-            ssaa_factor,
-        }
+            config,
+        })
     }
 
     pub fn render(&self) -> Image {
@@ -29,7 +36,7 @@ impl Renderer {
 
         for row in 0..image.resolution().height() {
             for column in 0..image.resolution().width() {
-                for _ in 0..self.ssaa_factor {
+                for _ in 0..self.config.ssaa_samples {
                     let offset =
                         Offset::new(rng.random_range(0.0..1.0), rng.random_range(0.0..1.0))
                             .expect("offset range should be bounded to [0, 1)");
@@ -74,4 +81,22 @@ impl Renderer {
             ),
         )
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Configuration {
+    pub ssaa_samples: usize,
+}
+
+impl Default for Configuration {
+    fn default() -> Self {
+        Self { ssaa_samples: 4 }
+    }
+}
+
+#[derive(Debug, Snafu, Clone, PartialEq)]
+#[non_exhaustive]
+pub enum ConfigurationError {
+    #[snafu(display("SSAA samples for each pixel is not positive"))]
+    InvalidSsaaSamples,
 }

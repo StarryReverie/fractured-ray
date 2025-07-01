@@ -1,3 +1,3 @@
 mod renderer;
 
-pub use renderer::Renderer;
+pub use renderer::{Configuration, ConfigurationError, Renderer};
