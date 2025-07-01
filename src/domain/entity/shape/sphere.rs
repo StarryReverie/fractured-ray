@@ -39,10 +39,10 @@ impl Shape for Sphere {
     fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection> {
         let a = ray.direction().norm_squared();
         let b = 2.0 * (ray.start() - self.center).dot(ray.direction());
-        let c = (ray.start() - self.center).norm_squared() - self.radius;
+        let c = (ray.start() - self.center).norm_squared() - self.radius * self.radius;
         let discriminant = b * b - 4.0 * a * c;
 
-        let distance = if discriminant > 0.0 {
+        let distance = if discriminant > 1e-8 {
             let x1 = (-b - discriminant.sqrt()) / (2.0 * a);
             let x2 = (-b + discriminant.sqrt()) / (2.0 * a);
             if x1 > 0.0 && range.contains(&x1) {
@@ -52,7 +52,7 @@ impl Shape for Sphere {
             } else {
                 return None;
             }
-        } else if discriminant == 0.0 {
+        } else if discriminant >= 0.0 {
             let x = -b / (2.0 * a);
             if x > 0.0 && range.contains(&x) {
                 x
@@ -110,6 +110,14 @@ mod tests {
         assert!((intersection.position() - Point::new(1.0, 1.0, 0.0)).norm() < 1e-6);
         assert!((intersection.normal() - UnitVector::x_direction()).norm() < 1e-6);
         assert_eq!(intersection.side(), SurfaceSide::Front);
+    }
+
+    #[test]
+    fn sphere_hit_succeeds_returning_tangent_intersection() {
+        let sphere = Sphere::new(Point::new(1.0, 0.5, -1.0), 0.5).unwrap();
+        let ray = RayTrace::new(Point::new(0.5, 0.5, 1.0), -UnitVector::z_direction());
+        let intersection = sphere.hit(&ray, DisRange::positive()).unwrap();
+        println!("{intersection:#?}");
     }
 
     #[test]
