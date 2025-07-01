@@ -10,8 +10,8 @@ pub struct Image {
 
 impl Image {
     pub fn new(resolution: Resolution) -> Self {
-        let width = resolution.width() as usize;
-        let height = resolution.height() as usize;
+        let width = resolution.width();
+        let height = resolution.height();
 
         let mut data = Vec::new();
         data.resize(width * height, Color::BLACK);
