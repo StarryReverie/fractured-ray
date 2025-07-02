@@ -1,22 +1,24 @@
 use snafu::prelude::*;
 
+use crate::domain::geometry::Val;
+
 use super::Resolution;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Viewport {
     resolution: Resolution,
-    width: f64,
-    height: f64,
-    pixel_size: f64,
+    width: Val,
+    height: Val,
+    pixel_size: Val,
 }
 
 impl Viewport {
-    pub fn new(resolution: Resolution, height: f64) -> Result<Self, TryNewViewportError> {
-        ensure!(height > 0.0, InvalidHeightSnafu);
+    pub fn new(resolution: Resolution, height: Val) -> Result<Self, TryNewViewportError> {
+        ensure!(height > Val(0.0), InvalidHeightSnafu);
 
-        let aspect_ratio = (resolution.width() as f64) / (resolution.height() as f64);
+        let aspect_ratio = Val::from(resolution.width()) / Val::from(resolution.height());
         let width = height * aspect_ratio;
-        let pixel_size = height / (resolution.height() as f64);
+        let pixel_size = height / Val::from(resolution.height());
 
         Ok(Self {
             resolution,
@@ -30,15 +32,15 @@ impl Viewport {
         &self.resolution
     }
 
-    pub fn width(&self) -> f64 {
+    pub fn width(&self) -> Val {
         self.width
     }
 
-    pub fn height(&self) -> f64 {
+    pub fn height(&self) -> Val {
         self.height
     }
 
-    pub fn pixel_size(&self) -> f64 {
+    pub fn pixel_size(&self) -> Val {
         self.pixel_size
     }
 
@@ -47,11 +49,11 @@ impl Viewport {
         row: usize,
         column: usize,
         offset: Offset,
-    ) -> Option<(f64, f64)> {
+    ) -> Option<(Val, Val)> {
         if self.contains_index(row, column) {
             Some((
-                (row as f64 + offset.row()) / (self.resolution.height() as f64),
-                (column as f64 + offset.column()) / (self.resolution.width() as f64),
+                (Val::from(row) + offset.row()) / Val::from(self.resolution.height()),
+                (Val::from(column) + offset.column()) / Val::from(self.resolution.width()),
             ))
         } else {
             None
@@ -73,14 +75,14 @@ pub enum TryNewViewportError {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Offset {
-    row: f64,
-    column: f64,
+    row: Val,
+    column: Val,
 }
 
 impl Offset {
-    pub fn new(row: f64, column: f64) -> Result<Self, TryNewOffsetError> {
+    pub fn new(row: Val, column: Val) -> Result<Self, TryNewOffsetError> {
         ensure!(
-            (0.0..=1.0).contains(&row) && (0.0..=1.0).contains(&column),
+            (Val(0.0)..=Val(1.0)).contains(&row) && (Val(0.0)..=Val(1.0)).contains(&column),
             InvalidOffsetSnafu
         );
         Ok(Self { row, column })
@@ -88,16 +90,16 @@ impl Offset {
 
     pub fn center() -> Self {
         Self {
-            row: 0.5,
-            column: 0.5,
+            row: Val(0.5),
+            column: Val(0.5),
         }
     }
 
-    pub fn row(&self) -> f64 {
+    pub fn row(&self) -> Val {
         self.row
     }
 
-    pub fn column(&self) -> f64 {
+    pub fn column(&self) -> Val {
         self.column
     }
 }

@@ -1,39 +1,41 @@
 use std::ops::{Add, Mul};
 
+use crate::domain::geometry::Val;
+
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Color {
-    red: f64,
-    green: f64,
-    blue: f64,
+    red: Val,
+    green: Val,
+    blue: Val,
 }
 
 impl Color {
-    pub const BLACK: Self = Color::new(0.0, 0.0, 0.0);
-    pub const RED: Self = Color::new(1.0, 0.0, 0.0);
-    pub const GREEN: Self = Color::new(0.0, 1.0, 0.0);
-    pub const BLUE: Self = Color::new(0.0, 0.0, 1.0);
-    pub const YELLOW: Self = Color::new(1.0, 1.0, 0.0);
-    pub const MAGENTA: Self = Color::new(1.0, 0.0, 1.0);
-    pub const CYAN: Self = Color::new(0.0, 1.0, 1.0);
-    pub const WHITE: Self = Color::new(1.0, 1.0, 1.0);
+    pub const BLACK: Self = Color::new(Val(0.0), Val(0.0), Val(0.0));
+    pub const RED: Self = Color::new(Val(1.0), Val(0.0), Val(0.0));
+    pub const GREEN: Self = Color::new(Val(0.0), Val(1.0), Val(0.0));
+    pub const BLUE: Self = Color::new(Val(0.0), Val(0.0), Val(1.0));
+    pub const YELLOW: Self = Color::new(Val(1.0), Val(1.0), Val(0.0));
+    pub const MAGENTA: Self = Color::new(Val(1.0), Val(0.0), Val(1.0));
+    pub const CYAN: Self = Color::new(Val(0.0), Val(1.0), Val(1.0));
+    pub const WHITE: Self = Color::new(Val(1.0), Val(1.0), Val(1.0));
 
-    pub const fn new(red: f64, green: f64, blue: f64) -> Self {
+    pub const fn new(red: Val, green: Val, blue: Val) -> Self {
         Self {
-            red: red.max(0.0),
-            green: green.max(0.0),
-            blue: blue.max(0.0),
+            red: red.max(Val(0.0)),
+            green: green.max(Val(0.0)),
+            blue: blue.max(Val(0.0)),
         }
     }
 
-    pub fn red(&self) -> f64 {
+    pub fn red(&self) -> Val {
         self.red
     }
 
-    pub fn green(&self) -> f64 {
+    pub fn green(&self) -> Val {
         self.green
     }
 
-    pub fn blue(&self) -> f64 {
+    pub fn blue(&self) -> Val {
         self.blue
     }
 }
@@ -62,15 +64,15 @@ impl Mul for Color {
     }
 }
 
-impl Mul<f64> for Color {
+impl Mul<Val> for Color {
     type Output = Self;
 
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: Val) -> Self::Output {
         Self::new(self.red * rhs, self.green * rhs, self.blue * rhs)
     }
 }
 
-impl Mul<Color> for f64 {
+impl Mul<Color> for Val {
     type Output = Color;
 
     fn mul(self, rhs: Color) -> Self::Output {

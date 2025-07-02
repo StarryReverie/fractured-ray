@@ -1,32 +1,32 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use super::{Product, TryIntoUnitVectorError, UnitVector};
+use super::{Product, TryIntoUnitVectorError, UnitVector, Val};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
-pub struct Vector(f64, f64, f64);
+pub struct Vector(Val, Val, Val);
 
 impl Vector {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
+    pub fn new(x: Val, y: Val, z: Val) -> Self {
         Self(x, y, z)
     }
 
-    pub fn x(&self) -> f64 {
+    pub fn x(&self) -> Val {
         self.0
     }
 
-    pub fn y(&self) -> f64 {
+    pub fn y(&self) -> Val {
         self.1
     }
 
-    pub fn z(&self) -> f64 {
+    pub fn z(&self) -> Val {
         self.2
     }
 
-    pub fn norm(&self) -> f64 {
+    pub fn norm(&self) -> Val {
         self.norm_squared().sqrt()
     }
 
-    pub fn norm_squared(&self) -> f64 {
+    pub fn norm_squared(&self) -> Val {
         self.dot(*self)
     }
 
@@ -59,15 +59,15 @@ impl Neg for Vector {
     }
 }
 
-impl Mul<f64> for Vector {
+impl Mul<Val> for Vector {
     type Output = Self;
 
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: Val) -> Self::Output {
         Self::new(self.x() * rhs, self.y() * rhs, self.z() * rhs)
     }
 }
 
-impl Mul<Vector> for f64 {
+impl Mul<Vector> for Val {
     type Output = Vector;
 
     fn mul(self, rhs: Vector) -> Self::Output {
@@ -75,10 +75,10 @@ impl Mul<Vector> for f64 {
     }
 }
 
-impl Div<f64> for Vector {
+impl Div<Val> for Vector {
     type Output = Self;
 
-    fn div(self, rhs: f64) -> Self::Output {
+    fn div(self, rhs: Val) -> Self::Output {
         Self::new(self.x() / rhs, self.y() / rhs, self.z() / rhs)
     }
 }
@@ -86,7 +86,7 @@ impl Div<f64> for Vector {
 impl Product for Vector {
     type Output = Self;
 
-    fn dot(self, rhs: Self) -> f64 {
+    fn dot(self, rhs: Self) -> Val {
         self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z()
     }
 
@@ -106,32 +106,49 @@ mod tests {
     #[test]
     fn vector3d_linear_operations_succeed() {
         assert_eq!(
-            Vector::new(1.0, -2.0, 3.0) + Vector::new(-4.0, 5.0, 8.0),
-            Vector::new(-3.0, 3.0, 11.0),
+            Vector::new(Val(1.0), Val(-2.0), Val(3.0)) + Vector::new(Val(-4.0), Val(5.0), Val(8.0)),
+            Vector::new(Val(-3.0), Val(3.0), Val(11.0)),
         );
         assert_eq!(
-            Vector::new(1.0, -2.0, 3.0) - Vector::new(-4.0, 5.0, 8.0),
-            Vector::new(5.0, -7.0, -5.0),
+            Vector::new(Val(1.0), Val(-2.0), Val(3.0)) - Vector::new(Val(-4.0), Val(5.0), Val(8.0)),
+            Vector::new(Val(5.0), Val(-7.0), Val(-5.0)),
         );
-        assert_eq!(Vector::new(1.0, 2.0, 3.0) * 2.0, Vector::new(2.0, 4.0, 6.0),);
-        assert_eq!(Vector::new(1.0, 2.0, 3.0) / 2.0, Vector::new(0.5, 1.0, 1.5),);
+        assert_eq!(
+            Vector::new(Val(1.0), Val(2.0), Val(3.0)) * Val(2.0),
+            Vector::new(Val(2.0), Val(4.0), Val(6.0)),
+        );
+        assert_eq!(
+            Vector::new(Val(1.0), Val(2.0), Val(3.0)) / Val(2.0),
+            Vector::new(Val(0.5), Val(1.0), Val(1.5)),
+        );
     }
 
     #[test]
     fn vector3d_products_succeed() {
         assert_eq!(
-            Vector::new(1.0, 1.0, -4.0).dot(Vector::new(1.0, -2.0, 2.0)),
-            -9.0,
+            Vector::new(Val(1.0), Val(1.0), Val(-4.0)).dot(Vector::new(
+                Val(1.0),
+                Val(-2.0),
+                Val(2.0)
+            )),
+            Val(-9.0),
         );
         assert_eq!(
-            Vector::new(0.0, -2.0, 2.0).cross(Vector::new(1.0, 2.0, 1.0)),
-            Vector::new(-6.0, 2.0, 2.0),
+            Vector::new(Val(0.0), Val(-2.0), Val(2.0)).cross(Vector::new(
+                Val(1.0),
+                Val(2.0),
+                Val(1.0)
+            )),
+            Vector::new(Val(-6.0), Val(2.0), Val(2.0)),
         )
     }
 
     #[test]
     fn vector3d_norms_succeed() {
-        assert_eq!(Vector::new(1.0, -2.0, 2.0).norm_squared(), 9.0);
-        assert_eq!(Vector::new(1.0, -2.0, 2.0).norm(), 3.0);
+        assert_eq!(
+            Vector::new(Val(1.0), Val(-2.0), Val(2.0)).norm_squared(),
+            Val(9.0)
+        );
+        assert_eq!(Vector::new(Val(1.0), Val(-2.0), Val(2.0)).norm(), Val(3.0));
     }
 }

@@ -1,6 +1,6 @@
 use crate::domain::{
     color::Color,
-    geometry::{Point, UnitVector},
+    geometry::{Point, UnitVector, Val},
 };
 
 use super::RayTrace;
@@ -28,7 +28,7 @@ impl Ray {
         self.color
     }
 
-    pub fn at(&self, distance: f64) -> Point {
+    pub fn at(&self, distance: Val) -> Point {
         self.trace.at(distance)
     }
 }

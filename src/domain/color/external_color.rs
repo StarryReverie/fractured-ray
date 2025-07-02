@@ -1,3 +1,5 @@
+use crate::domain::geometry::Val;
+
 use super::Color;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,17 +22,20 @@ impl ExternalColor {
         self.blue
     }
 
-    fn encode_gamma(linear: f64) -> f64 {
+    fn encode_gamma(linear: Val) -> Val {
         linear.sqrt()
     }
 }
 
 impl From<Color> for ExternalColor {
     fn from(value: Color) -> Self {
+        let red = Val(256.0) * Self::encode_gamma(value.red()).clamp(Val(0.0), Val(0.999));
+        let green = Val(256.0) * Self::encode_gamma(value.green()).clamp(Val(0.0), Val(0.999));
+        let blue = Val(256.0) * Self::encode_gamma(value.blue()).clamp(Val(0.0), Val(0.999));
         ExternalColor {
-            red: (256.0 * Self::encode_gamma(value.red()).clamp(0.0, 0.999)) as u8,
-            green: (256.0 * Self::encode_gamma(value.green()).clamp(0.0, 0.999)) as u8,
-            blue: (256.0 * Self::encode_gamma(value.blue()).clamp(0.0, 0.999)) as u8,
+            red: red.into(),
+            green: green.into(),
+            blue: blue.into(),
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::domain::geometry::{Point, UnitVector};
+use crate::domain::geometry::{Point, UnitVector, Val};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RayTrace {
@@ -19,7 +19,7 @@ impl RayTrace {
         self.direction
     }
 
-    pub fn at(&self, distance: f64) -> Point {
+    pub fn at(&self, distance: Val) -> Point {
         self.start + distance * self.direction
     }
 }
@@ -30,7 +30,10 @@ mod tests {
 
     #[test]
     fn ray_trace_at_succeeds() {
-        let ray = RayTrace::new(Point::new(0.0, 1.0, 0.0), UnitVector::x_direction());
-        assert_eq!(ray.at(1.0), Point::new(1.0, 1.0, 0.0));
+        let ray = RayTrace::new(
+            Point::new(Val(0.0), Val(1.0), Val(0.0)),
+            UnitVector::x_direction(),
+        );
+        assert_eq!(ray.at(Val(1.0)), Point::new(Val(1.0), Val(1.0), Val(0.0)));
     }
 }

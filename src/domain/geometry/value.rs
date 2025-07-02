@@ -1,0 +1,386 @@
+use std::cmp::Ordering;
+use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::str::FromStr;
+
+type Wrapped = f64;
+
+#[derive(Debug, Default, Clone, Copy)]
+pub struct Val(pub Wrapped);
+
+impl Val {
+    pub const PRECISION: Wrapped = 1e-8;
+
+    #[inline(always)]
+    pub const fn abs(self) -> Self {
+        Val(self.0.abs())
+    }
+
+    #[inline(always)]
+    pub fn sqrt(self) -> Self {
+        Val(self.0.sqrt())
+    }
+
+    #[inline(always)]
+    pub fn exp(self) -> Self {
+        Val(self.0.exp())
+    }
+
+    #[inline(always)]
+    pub fn exp2(self) -> Self {
+        Val(self.0.exp2())
+    }
+
+    #[inline(always)]
+    pub fn exp_m1(self) -> Self {
+        Val(self.0.exp_m1())
+    }
+
+    #[inline(always)]
+    pub fn ln(self) -> Self {
+        Val(self.0.ln())
+    }
+
+    #[inline(always)]
+    pub fn log10(self) -> Self {
+        Val(self.0.log10())
+    }
+
+    #[inline(always)]
+    pub fn log2(self) -> Self {
+        Val(self.0.log2())
+    }
+
+    #[inline(always)]
+    pub fn powf(self, n: Self) -> Self {
+        Val(self.0.powf(n.0))
+    }
+
+    #[inline(always)]
+    pub fn powi(self, n: i32) -> Self {
+        Val(self.0.powi(n))
+    }
+
+    #[inline(always)]
+    pub fn div_euclid(self, rhs: Self) -> Self {
+        Val(self.0.div_euclid(rhs.0))
+    }
+
+    #[inline(always)]
+    pub fn rem_euclid(self, rhs: Self) -> Self {
+        Val(self.0.rem_euclid(rhs.0))
+    }
+
+    #[inline(always)]
+    pub fn sin(self) -> Self {
+        Val(self.0.sin())
+    }
+
+    #[inline(always)]
+    pub fn cos(self) -> Self {
+        Val(self.0.cos())
+    }
+
+    #[inline(always)]
+    pub fn tan(self) -> Self {
+        Val(self.0.tan())
+    }
+
+    #[inline(always)]
+    pub fn asin(self) -> Self {
+        Val(self.0.asin())
+    }
+
+    #[inline(always)]
+    pub fn acos(self) -> Self {
+        Val(self.0.acos())
+    }
+
+    #[inline(always)]
+    pub fn atan(self) -> Self {
+        Val(self.0.atan())
+    }
+
+    #[inline(always)]
+    pub fn atan2(self, other: Self) -> Self {
+        Val(self.0.atan2(other.0))
+    }
+
+    #[inline(always)]
+    pub fn sinh(self) -> Self {
+        Val(self.0.sinh())
+    }
+
+    #[inline(always)]
+    pub fn cosh(self) -> Self {
+        Val(self.0.cosh())
+    }
+
+    #[inline(always)]
+    pub fn tanh(self) -> Self {
+        Val(self.0.tanh())
+    }
+
+    #[inline(always)]
+    pub fn asinh(self) -> Self {
+        Val(self.0.asinh())
+    }
+
+    #[inline(always)]
+    pub fn acosh(self) -> Self {
+        Val(self.0.acosh())
+    }
+
+    #[inline(always)]
+    pub fn atanh(self) -> Self {
+        Val(self.0.atanh())
+    }
+
+    #[inline(always)]
+    pub const fn recip(self) -> Self {
+        Val(self.0.recip())
+    }
+
+    #[inline(always)]
+    pub const fn to_degrees(self) -> Self {
+        Val(self.0.to_degrees())
+    }
+
+    #[inline(always)]
+    pub const fn to_radians(self) -> Self {
+        Val(self.0.to_radians())
+    }
+
+    #[inline(always)]
+    pub fn floor(self) -> Self {
+        Val(self.0.floor())
+    }
+
+    #[inline(always)]
+    pub fn ceil(self) -> Self {
+        Val(self.0.ceil())
+    }
+
+    #[inline(always)]
+    pub fn round(self) -> Self {
+        Val(self.0.round())
+    }
+
+    #[inline(always)]
+    pub fn trunc(self) -> Self {
+        Val(self.0.trunc())
+    }
+
+    #[inline(always)]
+    pub fn fract(self) -> Self {
+        Val(self.0.fract())
+    }
+
+    #[inline(always)]
+    pub const fn signum(self) -> Self {
+        Val(self.0.signum())
+    }
+
+    #[inline(always)]
+    pub const fn max(self, other: Self) -> Self {
+        Val(self.0.max(other.0))
+    }
+
+    #[inline(always)]
+    pub const fn min(self, other: Self) -> Self {
+        Val(self.0.min(other.0))
+    }
+
+    #[inline(always)]
+    pub const fn clamp(self, min: Self, max: Self) -> Self {
+        Val(self.0.clamp(min.0, max.0))
+    }
+
+    #[inline(always)]
+    pub const fn midpoint(self, other: Self) -> Self {
+        Val(self.0.midpoint(other.0))
+    }
+
+    #[inline(always)]
+    pub fn hypot(self, other: Self) -> Self {
+        Val(self.0.hypot(other.0))
+    }
+
+    #[inline(always)]
+    pub const fn is_nan(self) -> bool {
+        self.0.is_nan()
+    }
+
+    #[inline(always)]
+    pub const fn is_infinite(self) -> bool {
+        self.0.is_infinite()
+    }
+
+    #[inline(always)]
+    pub const fn is_finite(self) -> bool {
+        self.0.is_finite()
+    }
+
+    #[inline(always)]
+    pub const fn is_normal(self) -> bool {
+        self.0.is_normal()
+    }
+
+    #[inline(always)]
+    pub const fn is_sign_positive(self) -> bool {
+        self.0.is_sign_positive()
+    }
+
+    #[inline(always)]
+    pub const fn is_sign_negative(self) -> bool {
+        self.0.is_sign_negative()
+    }
+}
+
+impl PartialEq for Val {
+    #[inline(always)]
+    fn eq(&self, other: &Self) -> bool {
+        (self.0 - other.0).abs() <= Self::PRECISION
+    }
+}
+
+impl PartialOrd for Val {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        let delta = self.0 - other.0;
+        match (delta <= Self::PRECISION, delta >= -Self::PRECISION) {
+            (false, false) => None,
+            (false, true) => Some(Ordering::Greater),
+            (true, false) => Some(Ordering::Less),
+            (true, true) => Some(Ordering::Equal),
+        }
+    }
+}
+
+impl Add for Val {
+    type Output = Self;
+
+    #[inline(always)]
+    fn add(self, rhs: Self) -> Self::Output {
+        Val(self.0 + rhs.0)
+    }
+}
+
+impl AddAssign for Val {
+    #[inline(always)]
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
+    }
+}
+
+impl Sub for Val {
+    type Output = Self;
+
+    #[inline(always)]
+    fn sub(self, rhs: Self) -> Self::Output {
+        Val(self.0 - rhs.0)
+    }
+}
+
+impl SubAssign for Val {
+    #[inline(always)]
+    fn sub_assign(&mut self, rhs: Self) {
+        self.0 -= rhs.0;
+    }
+}
+
+impl Mul for Val {
+    type Output = Self;
+
+    #[inline(always)]
+    fn mul(self, rhs: Self) -> Self::Output {
+        Val(self.0 * rhs.0)
+    }
+}
+
+impl MulAssign for Val {
+    #[inline(always)]
+    fn mul_assign(&mut self, rhs: Self) {
+        self.0 *= rhs.0;
+    }
+}
+
+impl Div for Val {
+    type Output = Self;
+
+    #[inline(always)]
+    fn div(self, rhs: Self) -> Self::Output {
+        Val(self.0 / rhs.0)
+    }
+}
+
+impl DivAssign for Val {
+    #[inline(always)]
+    fn div_assign(&mut self, rhs: Self) {
+        self.0 /= rhs.0;
+    }
+}
+
+impl Neg for Val {
+    type Output = Self;
+
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        Val(-self.0)
+    }
+}
+
+impl Display for Val {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl From<Wrapped> for Val {
+    fn from(value: Wrapped) -> Self {
+        Self(value)
+    }
+}
+
+impl From<Val> for Wrapped {
+    fn from(value: Val) -> Self {
+        value.0
+    }
+}
+
+macro_rules! impl_primitive_conversions_for_val {
+    ($t:ty) => {
+        impl From<$t> for Val {
+            fn from(value: $t) -> Self {
+                Self(value as Wrapped)
+            }
+        }
+
+        impl From<Val> for $t {
+            fn from(value: Val) -> Self {
+                value.0 as $t
+            }
+        }
+    };
+}
+
+impl_primitive_conversions_for_val!(i8);
+impl_primitive_conversions_for_val!(i16);
+impl_primitive_conversions_for_val!(i32);
+impl_primitive_conversions_for_val!(i64);
+impl_primitive_conversions_for_val!(i128);
+impl_primitive_conversions_for_val!(isize);
+impl_primitive_conversions_for_val!(u8);
+impl_primitive_conversions_for_val!(u16);
+impl_primitive_conversions_for_val!(u32);
+impl_primitive_conversions_for_val!(u64);
+impl_primitive_conversions_for_val!(u128);
+impl_primitive_conversions_for_val!(usize);
+
+impl FromStr for Val {
+    type Err = <Wrapped as FromStr>::Err;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Val(Wrapped::from_str(s)?))
+    }
+}

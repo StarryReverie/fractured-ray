@@ -2,42 +2,42 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use snafu::prelude::*;
 
-use super::{Product, Vector};
+use super::{Product, Val, Vector};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UnitVector(Vector);
 
 impl UnitVector {
     pub fn x_direction() -> Self {
-        Self(Vector::new(1.0, 0.0, 0.0))
+        Self(Vector::new(Val(1.0), Val(0.0), Val(0.0)))
     }
 
     pub fn y_direction() -> Self {
-        Self(Vector::new(0.0, 1.0, 0.0))
+        Self(Vector::new(Val(0.0), Val(1.0), Val(0.0)))
     }
 
     pub fn z_direction() -> Self {
-        Self(Vector::new(0.0, 0.0, 1.0))
+        Self(Vector::new(Val(0.0), Val(0.0), Val(1.0)))
     }
 
-    pub fn x(&self) -> f64 {
+    pub fn x(&self) -> Val {
         self.0.x()
     }
 
-    pub fn y(&self) -> f64 {
+    pub fn y(&self) -> Val {
         self.0.y()
     }
 
-    pub fn z(&self) -> f64 {
+    pub fn z(&self) -> Val {
         self.0.z()
     }
 
-    pub fn norm(&self) -> f64 {
-        1.0
+    pub fn norm(&self) -> Val {
+        Val(1.0)
     }
 
-    pub fn norm_squared(&self) -> f64 {
-        1.0
+    pub fn norm_squared(&self) -> Val {
+        Val(1.0)
     }
 
     pub fn to_vector(&self) -> Vector {
@@ -50,7 +50,7 @@ impl TryFrom<Vector> for UnitVector {
 
     fn try_from(value: Vector) -> Result<Self, Self::Error> {
         let norm = value.norm();
-        ensure!(norm > 0.0, ZeroVectorSnafu);
+        ensure!(norm > Val(0.0), ZeroVectorSnafu);
         Ok(UnitVector(value / norm))
     }
 }
@@ -82,7 +82,7 @@ macro_rules! impl_operations {
         impl Product<$rhs_type> for $lhs_type {
             type Output = Vector;
 
-            fn dot(self, rhs: $rhs_type) -> f64 {
+            fn dot(self, rhs: $rhs_type) -> Val {
                 Vector::from(self).dot(Vector::from(rhs))
             }
 
@@ -105,15 +105,15 @@ impl Neg for UnitVector {
     }
 }
 
-impl Mul<f64> for UnitVector {
+impl Mul<Val> for UnitVector {
     type Output = Vector;
 
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: Val) -> Self::Output {
         self.0 * rhs
     }
 }
 
-impl Mul<UnitVector> for f64 {
+impl Mul<UnitVector> for Val {
     type Output = Vector;
 
     fn mul(self, rhs: UnitVector) -> Self::Output {
@@ -121,10 +121,10 @@ impl Mul<UnitVector> for f64 {
     }
 }
 
-impl Div<f64> for UnitVector {
+impl Div<Val> for UnitVector {
     type Output = Vector;
 
-    fn div(self, rhs: f64) -> Self::Output {
+    fn div(self, rhs: Val) -> Self::Output {
         self.0 / rhs
     }
 }
@@ -142,31 +142,49 @@ mod tests {
 
     #[test]
     fn unit_vector3d_linear_operations_succeed() {
-        let v1 = Vector::new(1.0, 0.0, 0.0).normalize().unwrap();
-        let v2 = Vector::new(0.0, 1.0, 0.0).normalize().unwrap();
-        assert_eq!(v1 + v2.to_vector(), Vector::new(1.0, 1.0, 0.0));
-        assert_eq!(v1.to_vector() - v2, Vector::new(1.0, -1.0, 0.0));
-        assert_eq!(-v1, UnitVector(Vector::new(-1.0, 0.0, 0.0)));
-        assert_eq!(2.0 * v1, Vector::new(2.0, 0.0, 0.0));
-        assert_eq!(v2 / 2.0, Vector::new(0.0, 0.5, 0.0));
+        let v1 = Vector::new(Val(1.0), Val(0.0), Val(0.0))
+            .normalize()
+            .unwrap();
+        let v2 = Vector::new(Val(0.0), Val(1.0), Val(0.0))
+            .normalize()
+            .unwrap();
+        assert_eq!(
+            v1 + v2.to_vector(),
+            Vector::new(Val(1.0), Val(1.0), Val(0.0))
+        );
+        assert_eq!(
+            v1.to_vector() - v2,
+            Vector::new(Val(1.0), Val(-1.0), Val(0.0))
+        );
+        assert_eq!(-v1, UnitVector(Vector::new(Val(-1.0), Val(0.0), Val(0.0))));
+        assert_eq!(Val(2.0) * v1, Vector::new(Val(2.0), Val(0.0), Val(0.0)));
+        assert_eq!(v2 / Val(2.0), Vector::new(Val(0.0), Val(0.5), Val(0.0)));
     }
 
     #[test]
     fn unit_vector3d_products_succeed() {
-        let v1 = Vector::new(1.0, 0.0, 0.0).normalize().unwrap();
-        let v2 = Vector::new(0.0, 1.0, 0.0).normalize().unwrap();
-        assert_eq!(v1.dot(v2), 0.0);
-        assert_eq!(v1.cross(v2), Vector::new(0.0, 0.0, 1.0));
+        let v1 = Vector::new(Val(1.0), Val(0.0), Val(0.0))
+            .normalize()
+            .unwrap();
+        let v2 = Vector::new(Val(0.0), Val(1.0), Val(0.0))
+            .normalize()
+            .unwrap();
+        assert_eq!(v1.dot(v2), Val(0.0));
+        assert_eq!(v1.cross(v2), Vector::new(Val(0.0), Val(0.0), Val(1.0)));
     }
 
     #[test]
     fn unit_vector3d_try_from_succeeds() {
         assert_eq!(
-            Vector::new(1.0, 2.0, 2.0).normalize(),
-            Ok(UnitVector(Vector::new(1.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0))),
+            Vector::new(Val(1.0), Val(2.0), Val(2.0)).normalize(),
+            Ok(UnitVector(Vector::new(
+                Val(1.0) / Val(3.0),
+                Val(2.0) / Val(3.0),
+                Val(2.0) / Val(3.0)
+            ))),
         );
         assert_eq!(
-            Vector::new(0.0, 0.0, 0.0).normalize(),
+            Vector::new(Val(0.0), Val(0.0), Val(0.0)).normalize(),
             Err(TryIntoUnitVectorError::ZeroVector),
         );
     }

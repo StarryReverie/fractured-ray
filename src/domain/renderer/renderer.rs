@@ -5,6 +5,7 @@ use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Color;
 use crate::domain::entity::Scene;
 use crate::domain::entity::shape::DisRange;
+use crate::domain::geometry::Val;
 use crate::domain::image::Image;
 use crate::domain::ray::{Ray, RayTrace};
 
@@ -47,9 +48,11 @@ impl Renderer for CoreRenderer {
         for row in 0..image.resolution().height() {
             for column in 0..image.resolution().width() {
                 for _ in 0..self.config.ssaa_samples {
-                    let offset =
-                        Offset::new(rng.random_range(0.0..1.0), rng.random_range(0.0..1.0))
-                            .expect("offset range should be bounded to [0, 1)");
+                    let offset = Offset::new(
+                        Val::from(rng.random::<f64>()),
+                        Val::from(rng.random::<f64>()),
+                    )
+                    .expect("offset range should be bounded to [0, 1)");
                     let point = self
                         .camera
                         .calc_point_in_pixel(row, column, offset)

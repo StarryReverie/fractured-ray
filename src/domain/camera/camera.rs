@@ -1,6 +1,6 @@
 use snafu::prelude::*;
 
-use crate::domain::geometry::{Point, Product, UnitVector, Vector};
+use crate::domain::geometry::{Point, Product, UnitVector, Val, Vector};
 
 use super::{Offset, Resolution, TryNewViewportError, Viewport};
 
@@ -8,7 +8,7 @@ use super::{Offset, Resolution, TryNewViewportError, Viewport};
 pub struct Camera {
     position: Point,
     orientation: UnitVector,
-    focal_length: f64,
+    focal_length: Val,
     viewport: Viewport,
     viewport_horizontal_edge: Vector,
     viewport_vertical_edge: Vector,
@@ -19,15 +19,15 @@ impl Camera {
         position: Point,
         orientation: UnitVector,
         resolution: Resolution,
-        height: f64,
-        focal_length: f64,
+        height: Val,
+        focal_length: Val,
     ) -> Result<Camera, TryNewCameraError> {
-        ensure!(focal_length > 0.0, InvalidFocalLengthSnafu);
+        ensure!(focal_length > Val(0.0), InvalidFocalLengthSnafu);
 
         let viewport = Viewport::new(resolution, height).context(ViewportSnafu)?;
 
-        let (hdir, vdir) = if orientation.x() != 0.0 || orientation.z() != 0.0 {
-            let hdir = Vector::new(-orientation.z(), 0.0, orientation.x())
+        let (hdir, vdir) = if orientation.x() != Val(0.0) || orientation.z() != Val(0.0) {
+            let hdir = Vector::new(-orientation.z(), Val(0.0), orientation.x())
                 .normalize()
                 .expect("hdir shouldn't be zero vector");
             let vdir = orientation
@@ -37,7 +37,7 @@ impl Camera {
             (hdir, vdir)
         } else {
             let hdir = UnitVector::x_direction();
-            let vdir = if orientation.y() > 0.0 {
+            let vdir = if orientation.y() > Val(0.0) {
                 -UnitVector::z_direction()
             } else {
                 UnitVector::z_direction()
@@ -66,7 +66,7 @@ impl Camera {
         self.orientation
     }
 
-    pub fn focal_length(&self) -> f64 {
+    pub fn focal_length(&self) -> Val {
         self.focal_length
     }
 
@@ -78,8 +78,8 @@ impl Camera {
         let (vp, hp) = self.viewport.index_to_percentage(row, column, offset)?;
         let viewport_center = self.position + self.focal_length * self.orientation;
         let point = viewport_center
-            + (hp - 0.5) * self.viewport_horizontal_edge
-            + (vp - 0.5) * self.viewport_vertical_edge;
+            + (hp - Val(0.5)) * self.viewport_horizontal_edge
+            + (vp - Val(0.5)) * self.viewport_vertical_edge;
         Some(point)
     }
 }
@@ -99,28 +99,28 @@ mod tests {
     #[test]
     fn camera_new_succeeds() {
         let camera = Camera::new(
-            Point::new(0.0, 0.0, 0.0),
+            Point::new(Val(0.0), Val(0.0), Val(0.0)),
             -UnitVector::z_direction(),
             Resolution::new(10, (2, 1)).unwrap(),
-            1.0,
-            1.0,
+            Val(1.0),
+            Val(1.0),
         )
         .unwrap();
         assert_eq!(
-            camera.calc_point_in_pixel(0, 0, Offset::new(0.0, 0.0).unwrap()),
-            Some(Point::new(-1.0, 0.5, -1.0)),
+            camera.calc_point_in_pixel(0, 0, Offset::new(Val(0.0), Val(0.0)).unwrap()),
+            Some(Point::new(Val(-1.0), Val(0.5), Val(-1.0))),
         );
         assert_eq!(
-            camera.calc_point_in_pixel(9, 0, Offset::new(1.0, 0.0).unwrap()),
-            Some(Point::new(-1.0, -0.5, -1.0)),
+            camera.calc_point_in_pixel(9, 0, Offset::new(Val(1.0), Val(0.0)).unwrap()),
+            Some(Point::new(Val(-1.0), Val(-0.5), Val(-1.0))),
         );
         assert_eq!(
-            camera.calc_point_in_pixel(9, 19, Offset::new(1.0, 1.0).unwrap()),
-            Some(Point::new(1.0, -0.5, -1.0)),
+            camera.calc_point_in_pixel(9, 19, Offset::new(Val(1.0), Val(1.0)).unwrap()),
+            Some(Point::new(Val(1.0), Val(-0.5), Val(-1.0))),
         );
         assert_eq!(
-            camera.calc_point_in_pixel(0, 19, Offset::new(0.0, 1.0).unwrap()),
-            Some(Point::new(1.0, 0.5, -1.0)),
+            camera.calc_point_in_pixel(0, 19, Offset::new(Val(0.0), Val(1.0)).unwrap()),
+            Some(Point::new(Val(1.0), Val(0.5), Val(-1.0))),
         );
     }
 
@@ -128,11 +128,13 @@ mod tests {
     fn camera_new_fails_when_focal_length_is_invalid() {
         assert_eq!(
             Camera::new(
-                Point::new(0.0, 2.0, 0.0),
-                Vector::new(1.0, -2.0, 2.0).normalize().unwrap(),
+                Point::new(Val(0.0), Val(2.0), Val(0.0)),
+                Vector::new(Val(1.0), Val(-2.0), Val(2.0))
+                    .normalize()
+                    .unwrap(),
                 Resolution::new(10, (2, 1)).unwrap(),
-                1.0,
-                0.0,
+                Val(1.0),
+                Val(0.0),
             ),
             Err(TryNewCameraError::InvalidFocalLength)
         );
@@ -141,18 +143,22 @@ mod tests {
     #[test]
     fn camera_calc_point_in_pixel_succeeds() {
         let camera = Camera::new(
-            Point::new(0.0, 2.0, 0.0),
-            Vector::new(1.0, -2.0, 2.0).normalize().unwrap(),
+            Point::new(Val(0.0), Val(2.0), Val(0.0)),
+            Vector::new(Val(1.0), Val(-2.0), Val(2.0))
+                .normalize()
+                .unwrap(),
             Resolution::new(10, (2, 1)).unwrap(),
-            1.0,
-            1.0,
+            Val(1.0),
+            Val(1.0),
         )
         .unwrap();
-        assert!(
-            (camera.calc_point_in_pixel(0, 0, Offset::center()).unwrap()
-                - Point::new(1.3172033, 1.6687435, 0.51014197))
-            .norm()
-                < 1e-6
+        assert_eq!(
+            camera.calc_point_in_pixel(0, 0, Offset::center()).unwrap(),
+            Point::new(
+                Val(1.3172032434332408),
+                Val(1.668743529958302),
+                Val(0.5101419082416814)
+            ),
         );
     }
 }

@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::entity::shape::{DisRange, RayIntersection};
-use crate::domain::geometry::{Product, Vector};
+use crate::domain::geometry::{Product, Val, Vector};
 use crate::domain::ray::{Ray, RayTrace};
 use crate::domain::renderer::Renderer;
 
@@ -26,8 +26,9 @@ impl Diffuse {
         let normal = intersection.normal();
         loop {
             let (x, y, z) = rng.random::<(f64, f64, f64)>();
-            let direction = Vector::new(x * 2.0 - 1.0, y * 2.0 - 1.0, z * 2.0 - 1.0);
-            if direction.norm_squared() > 1e-8 && direction.dot(normal) > 0.0 {
+            let (x, y, z) = (Val(x * 2.0 - 1.0), Val(y * 2.0 - 1.0), Val(z * 2.0 - 1.0));
+            let direction = Vector::new(x, y, z);
+            if direction.norm_squared() > Val(0.0) && direction.dot(normal) > Val(0.0) {
                 let direction = direction
                     .normalize()
                     .expect("direction should not be zero vector");
@@ -84,41 +85,49 @@ mod tests {
 
     #[test]
     fn diffuse_shade_impl_succeeds() {
-        let diffuse = Diffuse::new(Color::new(0.8, 0.8, 0.8));
+        let diffuse = Diffuse::new(Color::new(Val(0.8), Val(0.8), Val(0.8)));
 
         let mut renderer = MockRenderer::new();
         renderer.expect_trace().returning(|_, _, _| {
             Ray::new(
                 RayTrace::new(
-                    Point::new(0.0, 1.0, -2.0),
-                    -Vector::new(1.0, -2.0, -2.0).normalize().unwrap(),
+                    Point::new(Val(0.0), Val(1.0), Val(-2.0)),
+                    -Vector::new(Val(1.0), Val(-2.0), Val(-2.0))
+                        .normalize()
+                        .unwrap(),
                 ),
-                Color::new(0.6, 0.6, 0.6),
+                Color::new(Val(0.6), Val(0.6), Val(0.6)),
             )
         });
 
         let ray_trace = RayTrace::new(
-            Point::new(0.0, 0.0, 0.0),
-            Vector::new(0.0, 1.0, -2.0).normalize().unwrap(),
+            Point::new(Val(0.0), Val(0.0), Val(0.0)),
+            Vector::new(Val(0.0), Val(1.0), Val(-2.0))
+                .normalize()
+                .unwrap(),
         );
 
         let intersection = RayIntersection::new(
-            5f64.sqrt(),
-            Point::new(0.0, 1.0, -2.0),
+            Val(5.0).sqrt(),
+            Point::new(Val(0.0), Val(1.0), Val(-2.0)),
             -UnitVector::y_direction(),
             SurfaceSide::Front,
         );
 
         let incident_ray_trace = RayTrace::new(
-            Point::new(0.0, 1.0, -2.0),
-            Vector::new(1.0, -2.0, -2.0).normalize().unwrap(),
+            Point::new(Val(0.0), Val(1.0), Val(-2.0)),
+            Vector::new(Val(1.0), Val(-2.0), Val(-2.0))
+                .normalize()
+                .unwrap(),
         );
 
         let ray = diffuse.shade_impl(&renderer, ray_trace, intersection, 1, incident_ray_trace);
 
-        let expected = Color::new(0.6, 0.6, 0.6) * Color::new(0.8, 0.8, 0.8) * (2.0 / 3.0);
-        assert!((ray.color().red() - expected.red()).abs() < 1e-8);
-        assert!((ray.color().green() - expected.green()).abs() < 1e-8);
-        assert!((ray.color().blue() - expected.blue()).abs() < 1e-8);
+        let expected = Color::new(Val(0.6), Val(0.6), Val(0.6))
+            * Color::new(Val(0.8), Val(0.8), Val(0.8))
+            * (Val(2.0) / Val(3.0));
+        assert_eq!(ray.color().red(), expected.red());
+        assert_eq!(ray.color().green(), expected.green());
+        assert_eq!(ray.color().blue(), expected.blue());
     }
 }

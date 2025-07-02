@@ -1,5 +1,6 @@
 use crate::domain::camera::Resolution;
 use crate::domain::color::Color;
+use crate::domain::geometry::Val;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Image {
@@ -51,8 +52,8 @@ impl Image {
                 .data
                 .get_mut(index)
                 .expect("row and column should not be out of bound");
-            *entry = *entry * (*count as f64 / (*count as f64 + 1.0))
-                + color * (1.0 / (*count as f64 + 1.0));
+            *entry = *entry * (Val::from(*count) / (Val::from(*count) + Val::from(1.0)))
+                + color * (Val::from(1.0) / (Val::from(*count) + Val::from(1.0)));
             *count += 1;
             true
         } else {

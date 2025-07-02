@@ -1,24 +1,24 @@
 use std::ops::{Add, Sub};
 
-use super::{UnitVector, Vector};
+use super::{UnitVector, Val, Vector};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Point(Vector);
 
 impl Point {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
+    pub fn new(x: Val, y: Val, z: Val) -> Self {
         Vector::new(x, y, z).into()
     }
 
-    pub fn x(&self) -> f64 {
+    pub fn x(&self) -> Val {
         self.0.x()
     }
 
-    pub fn y(&self) -> f64 {
+    pub fn y(&self) -> Val {
         self.0.y()
     }
 
-    pub fn z(&self) -> f64 {
+    pub fn z(&self) -> Val {
         self.0.z()
     }
 
@@ -85,16 +85,16 @@ mod tests {
     #[test]
     fn point_operation_succeed() {
         assert_eq!(
-            Point::new(1.0, 0.0, 0.0) + Vector::new(0.0, 1.0, 0.0),
-            Point::new(1.0, 1.0, 0.0),
+            Point::new(Val(1.0), Val(0.0), Val(0.0)) + Vector::new(Val(0.0), Val(1.0), Val(0.0)),
+            Point::new(Val(1.0), Val(1.0), Val(0.0)),
         );
         assert_eq!(
-            Point::new(1.0, 0.0, 0.0) - Vector::new(0.0, 1.0, 0.0),
-            Point::new(1.0, -1.0, 0.0),
+            Point::new(Val(1.0), Val(0.0), Val(0.0)) - Vector::new(Val(0.0), Val(1.0), Val(0.0)),
+            Point::new(Val(1.0), Val(-1.0), Val(0.0)),
         );
         assert_eq!(
-            Point::new(1.0, 2.0, 0.0) - Point::new(1.0, 1.0, 0.0),
-            Vector::new(0.0, 1.0, 0.0),
+            Point::new(Val(1.0), Val(2.0), Val(0.0)) - Point::new(Val(1.0), Val(1.0), Val(0.0)),
+            Vector::new(Val(0.0), Val(1.0), Val(0.0)),
         );
     }
 }
