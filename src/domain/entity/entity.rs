@@ -40,11 +40,11 @@ impl Entity {
     pub fn shade(
         &self,
         renderer: &CoreRenderer,
-        ray_trace: RayTrace,
+        outgoing_ray_trace: RayTrace,
         intersection: RayIntersection,
         depth: usize,
     ) -> Ray {
         self.material
-            .shade(renderer, ray_trace, intersection, depth)
+            .shade(renderer, outgoing_ray_trace, intersection, depth)
     }
 }

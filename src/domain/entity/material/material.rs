@@ -8,7 +8,7 @@ pub trait Material: Debug + Send + Sync + 'static {
     fn shade(
         &self,
         renderer: &dyn Renderer,
-        ray_trace: RayTrace,
+        outgoing_ray_trace: RayTrace,
         intersection: RayIntersection,
         depth: usize,
     ) -> Ray;
