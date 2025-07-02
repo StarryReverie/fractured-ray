@@ -23,7 +23,11 @@ impl ExternalColor {
     }
 
     fn encode_gamma(linear: Val) -> Val {
-        linear.sqrt()
+        if linear <= Val(0.0031308) {
+            Val(12.92) * linear
+        } else {
+            linear.powf(Val(1.0 / 2.4)).mul_add(Val(1.055), Val(-0.055))
+        }
     }
 }
 

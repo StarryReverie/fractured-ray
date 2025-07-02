@@ -8,7 +8,7 @@ use fractured_ray::domain::entity::material::{Diffuse, Specular};
 use fractured_ray::domain::entity::shape::{Plane, Sphere};
 use fractured_ray::domain::geometry::{Point, UnitVector, Val};
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
-use fractured_ray::infrastructure::image::PpmWriter;
+use fractured_ray::infrastructure::image::PngWriter;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let camera = Camera::new(
@@ -49,7 +49,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         },
     )?;
     let image = renderer.render();
-    PpmWriter::new(File::create("output/image.ppm")?).write(image)?;
+    PngWriter::new(File::create("output/image.png")?).write(image)?;
 
     Ok(())
 }

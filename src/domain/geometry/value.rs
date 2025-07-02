@@ -12,6 +12,11 @@ impl Val {
     pub const PRECISION: Wrapped = 1e-8;
 
     #[inline(always)]
+    pub fn mul_add(self, a: Self, b: Self) -> Self {
+        Val(self.0.mul_add(a.0, b.0))
+    }
+
+    #[inline(always)]
     pub const fn abs(self) -> Self {
         Val(self.0.abs())
     }
