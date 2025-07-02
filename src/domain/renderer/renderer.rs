@@ -4,7 +4,7 @@ use snafu::prelude::*;
 use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Color;
 use crate::domain::entity::Scene;
-use crate::domain::entity::shape::{DisRange, RayIntersection};
+use crate::domain::entity::shape::DisRange;
 use crate::domain::image::Image;
 use crate::domain::ray::{Ray, RayTrace};
 
@@ -22,6 +22,7 @@ impl Renderer {
         config: Configuration,
     ) -> Result<Self, ConfigurationError> {
         ensure!(config.ssaa_samples > 0, InvalidSsaaSamplesSnafu);
+        ensure!(config.tracing_depth > 0, InvalidTracingDepthSnafu);
 
         Ok(Self {
             camera,
@@ -49,48 +50,48 @@ impl Renderer {
                         .normalize()
                         .expect("focal length should be positive");
 
-                    let ray = self.trace(RayTrace::new(point, direction), DisRange::positive());
+                    let ray = self.trace(RayTrace::new(point, direction), DisRange::positive(), 1);
                     image.record(row, column, ray.color());
                 }
             }
+            println!("finished ({row})");
         }
 
         image
     }
 
-    pub fn trace(&self, ray_trace: RayTrace, range: DisRange) -> Ray {
-        let intersection = self.scene.find_intersection(&ray_trace, range);
-        if let Some(intersection) = intersection {
-            self.calc_color(ray_trace, intersection)
+    pub fn trace(&self, ray_trace: RayTrace, range: DisRange, depth: usize) -> Ray {
+        if depth > self.config.tracing_depth {
+            return Ray::new(
+                RayTrace::new(ray_trace.start(), -ray_trace.direction()),
+                Color::BLACK,
+            );
+        }
+
+        let res = self.scene.find_intersection(&ray_trace, range);
+        if let Some((intersection, entity)) = res {
+            entity.shade(self, ray_trace, intersection, depth)
         } else {
             Ray::new(
                 RayTrace::new(ray_trace.start(), -ray_trace.direction()),
-                Color::BLACK,
+                Color::WHITE,
             )
         }
-    }
-
-    fn calc_color(&self, ray_trace: RayTrace, intersection: RayIntersection) -> Ray {
-        let normal = intersection.normal();
-        Ray::new(
-            RayTrace::new(ray_trace.start(), -ray_trace.direction()),
-            Color::new(
-                normal.x() / 2.0 + 0.5,
-                normal.y() / 2.0 + 0.5,
-                normal.z() / 2.0 + 0.5,
-            ),
-        )
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Configuration {
     pub ssaa_samples: usize,
+    pub tracing_depth: usize,
 }
 
 impl Default for Configuration {
     fn default() -> Self {
-        Self { ssaa_samples: 4 }
+        Self {
+            ssaa_samples: 4,
+            tracing_depth: 8,
+        }
     }
 }
 
@@ -99,4 +100,6 @@ impl Default for Configuration {
 pub enum ConfigurationError {
     #[snafu(display("SSAA samples for each pixel is not positive"))]
     InvalidSsaaSamples,
+    #[snafu(display("tracing depth is not positive"))]
+    InvalidTracingDepth,
 }

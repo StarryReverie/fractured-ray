@@ -1,4 +1,5 @@
 pub mod entity;
+pub mod material;
 pub mod scene;
 pub mod shape;
 

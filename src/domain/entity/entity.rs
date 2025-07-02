@@ -1,5 +1,7 @@
-use crate::domain::ray::RayTrace;
+use crate::domain::ray::{Ray, RayTrace};
+use crate::domain::renderer::Renderer;
 
+use super::material::Material;
 use super::shape::{DisRange, RayIntersection, Shape};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -15,13 +17,15 @@ impl Id {
 pub struct Entity {
     id: Id,
     shape: Box<dyn Shape>,
+    material: Box<dyn Material>,
 }
 
 impl Entity {
-    pub fn new<S: Shape>(id: Id, shape: S) -> Self {
+    pub fn new<S: Shape, M: Material>(id: Id, shape: S, material: M) -> Self {
         Entity {
             id,
             shape: Box::new(shape),
+            material: Box::new(material),
         }
     }
 
@@ -31,5 +35,16 @@ impl Entity {
 
     pub fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection> {
         self.shape.hit(ray, range)
+    }
+
+    pub fn shade(
+        &self,
+        renderer: &Renderer,
+        ray_trace: RayTrace,
+        intersection: RayIntersection,
+        depth: usize,
+    ) -> Ray {
+        self.material
+            .shade(renderer, ray_trace, intersection, depth)
     }
 }

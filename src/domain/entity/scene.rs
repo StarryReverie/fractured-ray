@@ -2,6 +2,7 @@ use crate::domain::ray::RayTrace;
 
 use super::Entity;
 use super::entity::Id;
+use super::material::Material;
 use super::shape::{DisRange, RayIntersection, Shape};
 
 #[derive(Debug)]
@@ -16,9 +17,9 @@ impl Scene {
         }
     }
 
-    pub fn add<S: Shape>(&mut self, shape: S) -> Id {
+    pub fn add<S: Shape, M: Material>(&mut self, shape: S, material: M) -> Id {
         let id = Id::new(self.entities.len());
-        self.entities.push(Entity::new(id, shape));
+        self.entities.push(Entity::new(id, shape, material));
         id
     }
 
@@ -26,8 +27,10 @@ impl Scene {
         &self,
         ray_trace: &RayTrace,
         mut range: DisRange,
-    ) -> Option<RayIntersection> {
+    ) -> Option<(RayIntersection, &Entity)> {
         let mut closet: Option<RayIntersection> = None;
+        let mut hit: Option<&Entity> = None;
+
         for entity in &self.entities {
             if let Some(closet) = &closet {
                 range = range.shrink_end(closet.distance());
@@ -37,12 +40,15 @@ impl Scene {
             };
             if let Some(closet) = &mut closet {
                 if intersection.distance() < closet.distance() {
-                    *closet = intersection
+                    *closet = intersection;
+                    hit = Some(entity);
                 }
             } else {
-                closet = Some(intersection)
+                closet = Some(intersection);
+                hit = Some(entity);
             }
         }
-        closet
+
+        closet.zip(hit)
     }
 }
