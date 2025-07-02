@@ -5,7 +5,7 @@ use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::Scene;
 use fractured_ray::domain::entity::material::Diffuse;
-use fractured_ray::domain::entity::shape::Sphere;
+use fractured_ray::domain::entity::shape::{Plane, Sphere};
 use fractured_ray::domain::geometry::{Point, UnitVector};
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::infrastructure::image::PpmWriter;
@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         Diffuse::new(Color::YELLOW),
     );
     scene.add(
-        Sphere::new(Point::new(0.0, -100.0, -1.0), 100.0)?,
+        Plane::new(Point::new(0.0, 0.0, -2.0), -UnitVector::y_direction()),
         Diffuse::new(Color::new(0.1, 0.1, 0.1)),
     );
 
