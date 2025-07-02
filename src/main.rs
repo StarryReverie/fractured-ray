@@ -4,7 +4,7 @@ use std::fs::File;
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::Scene;
-use fractured_ray::domain::entity::material::Diffuse;
+use fractured_ray::domain::entity::material::{Diffuse, Specular};
 use fractured_ray::domain::entity::shape::{Plane, Sphere};
 use fractured_ray::domain::geometry::{Point, UnitVector, Val};
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
@@ -12,11 +12,11 @@ use fractured_ray::infrastructure::image::PpmWriter;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let camera = Camera::new(
-        Point::new(Val(0.0), Val(1.0), Val(2.0)),
+        Point::new(Val(0.0), Val(1.0), Val(8.0)),
         -UnitVector::z_direction(),
         Resolution::new(1440, (16, 9))?,
         Val(2.0),
-        Val(1.0),
+        Val(3.0),
     )?;
 
     let mut scene = Scene::new();
@@ -25,11 +25,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         Diffuse::new(Color::MAGENTA),
     );
     scene.add(
-        Sphere::new(Point::new(Val(-1.0), Val(1.0), Val(-2.0)), Val(1.0))?,
+        Sphere::new(Point::new(Val(-3.0), Val(1.0), Val(-1.0)), Val(1.0))?,
         Diffuse::new(Color::CYAN),
     );
     scene.add(
-        Sphere::new(Point::new(Val(1.0), Val(1.0), Val(-2.0)), Val(1.0))?,
+        Sphere::new(Point::new(Val(1.0), Val(1.0), Val(-3.0)), Val(1.0))?,
         Diffuse::new(Color::YELLOW),
     );
     scene.add(
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(0.0), Val(0.0), Val(-2.0)),
             -UnitVector::y_direction(),
         ),
-        Diffuse::new(Color::new(Val(0.1), Val(0.1), Val(0.1))),
+        Specular::new(Color::WHITE * Val(0.4)),
     );
 
     let renderer = CoreRenderer::new(

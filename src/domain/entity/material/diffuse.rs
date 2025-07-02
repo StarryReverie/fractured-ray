@@ -18,7 +18,7 @@ impl Diffuse {
         Self { albedo }
     }
 
-    fn generate_ray_trace(
+    fn generate_incident_ray_trace(
         &self,
         intersection: &RayIntersection,
         rng: &mut dyn RngCore,
@@ -64,7 +64,7 @@ impl Material for Diffuse {
         depth: usize,
     ) -> Ray {
         let mut rng = rand::rng();
-        let incident_ray_trace = self.generate_ray_trace(&intersection, &mut rng);
+        let incident_ray_trace = self.generate_incident_ray_trace(&intersection, &mut rng);
         self.shade_impl(
             renderer,
             outgoing_ray_trace,
