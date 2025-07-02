@@ -7,7 +7,7 @@ use crate::domain::renderer::Renderer;
 pub trait Material: Debug + Send + Sync + 'static {
     fn shade(
         &self,
-        renderer: &Renderer,
+        renderer: &dyn Renderer,
         ray_trace: RayTrace,
         intersection: RayIntersection,
         depth: usize,

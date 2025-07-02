@@ -1,5 +1,5 @@
 use crate::domain::ray::{Ray, RayTrace};
-use crate::domain::renderer::Renderer;
+use crate::domain::renderer::CoreRenderer;
 
 use super::material::Material;
 use super::shape::{DisRange, RayIntersection, Shape};
@@ -39,7 +39,7 @@ impl Entity {
 
     pub fn shade(
         &self,
-        renderer: &Renderer,
+        renderer: &CoreRenderer,
         ray_trace: RayTrace,
         intersection: RayIntersection,
         depth: usize,

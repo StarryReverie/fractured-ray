@@ -8,14 +8,21 @@ use crate::domain::entity::shape::DisRange;
 use crate::domain::image::Image;
 use crate::domain::ray::{Ray, RayTrace};
 
+#[cfg_attr(test, mockall::automock)]
+pub trait Renderer: Send + Sync + 'static {
+    fn render(&self) -> Image;
+
+    fn trace(&self, ray_trace: RayTrace, range: DisRange, depth: usize) -> Ray;
+}
+
 #[derive(Debug)]
-pub struct Renderer {
+pub struct CoreRenderer {
     camera: Camera,
     scene: Scene,
     config: Configuration,
 }
 
-impl Renderer {
+impl CoreRenderer {
     pub fn new(
         camera: Camera,
         scene: Scene,
@@ -30,8 +37,10 @@ impl Renderer {
             config,
         })
     }
+}
 
-    pub fn render(&self) -> Image {
+impl Renderer for CoreRenderer {
+    fn render(&self) -> Image {
         let mut rng = rand::rng();
         let mut image = Image::new(self.camera.resolution().clone());
 
@@ -60,7 +69,7 @@ impl Renderer {
         image
     }
 
-    pub fn trace(&self, ray_trace: RayTrace, range: DisRange, depth: usize) -> Ray {
+    fn trace(&self, ray_trace: RayTrace, range: DisRange, depth: usize) -> Ray {
         if depth > self.config.tracing_depth {
             return Ray::new(
                 RayTrace::new(ray_trace.start(), -ray_trace.direction()),

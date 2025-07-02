@@ -7,7 +7,7 @@ use fractured_ray::domain::entity::Scene;
 use fractured_ray::domain::entity::material::Diffuse;
 use fractured_ray::domain::entity::shape::Sphere;
 use fractured_ray::domain::geometry::{Point, UnitVector};
-use fractured_ray::domain::renderer::{Configuration, Renderer};
+use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::infrastructure::image::PpmWriter;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         Diffuse::new(Color::new(0.1, 0.1, 0.1)),
     );
 
-    let renderer = Renderer::new(
+    let renderer = CoreRenderer::new(
         camera,
         scene,
         Configuration {
