@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     scene.add(
         Sphere::new(Point::new(Val(0.0), Val(4.0), Val(-1.0)), Val(1.0))?,
-        Emissive::new(Color::WHITE * Val(10.0)),
+        Emissive::new(Color::WHITE),
     );
 
     scene.add(
@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene,
         Configuration {
-            ssaa_samples: 32,
+            ssaa_samples: 16,
             ..Configuration::default()
         },
     )?;

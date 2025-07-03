@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::entity::shape::{DisRange, RayIntersection};
-use crate::domain::geometry::{Product, Val, Vector};
+use crate::domain::geometry::{Val, Vector};
 use crate::domain::ray::{Ray, RayTrace};
 use crate::domain::renderer::Renderer;
 
@@ -27,12 +27,10 @@ impl Diffuse {
         loop {
             let (x, y, z) = rng.random::<(f64, f64, f64)>();
             let (x, y, z) = (Val(x * 2.0 - 1.0), Val(y * 2.0 - 1.0), Val(z * 2.0 - 1.0));
-            let direction = Vector::new(x, y, z);
-            if direction.norm_squared() > Val(0.0) && direction.dot(normal) > Val(0.0) {
-                let direction = direction
-                    .normalize()
-                    .expect("direction should not be zero vector");
-                return RayTrace::new(intersection.position(), direction);
+            if let Ok(unit) = Vector::new(x, y, z).normalize() {
+                if let Ok(direction) = (normal + unit).normalize() {
+                    return RayTrace::new(intersection.position(), direction);
+                }
             }
         }
     }
@@ -40,16 +38,14 @@ impl Diffuse {
     fn shade_impl(
         &self,
         renderer: &dyn Renderer,
-        ray_trace: RayTrace,
-        intersection: RayIntersection,
+        outgoing_ray_trace: RayTrace,
         depth: usize,
         incident_ray_trace: RayTrace,
     ) -> Ray {
         let incident_ray = renderer.trace(incident_ray_trace, DisRange::positive(), depth + 1);
-        let cos_angle = intersection.normal().dot(incident_ray.direction()).abs();
-        let color = cos_angle * incident_ray.color() * self.albedo;
+        let color = incident_ray.color() * self.albedo;
         Ray::new(
-            RayTrace::new(ray_trace.start(), -ray_trace.direction()),
+            RayTrace::new(outgoing_ray_trace.start(), -outgoing_ray_trace.direction()),
             color,
         )
     }
@@ -65,20 +61,13 @@ impl Material for Diffuse {
     ) -> Ray {
         let mut rng = rand::rng();
         let incident_ray_trace = self.generate_incident_ray_trace(&intersection, &mut rng);
-        self.shade_impl(
-            renderer,
-            outgoing_ray_trace,
-            intersection,
-            depth,
-            incident_ray_trace,
-        )
+        self.shade_impl(renderer, outgoing_ray_trace, depth, incident_ray_trace)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::entity::shape::SurfaceSide;
-    use crate::domain::geometry::{Point, UnitVector};
+    use crate::domain::geometry::Point;
     use crate::domain::renderer::MockRenderer;
 
     use super::*;
@@ -100,18 +89,11 @@ mod tests {
             )
         });
 
-        let ray_trace = RayTrace::new(
+        let outgoing_ray_trace = RayTrace::new(
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
             Vector::new(Val(0.0), Val(1.0), Val(-2.0))
                 .normalize()
                 .unwrap(),
-        );
-
-        let intersection = RayIntersection::new(
-            Val(5.0).sqrt(),
-            Point::new(Val(0.0), Val(1.0), Val(-2.0)),
-            -UnitVector::y_direction(),
-            SurfaceSide::Front,
         );
 
         let incident_ray_trace = RayTrace::new(
@@ -121,7 +103,7 @@ mod tests {
                 .unwrap(),
         );
 
-        let ray = diffuse.shade_impl(&renderer, ray_trace, intersection, 1, incident_ray_trace);
+        let ray = diffuse.shade_impl(&renderer, outgoing_ray_trace, 1, incident_ray_trace);
 
         let expected = Color::new(Val(0.6), Val(0.6), Val(0.6))
             * Color::new(Val(0.8), Val(0.8), Val(0.8))
