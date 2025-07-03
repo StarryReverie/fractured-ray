@@ -108,7 +108,7 @@ impl Renderer for CoreRenderer {
         } else {
             Ray::new(
                 RayTrace::new(ray_trace.start(), -ray_trace.direction()),
-                Color::WHITE,
+                self.config.background_color,
             )
         }
     }
@@ -118,6 +118,7 @@ impl Renderer for CoreRenderer {
 pub struct Configuration {
     pub ssaa_samples: usize,
     pub tracing_depth: usize,
+    pub background_color: Color,
 }
 
 impl Default for Configuration {
@@ -125,6 +126,7 @@ impl Default for Configuration {
         Self {
             ssaa_samples: 4,
             tracing_depth: 8,
+            background_color: Color::BLACK,
         }
     }
 }
