@@ -6,7 +6,7 @@ use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Color;
 use crate::domain::entity::Scene;
 use crate::domain::entity::shape::DisRange;
-use crate::domain::geometry::Val;
+use crate::domain::geometry::{Val, WrappedVal};
 use crate::domain::image::Image;
 use crate::domain::ray::{Ray, RayTrace};
 
@@ -44,8 +44,8 @@ impl CoreRenderer {
         let mut rng = rand::rng();
 
         let offset = Offset::new(
-            Val::from(rng.random::<f64>()),
-            Val::from(rng.random::<f64>()),
+            Val::from(rng.random::<WrappedVal>()),
+            Val::from(rng.random::<WrappedVal>()),
         )
         .expect("offset range should be bounded to [0, 1)");
 

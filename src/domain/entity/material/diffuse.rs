@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::entity::shape::{DisRange, RayIntersection};
-use crate::domain::geometry::{Val, Vector};
+use crate::domain::geometry::{Val, Vector, WrappedVal};
 use crate::domain::ray::{Ray, RayTrace};
 use crate::domain::renderer::Renderer;
 
@@ -25,7 +25,7 @@ impl Diffuse {
     ) -> RayTrace {
         let normal = intersection.normal();
         loop {
-            let (x, y, z) = rng.random::<(f64, f64, f64)>();
+            let (x, y, z) = rng.random::<(WrappedVal, WrappedVal, WrappedVal)>();
             let (x, y, z) = (Val(x * 2.0 - 1.0), Val(y * 2.0 - 1.0), Val(z * 2.0 - 1.0));
             if let Ok(unit) = Vector::new(x, y, z).normalize() {
                 if let Ok(direction) = (normal + unit).normalize() {
@@ -105,9 +105,8 @@ mod tests {
 
         let ray = diffuse.shade_impl(&renderer, outgoing_ray_trace, 1, incident_ray_trace);
 
-        let expected = Color::new(Val(0.6), Val(0.6), Val(0.6))
-            * Color::new(Val(0.8), Val(0.8), Val(0.8))
-            * (Val(2.0) / Val(3.0));
+        let expected =
+            Color::new(Val(0.6), Val(0.6), Val(0.6)) * Color::new(Val(0.8), Val(0.8), Val(0.8));
         assert_eq!(ray.color().red(), expected.red());
         assert_eq!(ray.color().green(), expected.green());
         assert_eq!(ray.color().blue(), expected.blue());

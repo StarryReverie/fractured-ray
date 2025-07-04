@@ -3,13 +3,13 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::str::FromStr;
 
-type Wrapped = f64;
+pub type WrappedVal = f64;
 
 #[derive(Debug, Default, Clone, Copy)]
-pub struct Val(pub Wrapped);
+pub struct Val(pub WrappedVal);
 
 impl Val {
-    pub const PRECISION: Wrapped = 1e-8;
+    pub const PRECISION: WrappedVal = 1e-8;
 
     #[inline(always)]
     pub fn mul_add(self, a: Self, b: Self) -> Self {
@@ -341,13 +341,13 @@ impl Display for Val {
     }
 }
 
-impl From<Wrapped> for Val {
-    fn from(value: Wrapped) -> Self {
+impl From<WrappedVal> for Val {
+    fn from(value: WrappedVal) -> Self {
         Self(value)
     }
 }
 
-impl From<Val> for Wrapped {
+impl From<Val> for WrappedVal {
     fn from(value: Val) -> Self {
         value.0
     }
@@ -357,7 +357,7 @@ macro_rules! impl_primitive_conversions_for_val {
     ($t:ty) => {
         impl From<$t> for Val {
             fn from(value: $t) -> Self {
-                Self(value as Wrapped)
+                Self(value as WrappedVal)
             }
         }
 
@@ -383,9 +383,9 @@ impl_primitive_conversions_for_val!(u128);
 impl_primitive_conversions_for_val!(usize);
 
 impl FromStr for Val {
-    type Err = <Wrapped as FromStr>::Err;
+    type Err = <WrappedVal as FromStr>::Err;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Val(Wrapped::from_str(s)?))
+        Ok(Val(WrappedVal::from_str(s)?))
     }
 }
