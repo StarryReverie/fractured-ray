@@ -1,7 +1,7 @@
 use std::ops::RangeBounds;
 
 use crate::domain::geometry::{Point, Product, UnitVector, Val};
-use crate::domain::ray::RayTrace;
+use crate::domain::ray::Ray;
 
 use super::{DisRange, RayIntersection, Shape, SurfaceSide};
 
@@ -25,7 +25,7 @@ impl Plane {
     }
 
     pub fn calc_ray_intersection(
-        ray: &RayTrace,
+        ray: &Ray,
         range: DisRange,
         point: &Point,
         normal: &UnitVector,
@@ -52,7 +52,7 @@ impl Plane {
 }
 
 impl Shape for Plane {
-    fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection> {
+    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         Self::calc_ray_intersection(ray, range, &self.point, &self.normal)
     }
 }
@@ -69,13 +69,13 @@ mod tests {
             Point::new(Val(-1.0), Val(0.0), Val(0.0)),
             UnitVector::x_direction(),
         );
-        let ray_trace = RayTrace::new(
+        let ray = Ray::new(
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
             Vector::new(Val(-1.0), Val(0.0), Val(-1.0))
                 .normalize()
                 .unwrap(),
         );
-        let intersection = plane.hit(&ray_trace, DisRange::positive()).unwrap();
+        let intersection = plane.hit(&ray, DisRange::positive()).unwrap();
         assert_eq!(intersection.distance(), Val(2.0).sqrt());
         assert_eq!(
             intersection.position(),

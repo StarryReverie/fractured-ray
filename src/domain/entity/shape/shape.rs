@@ -2,10 +2,10 @@ use std::fmt::Debug;
 use std::ops::{Bound, RangeBounds};
 
 use crate::domain::geometry::{Point, UnitVector, Val};
-use crate::domain::ray::RayTrace;
+use crate::domain::ray::Ray;
 
 pub trait Shape: Debug + Send + Sync + 'static {
-    fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection>;
+    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection>;
 }
 
 #[derive(Debug, Clone, PartialEq)]

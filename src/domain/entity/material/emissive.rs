@@ -1,6 +1,6 @@
 use crate::domain::color::Color;
 use crate::domain::entity::shape::RayIntersection;
-use crate::domain::ray::RayTrace;
+use crate::domain::ray::Ray;
 use crate::domain::renderer::Renderer;
 
 use super::Material;
@@ -20,7 +20,7 @@ impl Material for Emissive {
     fn shade(
         &self,
         _renderer: &dyn Renderer,
-        _outgoing_ray_trace: RayTrace,
+        _ray: Ray,
         _intersection: RayIntersection,
         _depth: usize,
     ) -> Color {

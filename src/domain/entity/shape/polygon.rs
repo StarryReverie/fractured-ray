@@ -2,7 +2,7 @@ use smallvec::SmallVec;
 use snafu::prelude::*;
 
 use crate::domain::geometry::{Point, Product, UnitVector, Val};
-use crate::domain::ray::RayTrace;
+use crate::domain::ray::Ray;
 
 use super::{DisRange, Plane, RayIntersection, Shape, Triangle, TryNewTriangleError};
 
@@ -83,13 +83,13 @@ impl Polygon {
     }
 
     pub fn calc_ray_intersection(
-        ray_trace: &RayTrace,
+        ray: &Ray,
         range: DisRange,
         vertices: &[&Point],
         normal: &UnitVector,
     ) -> Option<RayIntersection> {
         assert!(vertices.len() > 3);
-        let intersection = Plane::calc_ray_intersection(ray_trace, range, vertices[0], normal)?;
+        let intersection = Plane::calc_ray_intersection(ray, range, vertices[0], normal)?;
         if Self::is_intersection_inside_polygon(&intersection, vertices) {
             Some(intersection)
         } else {
@@ -150,7 +150,7 @@ impl Polygon {
 }
 
 impl Shape for Polygon {
-    fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection> {
+    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         match &self.0 {
             PolygonInner::Triangle(triangle) => triangle.hit(ray, range),
             PolygonInner::General { vertices, normal } => {
@@ -262,12 +262,12 @@ mod tests {
         ])
         .unwrap();
 
-        let ray_trace = RayTrace::new(
+        let ray = Ray::new(
             Point::new(Val(-2.0), Val(0.0), Val(2.0)),
             UnitVector::x_direction(),
         );
 
-        let intersection = polygon.hit(&ray_trace, DisRange::positive()).unwrap();
+        let intersection = polygon.hit(&ray, DisRange::positive()).unwrap();
         assert_eq!(intersection.distance(), Val(1.8));
         assert_eq!(
             intersection.position(),
@@ -278,7 +278,7 @@ mod tests {
             Vector::new(
                 Val(-0.8451542547285166),
                 Val(-0.1690308509457033),
-                Val(-0.50709255283711)
+                Val(-0.50709255283711),
             )
             .normalize()
             .unwrap(),
@@ -296,10 +296,10 @@ mod tests {
         ])
         .unwrap();
 
-        let ray_trace = RayTrace::new(
+        let ray = Ray::new(
             Point::new(Val(0.0), Val(1.0), Val(0.0)),
             UnitVector::x_direction(),
         );
-        assert!(dbg!(polygon.hit(&ray_trace, DisRange::positive())).is_none());
+        assert!(dbg!(polygon.hit(&ray, DisRange::positive())).is_none());
     }
 }

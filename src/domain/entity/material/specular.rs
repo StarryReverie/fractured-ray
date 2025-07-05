@@ -1,7 +1,7 @@
 use crate::domain::color::Color;
 use crate::domain::entity::shape::{DisRange, RayIntersection};
 use crate::domain::geometry::{Product, Val};
-use crate::domain::ray::RayTrace;
+use crate::domain::ray::Ray;
 use crate::domain::renderer::Renderer;
 
 use super::Material;
@@ -16,18 +16,14 @@ impl Specular {
         Self { albedo }
     }
 
-    fn calc_incident_ray_trace(
-        &self,
-        outgoing_ray_trace: &RayTrace,
-        intersection: RayIntersection,
-    ) -> RayTrace {
+    fn calc_reflective_ray(&self, ray: &Ray, intersection: RayIntersection) -> Ray {
         let normal = intersection.normal();
-        let dir = outgoing_ray_trace.direction();
-        RayTrace::new(
+        let dir = ray.direction();
+        Ray::new(
             intersection.position(),
             (dir - Val(2.0) * dir.dot(normal) * normal)
                 .normalize()
-                .expect("incident ray trace's direction should not be zero vector"),
+                .expect("reflective ray's direction should not be zero vector"),
         )
     }
 }
@@ -36,12 +32,12 @@ impl Material for Specular {
     fn shade(
         &self,
         renderer: &dyn Renderer,
-        outgoing_ray_trace: RayTrace,
+        ray: Ray,
         intersection: RayIntersection,
         depth: usize,
     ) -> Color {
-        let incident_ray_trace = self.calc_incident_ray_trace(&outgoing_ray_trace, intersection);
-        let color = renderer.trace(incident_ray_trace, DisRange::positive(), depth + 1);
+        let reflective_ray = self.calc_reflective_ray(&ray, intersection);
+        let color = renderer.trace(reflective_ray, DisRange::positive(), depth + 1);
         color * self.albedo
     }
 }

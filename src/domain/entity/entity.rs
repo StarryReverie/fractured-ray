@@ -1,5 +1,5 @@
 use crate::domain::color::Color;
-use crate::domain::ray::RayTrace;
+use crate::domain::ray::Ray;
 use crate::domain::renderer::CoreRenderer;
 
 use super::material::Material;
@@ -34,18 +34,17 @@ impl Entity {
         self.id
     }
 
-    pub fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection> {
+    pub fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         self.shape.hit(ray, range)
     }
 
     pub fn shade(
         &self,
         renderer: &CoreRenderer,
-        outgoing_ray_trace: RayTrace,
+        ray: Ray,
         intersection: RayIntersection,
         depth: usize,
     ) -> Color {
-        self.material
-            .shade(renderer, outgoing_ray_trace, intersection, depth)
+        self.material.shade(renderer, ray, intersection, depth)
     }
 }

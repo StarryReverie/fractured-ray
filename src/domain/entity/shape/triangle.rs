@@ -4,7 +4,7 @@ use snafu::prelude::*;
 
 use crate::domain::entity::shape::SurfaceSide;
 use crate::domain::geometry::{Point, Product, Val};
-use crate::domain::ray::RayTrace;
+use crate::domain::ray::Ray;
 
 use super::{DisRange, RayIntersection, Shape};
 
@@ -46,7 +46,7 @@ impl Triangle {
     }
 
     pub fn calc_ray_intersection(
-        ray_trace: &RayTrace,
+        ray: &Ray,
         range: DisRange,
         vertex0: &Point,
         vertex1: &Point,
@@ -54,21 +54,21 @@ impl Triangle {
     ) -> Option<RayIntersection> {
         let side1 = *vertex1 - *vertex0;
         let side2 = *vertex2 - *vertex0;
-        let vec0 = ray_trace.direction().cross(side2);
+        let vec0 = ray.direction().cross(side2);
         let det = side1.dot(vec0);
         if det == Val(0.0) {
             return None;
         }
 
         let inv_det = det.recip();
-        let vec1 = ray_trace.start() - *vertex0;
+        let vec1 = ray.start() - *vertex0;
         let u = vec0.dot(vec1) * inv_det;
         if !(Val(0.0)..=Val(1.0)).contains(&u) {
             return None;
         }
 
         let vec2 = vec1.cross(side1);
-        let v = ray_trace.direction().dot(vec2) * inv_det;
+        let v = ray.direction().dot(vec2) * inv_det;
         if !(Val(0.0)..=(Val(1.0) - u)).contains(&v) {
             return None;
         }
@@ -78,12 +78,12 @@ impl Triangle {
             return None;
         }
 
-        let position = ray_trace.at(distance);
+        let position = ray.at(distance);
         let normal = side1
             .cross(side2)
             .normalize()
             .expect("side1 and side2 should not be zero vectors and should not be parallel");
-        let (normal, side) = if ray_trace.direction().dot(normal) < Val(0.0) {
+        let (normal, side) = if ray.direction().dot(normal) < Val(0.0) {
             (normal, SurfaceSide::Front)
         } else {
             (-normal, SurfaceSide::Back)
@@ -93,7 +93,7 @@ impl Triangle {
 }
 
 impl Shape for Triangle {
-    fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection> {
+    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         Self::calc_ray_intersection(ray, range, &self.vertex0, &self.vertex1, &self.vertex2)
     }
 }
@@ -161,12 +161,12 @@ mod tests {
         )
         .unwrap();
 
-        let ray_trace = RayTrace::new(
+        let ray = Ray::new(
             Point::new(Val(0.0), Val(0.5), Val(1.0)),
             UnitVector::x_direction(),
         );
 
-        let intersection = triangle.hit(&ray_trace, DisRange::positive()).unwrap();
+        let intersection = triangle.hit(&ray, DisRange::positive()).unwrap();
         assert_eq!(intersection.distance(), Val(0.41666666666666663));
         assert_eq!(
             intersection.position(),
@@ -184,14 +184,14 @@ mod tests {
         )
         .unwrap();
 
-        let ray_trace = RayTrace::new(
+        let ray = Ray::new(
             Point::new(Val(0.0), Val(0.0), Val(0.5)),
             Vector::new(Val(0.0), Val(1.0), Val(-0.5))
                 .normalize()
                 .unwrap(),
         );
 
-        let intersection = triangle.hit(&ray_trace, DisRange::positive());
+        let intersection = triangle.hit(&ray, DisRange::positive());
         assert!(intersection.is_none());
     }
 }

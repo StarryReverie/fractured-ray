@@ -1,34 +1,39 @@
-use crate::domain::{
-    color::Color,
-    geometry::{Point, UnitVector, Val},
-};
-
-use super::RayTrace;
+use crate::domain::geometry::{Point, UnitVector, Val};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Ray {
-    trace: RayTrace,
-    color: Color,
+    start: Point,
+    direction: UnitVector,
 }
 
 impl Ray {
-    pub fn new(trace: RayTrace, color: Color) -> Self {
-        Self { trace, color }
+    pub fn new(start: Point, direction: UnitVector) -> Self {
+        Self { start, direction }
     }
 
     pub fn start(&self) -> Point {
-        self.trace.start()
+        self.start
     }
 
     pub fn direction(&self) -> UnitVector {
-        self.trace.direction()
-    }
-
-    pub fn color(&self) -> Color {
-        self.color
+        self.direction
     }
 
     pub fn at(&self, distance: Val) -> Point {
-        self.trace.at(distance)
+        self.start + distance * self.direction
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ray_at_succeeds() {
+        let ray = Ray::new(
+            Point::new(Val(0.0), Val(1.0), Val(0.0)),
+            UnitVector::x_direction(),
+        );
+        assert_eq!(ray.at(Val(1.0)), Point::new(Val(1.0), Val(1.0), Val(0.0)));
     }
 }

@@ -1,4 +1,4 @@
-use crate::domain::ray::RayTrace;
+use crate::domain::ray::Ray;
 
 use super::Entity;
 use super::entity::Id;
@@ -25,7 +25,7 @@ impl Scene {
 
     pub fn find_intersection(
         &self,
-        ray_trace: &RayTrace,
+        ray: &Ray,
         mut range: DisRange,
     ) -> Option<(RayIntersection, &Entity)> {
         let mut closet: Option<RayIntersection> = None;
@@ -35,7 +35,7 @@ impl Scene {
             if let Some(closet) = &closet {
                 range = range.shrink_end(closet.distance());
             }
-            let Some(intersection) = entity.hit(ray_trace, range) else {
+            let Some(intersection) = entity.hit(ray, range) else {
                 continue;
             };
             if let Some(closet) = &mut closet {

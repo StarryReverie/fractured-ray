@@ -3,7 +3,7 @@ use std::ops::RangeBounds;
 use snafu::prelude::*;
 
 use crate::domain::geometry::{Point, Product, Val};
-use crate::domain::ray::RayTrace;
+use crate::domain::ray::Ray;
 
 use super::{DisRange, RayIntersection, Shape, SurfaceSide};
 
@@ -36,7 +36,7 @@ impl Sphere {
 }
 
 impl Shape for Sphere {
-    fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection> {
+    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         let a = ray.direction().norm_squared();
         let b = Val(2.0) * (ray.start() - self.center).dot(ray.direction());
         let c = (ray.start() - self.center).norm_squared() - self.radius * self.radius;
@@ -101,7 +101,7 @@ mod tests {
     #[test]
     fn sphere_hit_succeeds_returning_intersection_outside() {
         let sphere = Sphere::new(Point::new(Val(0.0), Val(1.0), Val(0.0)), Val(1.0)).unwrap();
-        let ray = RayTrace::new(
+        let ray = Ray::new(
             Point::new(Val(2.0), Val(0.0), Val(0.0)),
             Vector::new(Val(-1.0), Val(1.0), Val(0.0))
                 .normalize()
@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn sphere_hit_succeeds_returning_tangent_intersection() {
         let sphere = Sphere::new(Point::new(Val(1.0), Val(0.5), Val(-1.0)), Val(0.5)).unwrap();
-        let ray = RayTrace::new(
+        let ray = Ray::new(
             Point::new(Val(0.5), Val(0.5), Val(1.0)),
             -UnitVector::z_direction(),
         );
@@ -131,7 +131,7 @@ mod tests {
     #[test]
     fn sphere_hit_succeeds_returning_intersection_inside() {
         let sphere = Sphere::new(Point::new(Val(0.0), Val(1.0), Val(0.0)), Val(1.0)).unwrap();
-        let ray = RayTrace::new(
+        let ray = Ray::new(
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
             Vector::new(Val(1.0), Val(1.0), Val(0.0))
                 .normalize()
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn shpere_hit_succeeds_returning_none() {
         let sphere = Sphere::new(Point::new(Val(0.0), Val(1.0), Val(0.0)), Val(1.0)).unwrap();
-        let ray = RayTrace::new(
+        let ray = Ray::new(
             Point::new(Val(0.0), Val(0.0), Val(1.000001)),
             UnitVector::y_direction(),
         );
