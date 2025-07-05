@@ -1,7 +1,8 @@
-pub mod entity;
 pub mod material;
-pub mod scene;
 pub mod shape;
+
+mod entity;
+mod scene;
 
 pub use entity::Entity;
 pub use scene::Scene;
