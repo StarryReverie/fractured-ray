@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::iter::{Product, Sum};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::str::FromStr;
 
@@ -332,6 +333,18 @@ impl Neg for Val {
     #[inline(always)]
     fn neg(self) -> Self::Output {
         Val(-self.0)
+    }
+}
+
+impl Sum for Val {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Val(0.0), |sum, x| sum + x)
+    }
+}
+
+impl Product for Val {
+    fn product<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Val(1.0), |prod, x| prod * x)
     }
 }
 
