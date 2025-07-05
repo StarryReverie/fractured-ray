@@ -1,7 +1,8 @@
 use std::fmt::Debug;
 
+use crate::domain::color::Color;
 use crate::domain::entity::shape::RayIntersection;
-use crate::domain::ray::{Ray, RayTrace};
+use crate::domain::ray::RayTrace;
 use crate::domain::renderer::Renderer;
 
 pub trait Material: Debug + Send + Sync + 'static {
@@ -11,5 +12,5 @@ pub trait Material: Debug + Send + Sync + 'static {
         outgoing_ray_trace: RayTrace,
         intersection: RayIntersection,
         depth: usize,
-    ) -> Ray;
+    ) -> Color;
 }

@@ -1,18 +1,18 @@
 use crate::domain::color::Color;
 use crate::domain::entity::shape::RayIntersection;
-use crate::domain::ray::{Ray, RayTrace};
+use crate::domain::ray::RayTrace;
 use crate::domain::renderer::Renderer;
 
 use super::Material;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Emissive {
-    intensity: Color,
+    radiance: Color,
 }
 
 impl Emissive {
-    pub fn new(intensity: Color) -> Self {
-        Self { intensity }
+    pub fn new(radiance: Color) -> Self {
+        Self { radiance }
     }
 }
 
@@ -20,13 +20,10 @@ impl Material for Emissive {
     fn shade(
         &self,
         _renderer: &dyn Renderer,
-        outgoing_ray_trace: RayTrace,
+        _outgoing_ray_trace: RayTrace,
         _intersection: RayIntersection,
         _depth: usize,
-    ) -> Ray {
-        Ray::new(
-            RayTrace::new(outgoing_ray_trace.start(), -outgoing_ray_trace.direction()),
-            self.intensity,
-        )
+    ) -> Color {
+        self.radiance
     }
 }

@@ -1,4 +1,5 @@
-use crate::domain::ray::{Ray, RayTrace};
+use crate::domain::color::Color;
+use crate::domain::ray::RayTrace;
 use crate::domain::renderer::CoreRenderer;
 
 use super::material::Material;
@@ -43,7 +44,7 @@ impl Entity {
         outgoing_ray_trace: RayTrace,
         intersection: RayIntersection,
         depth: usize,
-    ) -> Ray {
+    ) -> Color {
         self.material
             .shade(renderer, outgoing_ray_trace, intersection, depth)
     }

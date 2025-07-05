@@ -8,13 +8,13 @@ use crate::domain::entity::Scene;
 use crate::domain::entity::shape::DisRange;
 use crate::domain::geometry::{Val, WrappedVal};
 use crate::domain::image::Image;
-use crate::domain::ray::{Ray, RayTrace};
+use crate::domain::ray::RayTrace;
 
 #[cfg_attr(test, mockall::automock)]
 pub trait Renderer: Send + Sync + 'static {
     fn render(&self) -> Image;
 
-    fn trace(&self, ray_trace: RayTrace, range: DisRange, depth: usize) -> Ray;
+    fn trace(&self, ray_trace: RayTrace, range: DisRange, depth: usize) -> Color;
 }
 
 #[derive(Debug)]
@@ -40,7 +40,7 @@ impl CoreRenderer {
         })
     }
 
-    fn render_pixel(&self, (row, column): (usize, usize)) -> Ray {
+    fn render_pixel(&self, (row, column): (usize, usize)) -> Color {
         let mut rng = rand::rng();
 
         let offset = Offset::new(
@@ -84,8 +84,8 @@ impl Renderer for CoreRenderer {
                 .map(|pos| (pos, self.render_pixel(pos)))
                 .collect_vec_list();
 
-            for ((row, column), ray) in res.into_iter().flatten() {
-                image.record(row, column, ray.color());
+            for ((row, column), color) in res.into_iter().flatten() {
+                image.record(row, column, color);
             }
 
             println!("finished batch #{batch}");
@@ -94,22 +94,16 @@ impl Renderer for CoreRenderer {
         image
     }
 
-    fn trace(&self, ray_trace: RayTrace, range: DisRange, depth: usize) -> Ray {
+    fn trace(&self, ray_trace: RayTrace, range: DisRange, depth: usize) -> Color {
         if depth > self.config.tracing_depth {
-            return Ray::new(
-                RayTrace::new(ray_trace.start(), -ray_trace.direction()),
-                Color::BLACK,
-            );
+            return Color::BLACK;
         }
 
         let res = self.scene.find_intersection(&ray_trace, range);
         if let Some((intersection, entity)) = res {
             entity.shade(self, ray_trace, intersection, depth)
         } else {
-            Ray::new(
-                RayTrace::new(ray_trace.start(), -ray_trace.direction()),
-                self.config.background_color,
-            )
+            self.config.background_color
         }
     }
 }

@@ -1,7 +1,7 @@
 use crate::domain::color::Color;
 use crate::domain::entity::shape::{DisRange, RayIntersection};
 use crate::domain::geometry::{Product, Val};
-use crate::domain::ray::{Ray, RayTrace};
+use crate::domain::ray::RayTrace;
 use crate::domain::renderer::Renderer;
 
 use super::Material;
@@ -39,13 +39,9 @@ impl Material for Specular {
         outgoing_ray_trace: RayTrace,
         intersection: RayIntersection,
         depth: usize,
-    ) -> Ray {
+    ) -> Color {
         let incident_ray_trace = self.calc_incident_ray_trace(&outgoing_ray_trace, intersection);
-        let incident_ray = renderer.trace(incident_ray_trace, DisRange::positive(), depth + 1);
-        let color = incident_ray.color() * self.albedo;
-        Ray::new(
-            RayTrace::new(outgoing_ray_trace.start(), -outgoing_ray_trace.direction()),
-            color,
-        )
+        let color = renderer.trace(incident_ray_trace, DisRange::positive(), depth + 1);
+        color * self.albedo
     }
 }

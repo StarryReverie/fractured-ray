@@ -3,7 +3,7 @@ use rand::prelude::*;
 use crate::domain::color::Color;
 use crate::domain::entity::shape::{DisRange, RayIntersection};
 use crate::domain::geometry::{Val, Vector, WrappedVal};
-use crate::domain::ray::{Ray, RayTrace};
+use crate::domain::ray::RayTrace;
 use crate::domain::renderer::Renderer;
 
 use super::Material;
@@ -38,16 +38,11 @@ impl Diffuse {
     fn shade_impl(
         &self,
         renderer: &dyn Renderer,
-        outgoing_ray_trace: RayTrace,
         depth: usize,
         incident_ray_trace: RayTrace,
-    ) -> Ray {
-        let incident_ray = renderer.trace(incident_ray_trace, DisRange::positive(), depth + 1);
-        let color = incident_ray.color() * self.albedo;
-        Ray::new(
-            RayTrace::new(outgoing_ray_trace.start(), -outgoing_ray_trace.direction()),
-            color,
-        )
+    ) -> Color {
+        let color = renderer.trace(incident_ray_trace, DisRange::positive(), depth + 1);
+        color * self.albedo
     }
 }
 
@@ -55,13 +50,13 @@ impl Material for Diffuse {
     fn shade(
         &self,
         renderer: &dyn Renderer,
-        outgoing_ray_trace: RayTrace,
+        _outgoing_ray_trace: RayTrace,
         intersection: RayIntersection,
         depth: usize,
-    ) -> Ray {
+    ) -> Color {
         let mut rng = rand::rng();
         let incident_ray_trace = self.generate_incident_ray_trace(&intersection, &mut rng);
-        self.shade_impl(renderer, outgoing_ray_trace, depth, incident_ray_trace)
+        self.shade_impl(renderer, depth, incident_ray_trace)
     }
 }
 
@@ -77,24 +72,9 @@ mod tests {
         let diffuse = Diffuse::new(Color::new(Val(0.8), Val(0.8), Val(0.8)));
 
         let mut renderer = MockRenderer::new();
-        renderer.expect_trace().returning(|_, _, _| {
-            Ray::new(
-                RayTrace::new(
-                    Point::new(Val(0.0), Val(1.0), Val(-2.0)),
-                    -Vector::new(Val(1.0), Val(-2.0), Val(-2.0))
-                        .normalize()
-                        .unwrap(),
-                ),
-                Color::new(Val(0.6), Val(0.6), Val(0.6)),
-            )
-        });
-
-        let outgoing_ray_trace = RayTrace::new(
-            Point::new(Val(0.0), Val(0.0), Val(0.0)),
-            Vector::new(Val(0.0), Val(1.0), Val(-2.0))
-                .normalize()
-                .unwrap(),
-        );
+        renderer
+            .expect_trace()
+            .returning(|_, _, _| Color::new(Val(0.6), Val(0.6), Val(0.6)));
 
         let incident_ray_trace = RayTrace::new(
             Point::new(Val(0.0), Val(1.0), Val(-2.0)),
@@ -103,12 +83,12 @@ mod tests {
                 .unwrap(),
         );
 
-        let ray = diffuse.shade_impl(&renderer, outgoing_ray_trace, 1, incident_ray_trace);
+        let color = diffuse.shade_impl(&renderer, 1, incident_ray_trace);
 
         let expected =
             Color::new(Val(0.6), Val(0.6), Val(0.6)) * Color::new(Val(0.8), Val(0.8), Val(0.8));
-        assert_eq!(ray.color().red(), expected.red());
-        assert_eq!(ray.color().green(), expected.green());
-        assert_eq!(ray.color().blue(), expected.blue());
+        assert_eq!(color.red(), expected.red());
+        assert_eq!(color.green(), expected.green());
+        assert_eq!(color.blue(), expected.blue());
     }
 }
