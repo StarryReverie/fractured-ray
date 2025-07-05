@@ -43,6 +43,20 @@ impl UnitVector {
     pub fn to_vector(&self) -> Vector {
         self.0
     }
+
+    pub fn is_perpendicular_to<V>(&self, rhs: V) -> bool
+    where
+        Self: Product<V, Output = Self>,
+    {
+        self.dot(rhs) == Val(0.0)
+    }
+
+    pub fn is_parallel_to<V>(&self, rhs: V) -> bool
+    where
+        Self: Product<V, Output = Self>,
+    {
+        self.cross(rhs).norm_squared() == Val(0.0)
+    }
 }
 
 impl TryFrom<Vector> for UnitVector {

@@ -5,24 +5,36 @@ use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::Scene;
 use fractured_ray::domain::entity::material::{Diffuse, Emissive, Specular};
-use fractured_ray::domain::entity::shape::{Plane, Sphere};
+use fractured_ray::domain::entity::shape::{Plane, Sphere, Triangle};
 use fractured_ray::domain::geometry::{Point, UnitVector, Val};
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::infrastructure::image::PngWriter;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let camera = Camera::new(
-        Point::new(Val(0.0), Val(2.0), Val(8.0)),
+        Point::new(Val(0.0), Val(2.0), Val(14.0)),
         -UnitVector::z_direction(),
         Resolution::new(1440, (16, 9))?,
         Val(2.0),
-        Val(3.0),
+        Val(5.0),
     )?;
 
     let mut scene = Scene::new();
 
     scene.add(
-        Sphere::new(Point::new(Val(0.0), Val(4.0), Val(-1.0)), Val(1.0))?,
+        Triangle::new(
+            Point::new(Val(-1.5), Val(4.0), Val(-2.5)),
+            Point::new(Val(1.5), Val(4.0), Val(-2.5)),
+            Point::new(Val(1.5), Val(4.0), Val(0.5)),
+        )?,
+        Emissive::new(Color::WHITE),
+    );
+    scene.add(
+        Triangle::new(
+            Point::new(Val(-1.5), Val(4.0), Val(-2.5)),
+            Point::new(Val(-1.5), Val(4.0), Val(0.5)),
+            Point::new(Val(1.5), Val(4.0), Val(0.5)),
+        )?,
         Emissive::new(Color::WHITE),
     );
 
@@ -55,7 +67,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
     scene.add(
         Plane::new(
-            Point::new(Val(0.0), Val(0.0), Val(8.0)),
+            Point::new(Val(0.0), Val(0.0), Val(15.0)),
             -UnitVector::z_direction(),
         ),
         Diffuse::new(Color::WHITE * Val(0.8)),

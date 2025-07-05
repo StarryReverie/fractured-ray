@@ -33,6 +33,20 @@ impl Vector {
     pub fn normalize(self) -> Result<UnitVector, TryIntoUnitVectorError> {
         self.try_into()
     }
+
+    pub fn is_perpendicular_to<V>(&self, rhs: V) -> bool
+    where
+        Self: Product<V, Output = Self>,
+    {
+        self.dot(rhs) == Val(0.0)
+    }
+
+    pub fn is_parallel_to<V>(&self, rhs: V) -> bool
+    where
+        Self: Product<V, Output = Self>,
+    {
+        self.cross(rhs).norm_squared() == Val(0.0)
+    }
 }
 
 impl Add for Vector {

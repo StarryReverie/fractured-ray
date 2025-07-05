@@ -23,20 +23,23 @@ impl Plane {
     pub fn normal(&self) -> UnitVector {
         self.normal
     }
-}
 
-impl Shape for Plane {
-    fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection> {
-        let den = ray.direction().dot(self.normal);
+    pub fn calc_ray_intersection(
+        ray: &RayTrace,
+        range: DisRange,
+        point: &Point,
+        normal: &UnitVector,
+    ) -> Option<RayIntersection> {
+        let den = ray.direction().dot(*normal);
         if den != Val(0.0) {
-            let num = (self.point - ray.start()).dot(self.normal);
+            let num = (*point - ray.start()).dot(*normal);
             let distance = num / den;
             if distance > Val(0.0) && range.contains(&distance) {
                 let position = ray.at(distance);
                 let (normal, side) = if den < Val(0.0) {
-                    (self.normal, SurfaceSide::Front)
+                    (*normal, SurfaceSide::Front)
                 } else {
-                    (-self.normal, SurfaceSide::Back)
+                    (-(*normal), SurfaceSide::Back)
                 };
                 Some(RayIntersection::new(distance, position, normal, side))
             } else {
@@ -45,6 +48,12 @@ impl Shape for Plane {
         } else {
             None
         }
+    }
+}
+
+impl Shape for Plane {
+    fn hit(&self, ray: &RayTrace, range: DisRange) -> Option<RayIntersection> {
+        Self::calc_ray_intersection(ray, range, &self.point, &self.normal)
     }
 }
 
