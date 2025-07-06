@@ -1,5 +1,7 @@
+use std::any::TypeId;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::hash::{Hash, Hasher};
 use std::iter::{Product, Sum};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::str::FromStr;
@@ -246,20 +248,37 @@ impl Val {
 impl PartialEq for Val {
     #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
-        (self.0 - other.0).abs() <= Self::PRECISION
+        self.cmp(other) == Ordering::Equal
     }
 }
+
+impl Eq for Val {}
 
 impl PartialOrd for Val {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Val {
+    #[inline]
+    fn cmp(&self, other: &Self) -> Ordering {
         let delta = self.0 - other.0;
         match (delta <= Self::PRECISION, delta >= -Self::PRECISION) {
-            (false, false) => None,
-            (false, true) => Some(Ordering::Greater),
-            (true, false) => Some(Ordering::Less),
-            (true, true) => Some(Ordering::Equal),
+            (false, false) => self.0.total_cmp(&other.0),
+            (false, true) => Ordering::Greater,
+            (true, false) => Ordering::Less,
+            (true, true) => Ordering::Equal,
         }
+    }
+}
+
+impl Hash for Val {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let bytes = self.0.to_bits();
+        state.write_u64(bytes);
+        TypeId::of::<Val>().hash(state);
     }
 }
 

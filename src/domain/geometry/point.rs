@@ -2,7 +2,7 @@ use std::ops::{Add, Sub};
 
 use super::{UnitVector, Val, Vector};
 
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Point(Vector);
 
 impl Point {

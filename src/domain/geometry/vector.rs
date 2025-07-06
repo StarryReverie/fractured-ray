@@ -2,7 +2,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use super::{Product, TryIntoUnitVectorError, UnitVector, Val};
 
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Vector(Val, Val, Val);
 
 impl Vector {

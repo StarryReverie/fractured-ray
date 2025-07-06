@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::fs::File;
 
+use smallvec::smallvec;
+
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::Scene;
@@ -43,6 +45,24 @@ fn main() -> Result<(), Box<dyn Error>> {
         Sphere::new(Point::new(Val(1.0), Val(1.0), Val(-3.0)), Val(1.0))?,
         Diffuse::new(Color::YELLOW),
     );
+
+    scene.add_mesh(
+        smallvec![
+            Point::new(Val(3.0), Val(0.0), Val(1.0)),
+            Point::new(Val(1.0), Val(0.0), Val(1.0)),
+            Point::new(Val(1.0), Val(0.0), Val(-1.0)),
+            Point::new(Val(3.0), Val(0.0), Val(-1.0)),
+            Point::new(Val(2.0), Val(2.0), Val(0.0)),
+        ],
+        vec![
+            smallvec![0, 1, 2, 3],
+            smallvec![0, 1, 4],
+            smallvec![1, 2, 4],
+            smallvec![2, 3, 4],
+            smallvec![3, 1, 4],
+        ],
+        Diffuse::new(Color::WHITE),
+    )?;
 
     scene.add(
         Plane::new(
@@ -91,7 +111,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene,
         Configuration {
-            ssaa_samples: 16,
+            ssaa_samples: 64,
             ..Configuration::default()
         },
     )?;

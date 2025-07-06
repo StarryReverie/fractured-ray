@@ -1,9 +1,12 @@
+use smallvec::SmallVec;
+
+use crate::domain::geometry::Point;
 use crate::domain::ray::Ray;
 
 use super::Entity;
 use super::entity::Id;
 use super::material::Material;
-use super::shape::{DisRange, RayIntersection, Shape};
+use super::shape::{CreateMeshShapeError, DisRange, Mesh, RayIntersection, Shape};
 
 #[derive(Debug)]
 pub struct Scene {
@@ -21,6 +24,24 @@ impl Scene {
         let id = Id::new(self.entities.len());
         self.entities.push(Entity::new(id, shape, material));
         id
+    }
+
+    pub fn add_mesh<M: Material>(
+        &mut self,
+        vertices: SmallVec<[Point; 8]>,
+        vertex_indices: Vec<SmallVec<[usize; 3]>>,
+        material: M,
+    ) -> Result<(), CreateMeshShapeError> {
+        let (triangles, polygons) = Mesh::shapes(vertices, vertex_indices, material)?;
+        for triangle in triangles {
+            let id = Id::new(self.entities.len());
+            self.entities.push(Entity::new_mesh_triangle(id, triangle));
+        }
+        for polygon in polygons {
+            let id = Id::new(self.entities.len());
+            self.entities.push(Entity::new_mesh_polygon(id, polygon));
+        }
+        Ok(())
     }
 
     pub fn find_intersection(
