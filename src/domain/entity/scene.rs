@@ -3,10 +3,9 @@ use smallvec::SmallVec;
 use crate::domain::geometry::Point;
 use crate::domain::ray::Ray;
 
-use super::Entity;
-use super::entity::Id;
 use super::material::Material;
 use super::shape::{CreateMeshShapeError, DisRange, Mesh, RayIntersection, Shape};
+use super::{Entity, Id};
 
 #[derive(Debug)]
 pub struct Scene {

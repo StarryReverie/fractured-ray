@@ -6,7 +6,7 @@ use crate::domain::entity::shape::SurfaceSide;
 use crate::domain::geometry::{Point, Product, Val};
 use crate::domain::ray::Ray;
 
-use super::{DisRange, RayIntersection, Shape};
+use super::{BoundingBox, DisRange, RayIntersection, Shape};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Triangle {
@@ -95,6 +95,13 @@ impl Triangle {
 impl Shape for Triangle {
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         Self::calc_ray_intersection(ray, range, &self.vertex0, &self.vertex1, &self.vertex2)
+    }
+
+    fn bounding_box(&self) -> Option<BoundingBox> {
+        let (v0, v1, v2) = (&self.vertex0, &self.vertex1, &self.vertex2);
+        let min = v0.component_min(v1).component_min(v2);
+        let max = v0.component_max(v1).component_max(v2);
+        Some(BoundingBox::new(min, max))
     }
 }
 
@@ -193,5 +200,23 @@ mod tests {
 
         let intersection = triangle.hit(&ray, DisRange::positive());
         assert!(intersection.is_none());
+    }
+
+    #[test]
+    fn triangle_bounding_box_succeeds() {
+        let triangle = Triangle::new(
+            Point::new(Val(1.0), Val(0.0), Val(0.0)),
+            Point::new(Val(0.0), Val(2.0), Val(0.0)),
+            Point::new(Val(0.0), Val(0.0), Val(3.0)),
+        )
+        .unwrap();
+
+        assert_eq!(
+            triangle.bounding_box(),
+            Some(BoundingBox::new(
+                Point::new(Val(0.0), Val(0.0), Val(0.0)),
+                Point::new(Val(1.0), Val(2.0), Val(3.0)),
+            )),
+        );
     }
 }

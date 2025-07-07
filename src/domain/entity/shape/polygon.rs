@@ -4,7 +4,7 @@ use snafu::prelude::*;
 use crate::domain::geometry::{Point, Product, UnitVector, Val};
 use crate::domain::ray::Ray;
 
-use super::{DisRange, Plane, RayIntersection, Shape, Triangle, TryNewTriangleError};
+use super::{BoundingBox, DisRange, Plane, RayIntersection, Shape, Triangle, TryNewTriangleError};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Polygon(PolygonInner);
@@ -159,6 +159,19 @@ impl Shape for Polygon {
             }
         }
     }
+
+    fn bounding_box(&self) -> Option<BoundingBox> {
+        match &self.0 {
+            PolygonInner::Triangle(triangle) => triangle.bounding_box(),
+            PolygonInner::General { vertices, .. } => {
+                let init = vertices[0];
+                let (min, max) = vertices.iter().fold((init, init), |(min, max), vertex| {
+                    (min.component_min(vertex), max.component_max(vertex))
+                });
+                Some(BoundingBox::new(min, max))
+            }
+        }
+    }
 }
 
 #[derive(Debug, Snafu, Clone, PartialEq, Eq)]
@@ -252,7 +265,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "reason"]
     fn polygon_hit_succeeds() {
         let polygon = Polygon::new([
             Point::new(Val(1.0), Val(0.0), Val(0.0)),
@@ -301,5 +313,24 @@ mod tests {
             UnitVector::x_direction(),
         );
         assert!(dbg!(polygon.hit(&ray, DisRange::positive())).is_none());
+    }
+
+    #[test]
+    fn polygon_bounding_box_succeeds() {
+        let polygon = Polygon::new([
+            Point::new(Val(1.0), Val(0.0), Val(0.0)),
+            Point::new(Val(0.0), Val(2.0), Val(1.0)),
+            Point::new(Val(-1.0), Val(1.0), Val(3.0)),
+            Point::new(Val(0.0), Val(-1.0), Val(2.0)),
+        ])
+        .unwrap();
+
+        assert_eq!(
+            polygon.bounding_box(),
+            Some(BoundingBox::new(
+                Point::new(Val(-1.0), Val(-1.0), Val(0.0)),
+                Point::new(Val(1.0), Val(2.0), Val(3.0)),
+            )),
+        )
     }
 }

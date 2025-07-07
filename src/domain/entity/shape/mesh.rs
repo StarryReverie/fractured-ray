@@ -11,7 +11,8 @@ use crate::domain::ray::Ray;
 use crate::domain::renderer::Renderer;
 
 use super::{
-    DisRange, Polygon, RayIntersection, Shape, Triangle, TryNewPolygonError, TryNewTriangleError,
+    BoundingBox, DisRange, Polygon, RayIntersection, Shape, Triangle, TryNewPolygonError,
+    TryNewTriangleError,
 };
 
 #[derive(Debug)]
@@ -141,6 +142,18 @@ impl Shape for MeshTriangle {
             .expect("vertex2 index has been checked during mesh construction");
         Triangle::calc_ray_intersection(ray, range, v0, v1, v2)
     }
+
+    fn bounding_box(&self) -> Option<BoundingBox> {
+        let v0 = (self.data.vertices.get(self.vertex0))
+            .expect("vertex0 index has been checked during mesh construction");
+        let v1 = (self.data.vertices.get(self.vertex1))
+            .expect("vertex1 index has been checked during mesh construction");
+        let v2 = (self.data.vertices.get(self.vertex2))
+            .expect("vertex2 index has been checked during mesh construction");
+        let min = v0.component_min(v1).component_min(v2);
+        let max = v0.component_max(v1).component_max(v2);
+        Some(BoundingBox::new(min, max))
+    }
 }
 
 impl Material for MeshTriangle {
@@ -177,6 +190,18 @@ impl Shape for MeshPolygon {
             .expect("normal existence has been checked during mesh construction");
 
         Polygon::calc_ray_intersection(ray, range, &vertices, &normal)
+    }
+
+    fn bounding_box(&self) -> Option<BoundingBox> {
+        let mut vertices = (self.vertex_indices.iter()).map(|index| {
+            (self.data.vertices.get(*index))
+                .expect("index has been checked during mesh construction")
+        });
+        let init = *vertices.next().expect("init should exist");
+        let (min, max) = vertices.fold((init, init), |(min, max), vertex| {
+            (min.component_min(vertex), max.component_max(vertex))
+        });
+        Some(BoundingBox::new(min, max))
     }
 }
 
@@ -225,5 +250,37 @@ mod tests {
 
         assert_eq!(triangles.len(), 4);
         assert_eq!(polygons.len(), 1);
+    }
+
+    #[test]
+    fn mesh_bounding_box_succeeds() {
+        let (triangles, polygons) = Mesh::shapes(
+            smallvec![
+                Point::new(Val(1.0), Val(1.0), Val(0.0)),
+                Point::new(Val(-1.0), Val(1.0), Val(0.0)),
+                Point::new(Val(-1.0), Val(-1.0), Val(0.0)),
+                Point::new(Val(1.0), Val(-1.0), Val(0.0)),
+                Point::new(Val(0.0), Val(0.0), Val(2.0)),
+            ],
+            vec![smallvec![0, 1, 2, 3], smallvec![0, 1, 4]],
+            Diffuse::new(Color::WHITE),
+        )
+        .unwrap();
+
+        assert_eq!(
+            triangles[0].bounding_box(),
+            Some(BoundingBox::new(
+                Point::new(Val(-1.0), Val(0.0), Val(0.0)),
+                Point::new(Val(1.0), Val(1.0), Val(2.0)),
+            )),
+        );
+
+        assert_eq!(
+            polygons[0].bounding_box(),
+            Some(BoundingBox::new(
+                Point::new(Val(-1.0), Val(-1.0), Val(0.0)),
+                Point::new(Val(1.0), Val(1.0), Val(0.0)),
+            )),
+        );
     }
 }

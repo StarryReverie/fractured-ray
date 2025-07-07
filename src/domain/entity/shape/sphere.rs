@@ -2,10 +2,10 @@ use std::ops::RangeBounds;
 
 use snafu::prelude::*;
 
-use crate::domain::geometry::{Point, Product, Val};
+use crate::domain::geometry::{Point, Product, Val, Vector};
 use crate::domain::ray::Ray;
 
-use super::{DisRange, RayIntersection, Shape, SurfaceSide};
+use super::{BoundingBox, DisRange, RayIntersection, Shape, SurfaceSide};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Sphere {
@@ -74,6 +74,11 @@ impl Shape for Sphere {
         };
 
         Some(RayIntersection::new(distance, position, normal, side))
+    }
+
+    fn bounding_box(&self) -> Option<BoundingBox> {
+        let d = Vector::new(self.radius, self.radius, self.radius);
+        Some(BoundingBox::new(self.center - d, self.center + d))
     }
 }
 
@@ -155,5 +160,17 @@ mod tests {
             UnitVector::y_direction(),
         );
         assert!(sphere.hit(&ray, DisRange::positive()).is_none());
+    }
+
+    #[test]
+    fn sphere_bounding_box_succeeds() {
+        let sphere = Sphere::new(Point::new(Val(0.0), Val(1.0), Val(0.0)), Val(1.0)).unwrap();
+        assert_eq!(
+            sphere.bounding_box(),
+            Some(BoundingBox::new(
+                Point::new(Val(-1.0), Val(0.0), Val(-1.0)),
+                Point::new(Val(1.0), Val(2.0), Val(1.0)),
+            )),
+        );
     }
 }
