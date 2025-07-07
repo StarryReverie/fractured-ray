@@ -6,7 +6,7 @@ use crate::domain::geometry::{Val, Vector, WrappedVal};
 use crate::domain::ray::Ray;
 use crate::domain::renderer::Renderer;
 
-use super::Material;
+use super::{Material, MaterialKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Diffuse {
@@ -42,6 +42,9 @@ impl Diffuse {
 }
 
 impl Material for Diffuse {
+    fn material_kind(&self) -> MaterialKind {
+        MaterialKind::Diffuse
+    }
     fn shade(
         &self,
         renderer: &dyn Renderer,

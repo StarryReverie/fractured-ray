@@ -3,7 +3,7 @@ use crate::domain::entity::shape::RayIntersection;
 use crate::domain::ray::Ray;
 use crate::domain::renderer::Renderer;
 
-use super::Material;
+use super::{Material, MaterialKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Emissive {
@@ -17,6 +17,9 @@ impl Emissive {
 }
 
 impl Material for Emissive {
+    fn material_kind(&self) -> MaterialKind {
+        MaterialKind::Emissive
+    }
     fn shade(
         &self,
         _renderer: &dyn Renderer,

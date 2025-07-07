@@ -5,7 +5,7 @@ use snafu::prelude::*;
 use crate::domain::geometry::{Point, Product, Val, Vector};
 use crate::domain::ray::Ray;
 
-use super::{BoundingBox, DisRange, RayIntersection, Shape, SurfaceSide};
+use super::{BoundingBox, DisRange, RayIntersection, Shape, ShapeKind, SurfaceSide};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Sphere {
@@ -36,6 +36,10 @@ impl Sphere {
 }
 
 impl Shape for Sphere {
+    fn shape_kind(&self) -> ShapeKind {
+        ShapeKind::Sphere
+    }
+
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         let a = ray.direction().norm_squared();
         let b = Val(2.0) * (ray.start() - self.center).dot(ray.direction());

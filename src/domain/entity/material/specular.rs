@@ -4,7 +4,7 @@ use crate::domain::geometry::{Product, Val};
 use crate::domain::ray::Ray;
 use crate::domain::renderer::Renderer;
 
-use super::Material;
+use super::{Material, MaterialKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Specular {
@@ -29,6 +29,10 @@ impl Specular {
 }
 
 impl Material for Specular {
+    fn material_kind(&self) -> MaterialKind {
+        MaterialKind::Specular
+    }
+
     fn shade(
         &self,
         renderer: &dyn Renderer,

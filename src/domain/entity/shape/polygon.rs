@@ -4,7 +4,9 @@ use snafu::prelude::*;
 use crate::domain::geometry::{Point, Product, UnitVector, Val};
 use crate::domain::ray::Ray;
 
-use super::{BoundingBox, DisRange, Plane, RayIntersection, Shape, Triangle, TryNewTriangleError};
+use super::{
+    BoundingBox, DisRange, Plane, RayIntersection, Shape, ShapeKind, Triangle, TryNewTriangleError,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Polygon(PolygonInner);
@@ -150,6 +152,10 @@ impl Polygon {
 }
 
 impl Shape for Polygon {
+    fn shape_kind(&self) -> ShapeKind {
+        ShapeKind::Polygon
+    }
+
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         match &self.0 {
             PolygonInner::Triangle(triangle) => triangle.hit(ray, range),

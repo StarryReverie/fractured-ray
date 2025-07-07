@@ -6,7 +6,17 @@ use crate::domain::ray::Ray;
 
 use super::BoundingBox;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ShapeKind {
+    Plane,
+    Polygon,
+    Triangle,
+    Sphere,
+}
+
 pub trait Shape: Debug + Send + Sync + 'static {
+    fn shape_kind(&self) -> ShapeKind;
+
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection>;
 
     fn bounding_box(&self) -> Option<BoundingBox>;

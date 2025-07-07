@@ -3,7 +3,7 @@ use std::ops::RangeBounds;
 use crate::domain::geometry::{Point, Product, UnitVector, Val};
 use crate::domain::ray::Ray;
 
-use super::{BoundingBox, DisRange, RayIntersection, Shape, SurfaceSide};
+use super::{BoundingBox, DisRange, RayIntersection, Shape, ShapeKind, SurfaceSide};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane {
@@ -52,6 +52,10 @@ impl Plane {
 }
 
 impl Shape for Plane {
+    fn shape_kind(&self) -> ShapeKind {
+        ShapeKind::Plane
+    }
+
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         Self::calc_ray_intersection(ray, range, &self.point, &self.normal)
     }

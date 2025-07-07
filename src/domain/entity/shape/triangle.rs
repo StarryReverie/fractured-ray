@@ -6,7 +6,7 @@ use crate::domain::entity::shape::SurfaceSide;
 use crate::domain::geometry::{Point, Product, Val};
 use crate::domain::ray::Ray;
 
-use super::{BoundingBox, DisRange, RayIntersection, Shape};
+use super::{BoundingBox, DisRange, RayIntersection, Shape, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Triangle {
@@ -93,6 +93,10 @@ impl Triangle {
 }
 
 impl Shape for Triangle {
+    fn shape_kind(&self) -> ShapeKind {
+        ShapeKind::Triangle
+    }
+
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         Self::calc_ray_intersection(ray, range, &self.vertex0, &self.vertex1, &self.vertex2)
     }

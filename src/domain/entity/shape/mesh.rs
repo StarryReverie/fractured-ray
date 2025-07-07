@@ -5,14 +5,14 @@ use smallvec::SmallVec;
 use snafu::prelude::*;
 
 use crate::domain::color::Color;
-use crate::domain::entity::material::Material;
+use crate::domain::entity::material::{Material, MaterialKind};
 use crate::domain::geometry::{Point, Product};
 use crate::domain::ray::Ray;
 use crate::domain::renderer::Renderer;
 
 use super::{
-    BoundingBox, DisRange, Polygon, RayIntersection, Shape, Triangle, TryNewPolygonError,
-    TryNewTriangleError,
+    BoundingBox, DisRange, Polygon, RayIntersection, Shape, ShapeKind, Triangle,
+    TryNewPolygonError, TryNewTriangleError,
 };
 
 #[derive(Debug)]
@@ -97,7 +97,7 @@ impl Mesh {
 
             res.push(MeshPolygon {
                 data: data.clone(),
-                vertex_indices: polygon.into_vec(),
+                vertex_indices: polygon.into_iter().collect(),
             });
         }
 
@@ -133,6 +133,10 @@ pub struct MeshTriangle {
 }
 
 impl Shape for MeshTriangle {
+    fn shape_kind(&self) -> ShapeKind {
+        ShapeKind::Triangle
+    }
+
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         let v0 = (self.data.vertices.get(self.vertex0))
             .expect("vertex0 index has been checked during mesh construction");
@@ -157,6 +161,10 @@ impl Shape for MeshTriangle {
 }
 
 impl Material for MeshTriangle {
+    fn material_kind(&self) -> MaterialKind {
+        self.data.material.material_kind()
+    }
+
     fn shade(
         &self,
         renderer: &dyn Renderer,
@@ -171,10 +179,14 @@ impl Material for MeshTriangle {
 #[derive(Debug, Clone)]
 pub struct MeshPolygon {
     data: Arc<Mesh>,
-    vertex_indices: Vec<usize>,
+    vertex_indices: SmallVec<[usize; 6]>,
 }
 
 impl Shape for MeshPolygon {
+    fn shape_kind(&self) -> ShapeKind {
+        ShapeKind::Polygon
+    }
+
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         let vertices = (self.vertex_indices.iter())
             .map(|index| {
@@ -206,6 +218,10 @@ impl Shape for MeshPolygon {
 }
 
 impl Material for MeshPolygon {
+    fn material_kind(&self) -> MaterialKind {
+        self.data.material.material_kind()
+    }
+
     fn shade(
         &self,
         renderer: &dyn Renderer,

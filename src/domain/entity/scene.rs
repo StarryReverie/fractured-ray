@@ -5,24 +5,22 @@ use crate::domain::ray::Ray;
 
 use super::material::Material;
 use super::shape::{CreateMeshShapeError, DisRange, Mesh, RayIntersection, Shape};
-use super::{Entity, Id};
+use super::{EntityId, EntityPool};
 
 #[derive(Debug)]
 pub struct Scene {
-    entities: Vec<Entity>,
+    entities: EntityPool,
 }
 
 impl Scene {
     pub fn new() -> Self {
         Self {
-            entities: Vec::new(),
+            entities: EntityPool::new(),
         }
     }
 
-    pub fn add<S: Shape, M: Material>(&mut self, shape: S, material: M) -> Id {
-        let id = Id::new(self.entities.len());
-        self.entities.push(Entity::new(id, shape, material));
-        id
+    pub fn add<S: Shape, M: Material>(&mut self, shape: S, material: M) -> EntityId {
+        self.entities.add_composition(shape, material)
     }
 
     pub fn add_mesh<M: Material>(
@@ -33,12 +31,10 @@ impl Scene {
     ) -> Result<(), CreateMeshShapeError> {
         let (triangles, polygons) = Mesh::shapes(vertices, vertex_indices, material)?;
         for triangle in triangles {
-            let id = Id::new(self.entities.len());
-            self.entities.push(Entity::new_mesh_triangle(id, triangle));
+            self.entities.add_mesh_triangle(triangle);
         }
         for polygon in polygons {
-            let id = Id::new(self.entities.len());
-            self.entities.push(Entity::new_mesh_polygon(id, polygon));
+            self.entities.add_mesh_polygon(polygon);
         }
         Ok(())
     }
@@ -47,28 +43,31 @@ impl Scene {
         &self,
         ray: &Ray,
         mut range: DisRange,
-    ) -> Option<(RayIntersection, &Entity)> {
+    ) -> Option<(RayIntersection, &dyn Material)> {
         let mut closet: Option<RayIntersection> = None;
-        let mut hit: Option<&Entity> = None;
+        let mut hit: Option<EntityId> = None;
 
-        for entity in &self.entities {
+        for id in self.entities.get_ids() {
+            let shape = self.entities.get_shape(*id).unwrap();
             if let Some(closet) = &closet {
                 range = range.shrink_end(closet.distance());
             }
-            let Some(intersection) = entity.hit(ray, range) else {
+            let Some(intersection) = shape.hit(ray, range) else {
                 continue;
             };
             if let Some(closet) = &mut closet {
                 if intersection.distance() < closet.distance() {
                     *closet = intersection;
-                    hit = Some(entity);
+                    hit = Some(*id);
                 }
             } else {
                 closet = Some(intersection);
-                hit = Some(entity);
+                hit = Some(*id);
             }
         }
 
-        closet.zip(hit)
+        closet
+            .zip(hit)
+            .map(|(closet, id)| (closet, self.entities.get_material(id).unwrap()))
     }
 }
