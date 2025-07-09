@@ -6,7 +6,7 @@ use smallvec::smallvec;
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::SceneBuilder;
-use fractured_ray::domain::entity::material::{Diffuse, Emissive, Specular};
+use fractured_ray::domain::entity::material::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::entity::shape::{Plane, Polygon, Sphere};
 use fractured_ray::domain::geometry::{Point, UnitVector, Val};
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
@@ -78,7 +78,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     builder.add(
         Sphere::new(Point::new(Val(0.0), Val(1.0), Val(-1.0)), Val(1.0))?,
-        Diffuse::new(Color::MAGENTA),
+        Refractive::new(Color::WHITE, Val(1.5))?,
     );
     builder.add(
         Sphere::new(Point::new(Val(-3.0), Val(1.0), Val(-1.0)), Val(1.0))?,
@@ -113,7 +113,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene,
         Configuration {
-            ssaa_samples: 8,
+            ssaa_samples: 64,
             ..Configuration::default()
         },
     )?;

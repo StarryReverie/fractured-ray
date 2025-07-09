@@ -6,8 +6,8 @@ use smallvec::smallvec;
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::SceneBuilder;
-use fractured_ray::domain::entity::material::{Diffuse, Emissive};
-use fractured_ray::domain::entity::shape::Polygon;
+use fractured_ray::domain::entity::material::{Diffuse, Emissive, Refractive, Specular};
+use fractured_ray::domain::entity::shape::{Polygon, Sphere};
 use fractured_ray::domain::geometry::{Point, UnitVector, Val};
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::infrastructure::image::PngWriter;
@@ -135,13 +135,25 @@ fn main() -> Result<(), Box<dyn Error>> {
         Diffuse::new(Color::WHITE),
     )?;
 
+    // Specular Ball
+    builder.add(
+        Sphere::new(Point::new(Val(400.0), Val(90.0), Val(180.0)), Val(90.0))?,
+        Specular::new(Color::WHITE * Val(0.8)),
+    );
+
+    // Refractive Ball
+    builder.add(
+        Sphere::new(Point::new(Val(185.0), Val(240.0), Val(169.5)), Val(75.0))?,
+        Refractive::new(Color::WHITE * Val(0.8), Val(1.5))?,
+    );
+
     let scene = builder.build();
 
     let renderer = CoreRenderer::new(
         camera,
         scene,
         Configuration {
-            ssaa_samples: 1024,
+            ssaa_samples: 512,
             ..Configuration::default()
         },
     )?;

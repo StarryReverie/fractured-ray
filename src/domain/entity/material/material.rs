@@ -9,6 +9,7 @@ use crate::domain::renderer::Renderer;
 pub enum MaterialKind {
     Diffuse,
     Emissive,
+    Refractive,
     Specular,
 }
 
