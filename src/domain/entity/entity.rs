@@ -51,6 +51,7 @@ pub struct EntityPool {
     materials: MaterialPool,
     mesh_triangles: Vec<MeshTriangle>,
     mesh_polygons: Vec<MeshPolygon>,
+    len: usize,
 }
 
 impl EntityPool {
@@ -67,6 +68,7 @@ impl EntityPool {
         let (material_kind, material_id) = self.materials.add(material);
         let id = EntityId::composition(shape_kind, shape_id, material_kind, material_id);
         self.ids.push(id);
+        self.len += 1;
         id
     }
 
@@ -74,6 +76,7 @@ impl EntityPool {
         self.mesh_triangles.push(mesh_triangle);
         let id = EntityId::mesh_triangle(self.mesh_triangles.len() as u32 - 1);
         self.ids.push(id);
+        self.len += 1;
         id
     }
 
@@ -81,6 +84,7 @@ impl EntityPool {
         self.mesh_polygons.push(mesh_polygon);
         let id = EntityId::mesh_polygon(self.mesh_polygons.len() as u32 - 1);
         self.ids.push(id);
+        self.len += 1;
         id
     }
 
@@ -120,6 +124,10 @@ impl EntityPool {
 
     pub fn get_ids(&self) -> &[EntityId] {
         &self.ids
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
     }
 }
 

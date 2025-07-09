@@ -134,7 +134,7 @@ mod tests {
             -UnitVector::z_direction(),
         );
         let intersection = sphere.hit(&ray, DisRange::positive()).unwrap();
-        println!("{intersection:#?}");
+        assert_eq!(intersection.distance(), Val(2.0));
     }
 
     #[test]

@@ -5,7 +5,7 @@ use smallvec::smallvec;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
-use fractured_ray::domain::entity::Scene;
+use fractured_ray::domain::entity::SceneBuilder;
 use fractured_ray::domain::entity::material::{Diffuse, Emissive};
 use fractured_ray::domain::entity::shape::Polygon;
 use fractured_ray::domain::geometry::{Point, UnitVector, Val};
@@ -21,10 +21,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         Val(0.035),
     )?;
 
-    let mut scene = Scene::new();
+    let mut builder = SceneBuilder::new();
 
     // Light
-    scene.add(
+    builder.add(
         Polygon::new([
             Point::new(Val(343.0), Val(548.0), Val(227.0)),
             Point::new(Val(343.0), Val(548.0), Val(332.0)),
@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // Floor
-    scene.add(
+    builder.add(
         Polygon::new([
             Point::new(Val(552.8), Val(0.0), Val(0.0)),
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // Ceiling
-    scene.add(
+    builder.add(
         Polygon::new([
             Point::new(Val(556.0), Val(548.8), Val(0.0)),
             Point::new(Val(556.0), Val(548.8), Val(559.2)),
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // Left Wall
-    scene.add(
+    builder.add(
         Polygon::new([
             Point::new(Val(549.6), Val(0.0), Val(0.0)),
             Point::new(Val(549.6), Val(0.0), Val(559.2)),
@@ -68,7 +68,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // Right Wall
-    scene.add(
+    builder.add(
         Polygon::new([
             Point::new(Val(0.0), Val(0.0), Val(559.2)),
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
@@ -79,7 +79,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // Back Wall
-    scene.add(
+    builder.add(
         Polygon::new([
             Point::new(Val(549.6), Val(0.0), Val(559.2)),
             Point::new(Val(0.0), Val(0.0), Val(559.2)),
@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // Short Block
-    scene.add_mesh(
+    builder.add_mesh(
         smallvec![
             Point::new(Val(130.0), Val(165.0), Val(65.0)),
             Point::new(Val(82.0), Val(165.0), Val(225.0)),
@@ -113,7 +113,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     // Tall Block
-    scene.add_mesh(
+    builder.add_mesh(
         smallvec![
             Point::new(Val(423.0), Val(330.0), Val(247.0)),
             Point::new(Val(265.0), Val(330.0), Val(296.0)),
@@ -134,6 +134,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         ],
         Diffuse::new(Color::WHITE),
     )?;
+
+    let scene = builder.build();
 
     let renderer = CoreRenderer::new(
         camera,

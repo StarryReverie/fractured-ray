@@ -42,6 +42,13 @@ impl BoundingBox {
         )
     }
 
+    pub fn surface_area(&self) -> Val {
+        let a = self.max.x() - self.min.x();
+        let b = self.max.y() - self.min.y();
+        let c = self.max.z() - self.min.z();
+        Val(2.0) * (a * b + a * c + b * c)
+    }
+
     pub fn hit(&self, ray: &Ray, range: DisRange) -> Option<Val> {
         let (s, d) = (ray.start(), ray.direction());
         let xr = Self::calc_axis_range(s.x(), d.x(), self.min.x(), self.max.x());

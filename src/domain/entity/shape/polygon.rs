@@ -247,12 +247,12 @@ mod tests {
     #[test]
     fn polygon_new_fails_when_adjacent_sides_are_parallel() {
         assert!(matches!(
-            dbg!(Polygon::new([
+            Polygon::new([
                 Point::new(Val(1.0), Val(0.0), Val(0.0)),
                 Point::new(Val(0.0), Val(2.0), Val(0.0)),
                 Point::new(Val(0.0), Val(1.0), Val(1.5)),
                 Point::new(Val(0.0), Val(0.0), Val(3.0)),
-            ])),
+            ]),
             Err(TryNewPolygonError::ParallelAdjacentSides),
         ));
     }
@@ -318,7 +318,7 @@ mod tests {
             Point::new(Val(0.0), Val(1.0), Val(0.0)),
             UnitVector::x_direction(),
         );
-        assert!(dbg!(polygon.hit(&ray, DisRange::positive())).is_none());
+        assert!(polygon.hit(&ray, DisRange::positive()).is_none());
     }
 
     #[test]

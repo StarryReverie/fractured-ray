@@ -1,3 +1,4 @@
+use core::panic;
 use std::ops::{Add, Sub};
 
 use super::{UnitVector, Val, Vector};
@@ -20,6 +21,15 @@ impl Point {
 
     pub fn z(&self) -> Val {
         self.0.z()
+    }
+
+    pub fn axis(&self, axis: usize) -> Val {
+        match axis {
+            0 => self.x(),
+            1 => self.y(),
+            2 => self.z(),
+            _ => panic!("axis should be in [0, 3)"),
+        }
     }
 
     pub fn to_vector(&self) -> Vector {
