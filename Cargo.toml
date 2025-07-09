@@ -6,6 +6,7 @@ authors = ["Justin Chen oosquare@outlook.com"]
 description = "Minimal Raytracing Implementation"
 
 [dependencies]
+indicatif = "0.18.0"
 mockall = "0.13.1"
 png = "0.17.16"
 rand = "0.9.1"

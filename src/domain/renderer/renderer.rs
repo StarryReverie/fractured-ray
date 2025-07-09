@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+use indicatif::{ProgressBar, ProgressFinish, ProgressIterator, ProgressStyle};
 use rand::prelude::*;
 use rayon::prelude::*;
 use snafu::prelude::*;
@@ -60,6 +63,20 @@ impl CoreRenderer {
 
         self.trace(Ray::new(point, direction), DisRange::positive(), 1)
     }
+
+    fn init_progress_bar(&self) -> ProgressBar {
+        const TEMPLATE: &str = "{msg:>12.green.bold} [{spinner:.yellow.bold}] [{bar:50.cyan.bold/blue.bold}] ({percent}%) [Elapsed: {elapsed_precise} ETA: {eta_precise}]";
+        let style = ProgressStyle::with_template(TEMPLATE)
+            .unwrap()
+            .tick_chars(r#"|/-\|/-\+"#)
+            .progress_chars("=>-");
+        let bar = ProgressBar::new(self.config.ssaa_samples as u64)
+            .with_style(style)
+            .with_message("Rendering")
+            .with_finish(ProgressFinish::WithMessage("Finished".into()));
+        bar.enable_steady_tick(Duration::from_millis(50));
+        bar
+    }
 }
 
 impl Renderer for CoreRenderer {
@@ -73,9 +90,8 @@ impl Renderer for CoreRenderer {
             .flat_map(|r| (0..width).map(move |c| (r, c)))
             .collect::<Vec<_>>();
 
-        println!("Renderering started");
-
-        for batch in 1..=self.config.ssaa_samples {
+        let pb = self.init_progress_bar();
+        for _ in (0..self.config.ssaa_samples).progress_with(pb) {
             let res = meshgrid
                 .par_iter()
                 .cloned()
@@ -85,8 +101,6 @@ impl Renderer for CoreRenderer {
             for ((row, column), color) in res.into_iter().flatten() {
                 image.record(row, column, color);
             }
-
-            println!("finished batch #{batch}");
         }
 
         image
