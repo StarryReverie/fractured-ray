@@ -70,8 +70,7 @@ impl Renderer for CoreRenderer {
         let width = image.resolution().width();
 
         let meshgrid = (0..height)
-            .into_iter()
-            .flat_map(|r| (0..width).into_iter().map(move |c| (r, c)))
+            .flat_map(|r| (0..width).map(move |c| (r, c)))
             .collect::<Vec<_>>();
 
         println!("Renderering started");

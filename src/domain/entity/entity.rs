@@ -46,12 +46,10 @@ impl EntityId {
 
 #[derive(Debug, Default)]
 pub struct EntityPool {
-    ids: Vec<EntityId>,
     shapes: ShapePool,
     materials: MaterialPool,
     mesh_triangles: Vec<MeshTriangle>,
     mesh_polygons: Vec<MeshPolygon>,
-    len: usize,
 }
 
 impl EntityPool {
@@ -66,26 +64,17 @@ impl EntityPool {
     {
         let (shape_kind, shape_id) = self.shapes.add(shape);
         let (material_kind, material_id) = self.materials.add(material);
-        let id = EntityId::composition(shape_kind, shape_id, material_kind, material_id);
-        self.ids.push(id);
-        self.len += 1;
-        id
+        EntityId::composition(shape_kind, shape_id, material_kind, material_id)
     }
 
     pub fn add_mesh_triangle(&mut self, mesh_triangle: MeshTriangle) -> EntityId {
         self.mesh_triangles.push(mesh_triangle);
-        let id = EntityId::mesh_triangle(self.mesh_triangles.len() as u32 - 1);
-        self.ids.push(id);
-        self.len += 1;
-        id
+        EntityId::mesh_triangle(self.mesh_triangles.len() as u32 - 1)
     }
 
     pub fn add_mesh_polygon(&mut self, mesh_polygon: MeshPolygon) -> EntityId {
         self.mesh_polygons.push(mesh_polygon);
-        let id = EntityId::mesh_polygon(self.mesh_polygons.len() as u32 - 1);
-        self.ids.push(id);
-        self.len += 1;
-        id
+        EntityId::mesh_polygon(self.mesh_polygons.len() as u32 - 1)
     }
 
     pub fn get_shape(&self, id: EntityId) -> Option<&dyn Shape> {
@@ -120,14 +109,6 @@ impl EntityPool {
                 .get(id as usize)
                 .map(MaterialPool::upcast),
         }
-    }
-
-    pub fn get_ids(&self) -> &[EntityId] {
-        &self.ids
-    }
-
-    pub fn len(&self) -> usize {
-        self.len
     }
 }
 

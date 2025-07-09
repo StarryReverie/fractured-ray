@@ -46,8 +46,8 @@ impl SceneBuilder {
     }
 
     pub fn build(self) -> Scene {
-        let mut nodes = Vec::with_capacity(self.entities.len() * 2);
-        let mut bboxes = Vec::with_capacity(self.entities.len());
+        let mut nodes = Vec::with_capacity(self.ids.len() * 2);
+        let mut bboxes = Vec::with_capacity(self.ids.len());
         let mut unboundeds = Vec::new();
 
         for id in self.ids {
@@ -88,8 +88,8 @@ impl SceneBuilder {
             nodes.push(BvhNode::internal(node_bbox));
             let node_id = nodes.len() - 1;
 
-            let right_bboxes = partition.drain(mid..).flat_map(|t| t.1).collect();
-            let left_bboxes = partition.into_iter().flat_map(|t| t.1).collect();
+            let right_bboxes = partition.drain(mid..).flat_map(|t| t.items).collect();
+            let left_bboxes = partition.into_iter().flat_map(|t| t.items).collect();
             let _left = Self::build_bvh(nodes, left_bboxes);
             let right = Self::build_bvh(nodes, right_bboxes);
 
@@ -100,7 +100,7 @@ impl SceneBuilder {
 
             node_id
         } else {
-            let ids = partition.into_iter().flat_map(|t| t.1).map(|t| t.0);
+            let ids = partition.into_iter().flat_map(|t| t.items).map(|t| t.0);
             nodes.push(BvhNode::cluster_leaf(node_bbox, ids));
             nodes.len() - 1
         }
@@ -122,27 +122,27 @@ impl SceneBuilder {
         axis: usize,
         node_bbox: &BoundingBox,
         bboxes: Vec<(EntityId, BoundingBox)>,
-    ) -> Vec<(Option<BoundingBox>, Vec<(EntityId, BoundingBox)>)> {
+    ) -> Vec<PartitionBucket> {
         let mut buckets = Vec::new();
-        buckets.resize(BvhNode::SAH_PARTITION, (None, Vec::new()));
+        buckets.resize(BvhNode::SAH_PARTITION, PartitionBucket::new());
         let range = (node_bbox.min().axis(axis), node_bbox.max().axis(axis));
         let bucket_span = (range.1 - range.0) / BvhNode::SAH_PARTITION.into();
 
         for (id, bbox) in bboxes {
             let fraction = (bbox.centroid().axis(axis) - range.0) / bucket_span;
             let index = usize::from(fraction).clamp(0, BvhNode::SAH_PARTITION - 1);
-            buckets[index].1.push((id, bbox));
+            buckets[index].items.push((id, bbox));
         }
 
-        for i in 0..buckets.len() {
-            buckets[i].0 = Self::merge_bboxes(buckets[i].1.iter().map(|bbox| &bbox.1));
+        for bucket in &mut buckets {
+            bucket.overall_bbox = Self::merge_bboxes(bucket.items.iter().map(|bbox| &bbox.1));
         }
 
         buckets
     }
 
     fn calc_split_point(
-        partition: &Vec<(Option<BoundingBox>, Vec<(EntityId, BoundingBox)>)>,
+        partition: &[PartitionBucket],
         bbox_num: usize,
         total_surface_area: Val,
     ) -> Option<usize> {
@@ -153,11 +153,11 @@ impl SceneBuilder {
         let mut num = 0;
         let mut num_pre = [0; BvhNode::SAH_PARTITION - 1];
         for i in 0..BvhNode::SAH_PARTITION - 1 {
-            num += partition[i].1.len();
+            num += partition[i].items.len();
             num_pre[i] = num;
             merged_bbox = merged_bbox
-                .map(|b1| partition[i].0.as_ref().map(|b2| b1.merge(b2)).unwrap_or(b1))
-                .or_else(|| partition[i].0.clone());
+                .map(|bbox| partition[i].merge_bbox(bbox))
+                .or_else(|| partition[i].overall_bbox.clone());
             let surface_area = merged_bbox
                 .as_ref()
                 .map_or(Val(0.0), BoundingBox::surface_area);
@@ -169,11 +169,11 @@ impl SceneBuilder {
         merged_bbox = None;
         let mut num_suf = [0; BvhNode::SAH_PARTITION - 1];
         for i in (0..BvhNode::SAH_PARTITION - 1).rev() {
-            num += partition[i + 1].1.len();
+            num += partition[i + 1].items.len();
             num_suf[i] = num;
             merged_bbox = merged_bbox
-                .map(|b1| partition[i].0.as_ref().map(|b2| b1.merge(b2)).unwrap_or(b1))
-                .or_else(|| partition[i].0.clone());
+                .map(|bbox| partition[i].merge_bbox(bbox))
+                .or_else(|| partition[i].overall_bbox.clone());
             let surface_area = merged_bbox
                 .as_ref()
                 .map_or(Val(0.0), BoundingBox::surface_area);
@@ -210,6 +210,28 @@ impl SceneBuilder {
         let init = bboxes.next().cloned()?;
         let bbox = bboxes.fold(init, |acc, bbox| acc.merge(bbox));
         Some(bbox)
+    }
+}
+
+#[derive(Clone)]
+struct PartitionBucket {
+    overall_bbox: Option<BoundingBox>,
+    items: Vec<(EntityId, BoundingBox)>,
+}
+
+impl PartitionBucket {
+    fn new() -> Self {
+        Self {
+            overall_bbox: None,
+            items: Vec::new(),
+        }
+    }
+
+    fn merge_bbox(&self, other: BoundingBox) -> BoundingBox {
+        self.overall_bbox
+            .as_ref()
+            .map(|s| other.merge(s))
+            .unwrap_or(other)
     }
 }
 

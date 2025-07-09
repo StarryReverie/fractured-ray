@@ -161,7 +161,7 @@ impl Shape for Polygon {
             PolygonInner::Triangle(triangle) => triangle.hit(ray, range),
             PolygonInner::General { vertices, normal } => {
                 let vertices = vertices.iter().collect::<SmallVec<[&Point; 6]>>();
-                Self::calc_ray_intersection(ray, range, &vertices, &normal)
+                Self::calc_ray_intersection(ray, range, &vertices, normal)
             }
         }
     }
