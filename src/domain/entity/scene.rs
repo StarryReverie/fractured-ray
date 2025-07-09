@@ -22,8 +22,9 @@ impl SceneBuilder {
     }
 
     pub fn add<S: Shape, M: Material>(&mut self, shape: S, material: M) -> &mut Self {
-        let id = self.entities.add_composition(shape, material);
-        self.ids.push(id);
+        let shape_id = self.entities.add_shape(shape);
+        let material_id = self.entities.add_material(material);
+        self.ids.push(EntityId::new(shape_id, material_id));
         self
     }
 
@@ -33,14 +34,15 @@ impl SceneBuilder {
         vertex_indices: Vec<SmallVec<[usize; 3]>>,
         material: M,
     ) -> Result<&mut Self, CreateMeshShapeError> {
-        let (triangles, polygons) = Mesh::shapes(vertices, vertex_indices, material)?;
+        let (triangles, polygons) = Mesh::shapes(vertices, vertex_indices)?;
+        let material_id = self.entities.add_material(material);
         for triangle in triangles {
-            let id = self.entities.add_mesh_triangle(triangle);
-            self.ids.push(id);
+            let shape_id = self.entities.add_shape(triangle);
+            self.ids.push(EntityId::new(shape_id, material_id));
         }
         for polygon in polygons {
-            let id = self.entities.add_mesh_polygon(polygon);
-            self.ids.push(id);
+            let shape_id = self.entities.add_shape(polygon);
+            self.ids.push(EntityId::new(shape_id, material_id));
         }
         Ok(self)
     }

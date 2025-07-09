@@ -8,10 +8,12 @@ use super::BoundingBox;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ShapeKind {
+    MeshPolygon,
+    MeshTriangle,
     Plane,
     Polygon,
-    Triangle,
     Sphere,
+    Triangle,
 }
 
 pub trait Shape: Debug + Send + Sync + 'static {

@@ -4,11 +4,8 @@ use std::sync::Arc;
 use smallvec::SmallVec;
 use snafu::prelude::*;
 
-use crate::domain::color::Color;
-use crate::domain::entity::material::{Material, MaterialKind};
 use crate::domain::geometry::{Point, Product};
 use crate::domain::ray::Ray;
-use crate::domain::renderer::Renderer;
 
 use super::{
     BoundingBox, DisRange, Polygon, RayIntersection, Shape, ShapeKind, Triangle,
@@ -18,21 +15,19 @@ use super::{
 #[derive(Debug)]
 pub struct Mesh {
     vertices: SmallVec<[Point; 8]>,
-    material: Box<dyn Material>,
 }
 
 impl Mesh {
-    fn new(vertices: SmallVec<[Point; 8]>, material: Box<dyn Material>) -> Self {
-        Self { vertices, material }
+    fn new(vertices: SmallVec<[Point; 8]>) -> Self {
+        Self { vertices }
     }
 
-    pub fn shapes<M: Material>(
+    pub fn shapes(
         vertices: SmallVec<[Point; 8]>,
         mut vertex_indices: Vec<SmallVec<[usize; 3]>>,
-        material: M,
     ) -> Result<(Vec<MeshTriangle>, Vec<MeshPolygon>), CreateMeshShapeError> {
         Self::validate_vertex_uniqueness(&vertices)?;
-        let data = Arc::new(Mesh::new(vertices, Box::new(material)));
+        let data = Arc::new(Mesh::new(vertices));
 
         let triangles = vertex_indices.extract_if(.., |s| s.len() == 3).collect();
         let polygons = vertex_indices;
@@ -160,22 +155,6 @@ impl Shape for MeshTriangle {
     }
 }
 
-impl Material for MeshTriangle {
-    fn material_kind(&self) -> MaterialKind {
-        self.data.material.material_kind()
-    }
-
-    fn shade(
-        &self,
-        renderer: &dyn Renderer,
-        ray: Ray,
-        intersection: RayIntersection,
-        depth: usize,
-    ) -> Color {
-        self.data.material.shade(renderer, ray, intersection, depth)
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct MeshPolygon {
     data: Arc<Mesh>,
@@ -217,28 +196,10 @@ impl Shape for MeshPolygon {
     }
 }
 
-impl Material for MeshPolygon {
-    fn material_kind(&self) -> MaterialKind {
-        self.data.material.material_kind()
-    }
-
-    fn shade(
-        &self,
-        renderer: &dyn Renderer,
-        ray: Ray,
-        intersection: RayIntersection,
-        depth: usize,
-    ) -> Color {
-        self.data.material.shade(renderer, ray, intersection, depth)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use smallvec::smallvec;
 
-    use crate::domain::color::Color;
-    use crate::domain::entity::material::Diffuse;
     use crate::domain::geometry::Val;
 
     use super::*;
@@ -260,7 +221,6 @@ mod tests {
                 smallvec![2, 3, 4],
                 smallvec![3, 1, 4],
             ],
-            Diffuse::new(Color::WHITE),
         )
         .unwrap();
 
@@ -279,7 +239,6 @@ mod tests {
                 Point::new(Val(0.0), Val(0.0), Val(2.0)),
             ],
             vec![smallvec![0, 1, 2, 3], smallvec![0, 1, 4]],
-            Diffuse::new(Color::WHITE),
         )
         .unwrap();
 
