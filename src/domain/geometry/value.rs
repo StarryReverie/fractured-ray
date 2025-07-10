@@ -13,6 +13,8 @@ pub struct Val(pub WrappedVal);
 
 impl Val {
     pub const PRECISION: WrappedVal = 1e-8;
+    pub const PI: Self = Self(std::f64::consts::PI);
+    pub const INFINITY: Self = Self(f64::INFINITY);
 
     #[inline(always)]
     pub fn mul_add(self, a: Self, b: Self) -> Self {
@@ -87,6 +89,12 @@ impl Val {
     #[inline(always)]
     pub fn cos(self) -> Self {
         Val(self.0.cos())
+    }
+
+    #[inline(always)]
+    pub fn sin_cos(self) -> (Self, Self) {
+        let res = self.0.sin_cos();
+        (Val(res.0), Val(res.1))
     }
 
     #[inline(always)]

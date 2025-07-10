@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::fs::File;
+use std::sync::Arc;
 
 use smallvec::smallvec;
 
@@ -7,8 +8,8 @@ use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::SceneBuilder;
 use fractured_ray::domain::entity::material::{Diffuse, Emissive, Refractive, Specular};
-use fractured_ray::domain::entity::shape::{Plane, Polygon, Sphere};
-use fractured_ray::domain::geometry::{Point, UnitVector, Val};
+use fractured_ray::domain::entity::shape::{Instance, Plane, Polygon, Sphere};
+use fractured_ray::domain::geometry::{Point, Rotation, UnitVector, Val};
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::infrastructure::image::PngWriter;
 
@@ -67,12 +68,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     builder.add(
-        Polygon::new([
-            Point::new(Val(-1.5), Val(3.9999), Val(-2.0)),
-            Point::new(Val(1.5), Val(3.9999), Val(-2.0)),
-            Point::new(Val(1.5), Val(3.9999), Val(1.0)),
-            Point::new(Val(-1.5), Val(3.9999), Val(1.0)),
-        ])?,
+        Instance::of(Arc::new(Polygon::new([
+            Point::new(Val(-2.0), Val(3.999), Val(-2.0)),
+            Point::new(Val(2.0), Val(3.999), Val(-2.0)),
+            Point::new(Val(2.0), Val(3.999), Val(2.0)),
+            Point::new(Val(-2.0), Val(3.999), Val(2.0)),
+        ])?))
+        .rotate(Rotation::new(Val::PI / Val(3.0), Val(0.0), Val(0.0))),
         Emissive::new(Color::WHITE),
     );
 
@@ -113,7 +115,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene,
         Configuration {
-            ssaa_samples: 64,
+            ssaa_samples: 8,
             ..Configuration::default()
         },
     )?;

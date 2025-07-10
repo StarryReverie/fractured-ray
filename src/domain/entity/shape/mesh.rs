@@ -129,7 +129,7 @@ pub struct MeshTriangle {
 
 impl Shape for MeshTriangle {
     fn shape_kind(&self) -> ShapeKind {
-        ShapeKind::Triangle
+        ShapeKind::MeshTriangle
     }
 
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
@@ -163,7 +163,7 @@ pub struct MeshPolygon {
 
 impl Shape for MeshPolygon {
     fn shape_kind(&self) -> ShapeKind {
-        ShapeKind::Polygon
+        ShapeKind::MeshPolygon
     }
 
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {

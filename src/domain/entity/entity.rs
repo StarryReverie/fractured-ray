@@ -2,7 +2,9 @@ use std::any::{Any, TypeId};
 use std::mem::ManuallyDrop;
 
 use super::material::{Diffuse, Emissive, Material, MaterialKind, Refractive, Specular};
-use super::shape::{MeshPolygon, MeshTriangle, Plane, Polygon, Shape, ShapeKind, Sphere, Triangle};
+use super::shape::{
+    Instance, MeshPolygon, MeshTriangle, Plane, Polygon, Shape, ShapeKind, Sphere, Triangle,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ShapeId {
@@ -95,6 +97,7 @@ impl EntityPool {
 
 #[derive(Debug, Default)]
 struct ShapePool {
+    instances: Vec<Instance>,
     mesh_polygons: Vec<MeshPolygon>,
     mesh_triangles: Vec<MeshTriangle>,
     planes: Vec<Plane>,
@@ -108,7 +111,10 @@ impl ShapePool {
         let kind = shape.shape_kind();
         let type_id = TypeId::of::<S>();
 
-        if type_id == TypeId::of::<MeshPolygon>() {
+        if type_id == TypeId::of::<Instance>() {
+            let index = Self::downcast_and_push(shape, &mut self.instances);
+            ShapeId::new(kind, index)
+        } else if type_id == TypeId::of::<MeshPolygon>() {
             let index = Self::downcast_and_push(shape, &mut self.mesh_polygons);
             ShapeId::new(kind, index)
         } else if type_id == TypeId::of::<MeshTriangle>() {
@@ -143,6 +149,7 @@ impl ShapePool {
     pub fn get(&self, shape_id: ShapeId) -> Option<&dyn Shape> {
         let index = shape_id.index as usize;
         match shape_id.kind {
+            ShapeKind::Instance => self.instances.get(index).map(Self::upcast),
             ShapeKind::MeshPolygon => self.mesh_polygons.get(index).map(Self::upcast),
             ShapeKind::MeshTriangle => self.mesh_triangles.get(index).map(Self::upcast),
             ShapeKind::Plane => self.planes.get(index).map(Self::upcast),

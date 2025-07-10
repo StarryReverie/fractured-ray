@@ -1,4 +1,6 @@
-use crate::domain::geometry::{Point, UnitVector, Val};
+use crate::domain::geometry::{
+    AllTransformation, Point, Transform, Transformation, UnitVector, Val,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Ray {
@@ -21,6 +23,15 @@ impl Ray {
 
     pub fn at(&self, distance: Val) -> Point {
         self.start + distance * self.direction
+    }
+}
+
+impl Transform<AllTransformation> for Ray {
+    fn transform(&self, transformation: &AllTransformation) -> Self {
+        Ray::new(
+            self.start().transform(transformation),
+            self.direction().transform(transformation),
+        )
     }
 }
 

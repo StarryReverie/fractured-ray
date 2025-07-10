@@ -1,7 +1,7 @@
 use core::panic;
 use std::ops::{Add, Sub};
 
-use super::{UnitVector, Val, Vector};
+use super::{Rotation, Transform, Translation, UnitVector, Val, Vector};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Point(Vector);
@@ -101,6 +101,18 @@ impl Sub for Point {
 
     fn sub(self, rhs: Self) -> Self::Output {
         self.0 - rhs.0
+    }
+}
+
+impl Transform<Rotation> for Point {
+    fn transform(&self, transformation: &Rotation) -> Self {
+        Self(self.0.transform(transformation))
+    }
+}
+
+impl Transform<Translation> for Point {
+    fn transform(&self, transformation: &Translation) -> Self {
+        *self + transformation.displacement()
     }
 }
 

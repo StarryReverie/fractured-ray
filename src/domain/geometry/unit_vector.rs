@@ -2,7 +2,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use snafu::prelude::*;
 
-use super::{Product, Val, Vector};
+use super::{Product, Rotation, Transform, Translation, Val, Vector};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UnitVector(Vector);
@@ -140,6 +140,18 @@ impl Div<Val> for UnitVector {
 
     fn div(self, rhs: Val) -> Self::Output {
         self.0 / rhs
+    }
+}
+
+impl Transform<Rotation> for UnitVector {
+    fn transform(&self, transformation: &Rotation) -> Self {
+        Self(self.0.transform(transformation))
+    }
+}
+
+impl Transform<Translation> for UnitVector {
+    fn transform(&self, transformation: &Translation) -> Self {
+        Self(self.0.transform(transformation))
     }
 }
 

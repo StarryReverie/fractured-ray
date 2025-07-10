@@ -1,6 +1,8 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use super::{Product, TryIntoUnitVectorError, UnitVector, Val};
+use super::{
+    Product, Quaternion, Rotation, Transform, Translation, TryIntoUnitVectorError, UnitVector, Val,
+};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Vector(Val, Val, Val);
@@ -113,12 +115,29 @@ impl Product for Vector {
     }
 }
 
+impl Transform<Rotation> for Vector {
+    fn transform(&self, transformation: &Rotation) -> Self {
+        let p = Quaternion::from(*self);
+        let q = transformation.quaternion();
+        let q_inv = q.conjugate();
+
+        let p = q * p * q_inv;
+        Self(p.x(), p.y(), p.z())
+    }
+}
+
+impl Transform<Translation> for Vector {
+    fn transform(&self, _transformation: &Translation) -> Self {
+        *self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn vector3d_linear_operations_succeed() {
+    fn vector_linear_operations_succeed() {
         assert_eq!(
             Vector::new(Val(1.0), Val(-2.0), Val(3.0)) + Vector::new(Val(-4.0), Val(5.0), Val(8.0)),
             Vector::new(Val(-3.0), Val(3.0), Val(11.0)),
@@ -138,7 +157,7 @@ mod tests {
     }
 
     #[test]
-    fn vector3d_products_succeed() {
+    fn vector_products_succeed() {
         assert_eq!(
             Vector::new(Val(1.0), Val(1.0), Val(-4.0)).dot(Vector::new(
                 Val(1.0),
@@ -158,11 +177,24 @@ mod tests {
     }
 
     #[test]
-    fn vector3d_norms_succeed() {
+    fn vector_norms_succeed() {
         assert_eq!(
             Vector::new(Val(1.0), Val(-2.0), Val(2.0)).norm_squared(),
             Val(9.0)
         );
         assert_eq!(Vector::new(Val(1.0), Val(-2.0), Val(2.0)).norm(), Val(3.0));
+    }
+
+    #[test]
+    fn vector_rotation_transform_succeeds() {
+        let v = Vector::new(Val(1.0), Val(0.0), Val(0.0));
+        let v = v.transform(&Rotation::new(
+            Val::PI / Val(3.0),
+            Val::PI / Val(3.0),
+            Val(0.0),
+        ));
+        assert_eq!(v.x(), Val(0.25));
+        assert_eq!(v.y(), Val(3.0).sqrt() / Val(2.0));
+        assert_eq!(v.z(), -Val(3.0).sqrt() / Val(4.0));
     }
 }

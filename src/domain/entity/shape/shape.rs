@@ -1,13 +1,14 @@
 use std::fmt::Debug;
 use std::ops::{Bound, RangeBounds};
 
-use crate::domain::geometry::{Point, UnitVector, Val};
+use crate::domain::geometry::{AllTransformation, Point, Transform, UnitVector, Val};
 use crate::domain::ray::Ray;
 
 use super::BoundingBox;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ShapeKind {
+    Instance,
     MeshPolygon,
     MeshTriangle,
     Plane,
@@ -56,6 +57,17 @@ impl RayIntersection {
 
     pub fn side(&self) -> SurfaceSide {
         self.side
+    }
+}
+
+impl Transform<AllTransformation> for RayIntersection {
+    fn transform(&self, transformation: &AllTransformation) -> Self {
+        RayIntersection::new(
+            self.distance(),
+            self.position().transform(transformation),
+            self.normal().transform(transformation),
+            self.side(),
+        )
     }
 }
 
