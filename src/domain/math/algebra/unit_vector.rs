@@ -2,7 +2,11 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use snafu::prelude::*;
 
-use super::{Product, Rotation, Transform, Translation, Val, Vector};
+use super::{Product, Vector};
+use crate::domain::math::{
+    geometry::{Rotation, Transform, Translation},
+    numeric::Val,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UnitVector(Vector);

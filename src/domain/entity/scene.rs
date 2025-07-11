@@ -1,12 +1,10 @@
 use smallvec::SmallVec;
 
-use crate::domain::geometry::Val;
-use crate::domain::ray::Ray;
+use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::{Ray, RayIntersection};
 
 use super::material::Material;
-use super::shape::{
-    BoundingBox, DisRange, RayIntersection, Shape, ShapeConstructor, TryNewMeshError,
-};
+use super::shape::{BoundingBox, Shape, ShapeConstructor, TryNewMeshError};
 use super::{EntityId, EntityPool, MaterialContainer, ShapeContainer};
 
 #[derive(Debug)]
@@ -423,7 +421,8 @@ mod tests {
     use crate::domain::color::Color;
     use crate::domain::entity::material::Diffuse;
     use crate::domain::entity::shape::{Polygon, Sphere, Triangle};
-    use crate::domain::geometry::{Point, Vector};
+    use crate::domain::math::algebra::Vector;
+    use crate::domain::math::geometry::Point;
 
     use super::*;
 

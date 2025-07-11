@@ -1,9 +1,11 @@
 use std::ops::RangeBounds;
 
-use crate::domain::geometry::{Point, Product, UnitVector, Val};
-use crate::domain::ray::Ray;
+use crate::domain::math::algebra::{Product, UnitVector};
+use crate::domain::math::geometry::Point;
+use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 
-use super::{BoundingBox, DisRange, RayIntersection, Shape, ShapeKind, SurfaceSide};
+use super::{BoundingBox, Shape, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane {
@@ -67,7 +69,7 @@ impl Shape for Plane {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::geometry::Vector;
+    use crate::domain::math::algebra::Vector;
 
     use super::*;
 

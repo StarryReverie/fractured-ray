@@ -1,6 +1,9 @@
 use std::ops::Mul;
 
-use super::{Point, UnitVector, Val, Vector};
+use crate::domain::math::geometry::Point;
+use crate::domain::math::numeric::Val;
+
+use super::{UnitVector, Vector};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Quaternion(Val, Val, Val, Val);

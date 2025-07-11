@@ -1,9 +1,8 @@
 use std::ops::{Bound, RangeBounds};
 
-use crate::domain::geometry::{AllTransformation, Point, Transform, Val};
+use crate::domain::math::geometry::{AllTransformation, Point, Transform};
+use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-
-use super::DisRange;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoundingBox {

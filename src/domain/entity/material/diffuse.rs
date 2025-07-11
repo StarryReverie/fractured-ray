@@ -1,9 +1,9 @@
 use rand::prelude::*;
 
 use crate::domain::color::Color;
-use crate::domain::entity::shape::{DisRange, RayIntersection};
-use crate::domain::geometry::{Val, Vector, WrappedVal};
-use crate::domain::ray::Ray;
+use crate::domain::math::algebra::Vector;
+use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
+use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::Renderer;
 
 use super::{Material, MaterialKind};
@@ -60,7 +60,7 @@ impl Material for Diffuse {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::geometry::Point;
+    use crate::domain::math::geometry::Point;
     use crate::domain::renderer::MockRenderer;
 
     use super::*;

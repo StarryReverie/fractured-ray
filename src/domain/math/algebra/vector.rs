@@ -1,8 +1,9 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use super::{
-    Product, Quaternion, Rotation, Transform, Translation, TryIntoUnitVectorError, UnitVector, Val,
-};
+use crate::domain::math::geometry::{Rotation, Transform, Translation};
+use crate::domain::math::numeric::Val;
+
+use super::{Product, Quaternion, TryIntoUnitVectorError, UnitVector};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Vector(Val, Val, Val);
@@ -134,6 +135,8 @@ impl Transform<Translation> for Vector {
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::math::numeric::Val;
+
     use super::*;
 
     #[test]

@@ -1,12 +1,12 @@
 use smallvec::SmallVec;
 use snafu::prelude::*;
 
-use crate::domain::geometry::{Point, Product, UnitVector, Val};
-use crate::domain::ray::Ray;
+use crate::domain::math::algebra::{Product, UnitVector};
+use crate::domain::math::geometry::Point;
+use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::{Ray, RayIntersection};
 
-use super::{
-    BoundingBox, DisRange, Plane, RayIntersection, Shape, ShapeKind, Triangle, TryNewTriangleError,
-};
+use super::{BoundingBox, Plane, Shape, ShapeKind, Triangle, TryNewTriangleError};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Polygon(PolygonInner);
@@ -195,7 +195,8 @@ pub enum TryNewPolygonError {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::{entity::shape::SurfaceSide, geometry::Vector};
+    use crate::domain::math::algebra::Vector;
+    use crate::domain::ray::SurfaceSide;
 
     use super::*;
 

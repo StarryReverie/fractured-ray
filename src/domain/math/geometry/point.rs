@@ -1,7 +1,10 @@
 use core::panic;
 use std::ops::{Add, Sub};
 
-use super::{Rotation, Transform, Translation, UnitVector, Val, Vector};
+use crate::domain::math::algebra::{UnitVector, Vector};
+use crate::domain::math::numeric::Val;
+
+use super::{Rotation, Transform, Translation};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Point(Vector);

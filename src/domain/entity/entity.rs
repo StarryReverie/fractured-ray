@@ -251,7 +251,8 @@ impl MaterialContainer for MaterialPool {
 #[cfg(test)]
 mod tests {
     use crate::domain::color::Color;
-    use crate::domain::geometry::{Point, Val};
+    use crate::domain::math::geometry::Point;
+    use crate::domain::math::numeric::Val;
 
     use super::*;
 

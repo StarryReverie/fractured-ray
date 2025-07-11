@@ -1,6 +1,6 @@
 use snafu::prelude::*;
 
-use crate::domain::geometry::Val;
+use crate::domain::math::numeric::Val;
 
 use super::Resolution;
 

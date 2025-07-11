@@ -2,10 +2,12 @@ use std::ops::RangeBounds;
 
 use snafu::prelude::*;
 
-use crate::domain::geometry::{Point, Product, Val, Vector};
-use crate::domain::ray::Ray;
+use crate::domain::math::algebra::{Product, Vector};
+use crate::domain::math::geometry::Point;
+use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 
-use super::{BoundingBox, DisRange, RayIntersection, Shape, ShapeKind, SurfaceSide};
+use super::{BoundingBox, Shape, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Sphere {
@@ -95,7 +97,7 @@ pub enum TryNewSphereError {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::geometry::{UnitVector, Vector};
+    use crate::domain::math::algebra::{UnitVector, Vector};
 
     use super::*;
 

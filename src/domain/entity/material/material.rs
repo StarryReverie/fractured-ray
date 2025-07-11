@@ -1,8 +1,7 @@
 use std::fmt::Debug;
 
 use crate::domain::color::Color;
-use crate::domain::entity::shape::RayIntersection;
-use crate::domain::ray::Ray;
+use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::Renderer;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

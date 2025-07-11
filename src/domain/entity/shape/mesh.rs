@@ -5,12 +5,14 @@ use smallvec::SmallVec;
 use snafu::prelude::*;
 
 use crate::domain::entity::{ShapeContainer, ShapeId};
-use crate::domain::geometry::{AllTransformation, Point, Product, Transform};
-use crate::domain::ray::Ray;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{AllTransformation, Point, Transform};
+use crate::domain::math::numeric::DisRange;
+use crate::domain::ray::{Ray, RayIntersection};
 
 use super::{
-    BoundingBox, DisRange, Polygon, RayIntersection, Shape, ShapeConstructor, ShapeKind, Triangle,
-    TryNewPolygonError, TryNewTriangleError,
+    BoundingBox, Polygon, Shape, ShapeConstructor, ShapeKind, Triangle, TryNewPolygonError,
+    TryNewTriangleError,
 };
 
 #[derive(Debug, Clone)]
@@ -278,7 +280,7 @@ impl Shape for MeshPolygon {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::geometry::Val;
+    use crate::domain::math::numeric::Val;
 
     use super::*;
 

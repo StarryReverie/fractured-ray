@@ -2,11 +2,12 @@ use std::ops::RangeBounds;
 
 use snafu::prelude::*;
 
-use crate::domain::entity::shape::SurfaceSide;
-use crate::domain::geometry::{Point, Product, Val};
-use crate::domain::ray::Ray;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::Point;
+use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 
-use super::{BoundingBox, DisRange, RayIntersection, Shape, ShapeKind};
+use super::{BoundingBox, Shape, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Triangle {
@@ -120,10 +121,8 @@ pub enum TryNewTriangleError {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::entity::shape::SurfaceSide;
-    use crate::domain::geometry::UnitVector;
-    use crate::domain::geometry::Val;
-    use crate::domain::geometry::Vector;
+    use crate::domain::math::algebra::{UnitVector, Vector};
+    use crate::domain::math::numeric::Val;
 
     use super::*;
 

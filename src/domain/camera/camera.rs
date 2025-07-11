@@ -1,6 +1,8 @@
 use snafu::prelude::*;
 
-use crate::domain::geometry::{Point, Product, UnitVector, Val, Vector};
+use crate::domain::math::algebra::{Product, UnitVector, Vector};
+use crate::domain::math::geometry::Point;
+use crate::domain::math::numeric::Val;
 
 use super::{Offset, Resolution, TryNewViewportError, Viewport};
 

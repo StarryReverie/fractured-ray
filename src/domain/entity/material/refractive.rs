@@ -2,9 +2,9 @@ use rand::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::color::Color;
-use crate::domain::entity::shape::{DisRange, RayIntersection, SurfaceSide};
-use crate::domain::geometry::{Product, Val, WrappedVal};
-use crate::domain::ray::Ray;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
+use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::Renderer;
 
 use super::{Material, MaterialKind};
@@ -128,7 +128,8 @@ pub enum TryNewRefractiveError {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::geometry::{Point, UnitVector, Vector};
+    use crate::domain::math::algebra::{UnitVector, Vector};
+    use crate::domain::math::geometry::Point;
 
     use super::*;
 

@@ -8,7 +8,9 @@ use fractured_ray::domain::entity::material::{Diffuse, Emissive, Refractive, Spe
 use fractured_ray::domain::entity::shape::{
     MeshConstructor, MeshConstructorInstance, Plane, Polygon, Sphere,
 };
-use fractured_ray::domain::geometry::{Point, Rotation, UnitVector, Val};
+use fractured_ray::domain::math::algebra::{UnitVector, Vector};
+use fractured_ray::domain::math::geometry::{Point, Rotation, Translation};
+use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::infrastructure::image::PngWriter;
 
@@ -92,11 +94,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     builder.add_constructor(
         MeshConstructorInstance::wrap(MeshConstructor::new(
             vec![
-                Point::new(Val(3.0), Val(0.0), Val(1.0)),
                 Point::new(Val(1.0), Val(0.0), Val(1.0)),
+                Point::new(Val(-1.0), Val(0.0), Val(1.0)),
+                Point::new(Val(-1.0), Val(0.0), Val(-1.0)),
                 Point::new(Val(1.0), Val(0.0), Val(-1.0)),
-                Point::new(Val(3.0), Val(0.0), Val(-1.0)),
-                Point::new(Val(2.0), Val(2.0), Val(0.0)),
+                Point::new(Val(0.0), Val(2.0), Val(0.0)),
             ],
             vec![
                 vec![0, 1, 2, 3],
@@ -106,17 +108,23 @@ fn main() -> Result<(), Box<dyn Error>> {
                 vec![3, 1, 4],
             ],
         )?)
-        .rotate(Rotation::new(Val::PI / Val(-12.0), Val(0.0), Val(0.0))),
+        .rotate(Rotation::new(
+            Val::PI / Val(2.0),
+            Val::PI / Val(6.0),
+            Val::PI / Val(6.0),
+        ))
+        .translate(Translation::new(Vector::new(Val(2.0), Val(0.0), Val(0.0)))),
         Diffuse::new(Color::WHITE),
     )?;
 
     let scene = builder.build();
+    println!("init");
 
     let renderer = CoreRenderer::new(
         camera,
         scene,
         Configuration {
-            ssaa_samples: 8,
+            ssaa_samples: 16,
             ..Configuration::default()
         },
     )?;

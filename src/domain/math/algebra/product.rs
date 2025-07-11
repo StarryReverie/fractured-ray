@@ -1,4 +1,4 @@
-use super::Val;
+use crate::domain::math::numeric::Val;
 
 pub trait Product<Rhs = Self> {
     type Output;

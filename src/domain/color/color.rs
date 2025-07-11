@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul};
 
-use crate::domain::geometry::Val;
+use crate::domain::math::numeric::Val;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Color {

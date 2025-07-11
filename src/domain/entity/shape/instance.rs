@@ -1,14 +1,13 @@
 use std::sync::Arc;
 
 use crate::domain::entity::{ShapeContainer, ShapeId};
-use crate::domain::geometry::{
+use crate::domain::math::geometry::{
     AllTransformation, Rotation, Transform, Transformation, Translation,
 };
-use crate::domain::ray::Ray;
+use crate::domain::math::numeric::DisRange;
+use crate::domain::ray::{Ray, RayIntersection};
 
-use super::{
-    BoundingBox, DisRange, MeshConstructor, RayIntersection, Shape, ShapeConstructor, ShapeKind,
-};
+use super::{BoundingBox, MeshConstructor, Shape, ShapeConstructor, ShapeKind};
 
 #[derive(Debug, Clone)]
 pub struct Instance {

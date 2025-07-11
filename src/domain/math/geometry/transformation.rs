@@ -1,4 +1,5 @@
-use super::{Quaternion, Val, Vector};
+use crate::domain::math::algebra::{Quaternion, Vector};
+use crate::domain::math::numeric::Val;
 
 pub trait Transformation {
     fn inverse(self) -> Self;

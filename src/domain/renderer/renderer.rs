@@ -8,9 +8,8 @@ use snafu::prelude::*;
 use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Color;
 use crate::domain::entity::Scene;
-use crate::domain::entity::shape::DisRange;
-use crate::domain::geometry::{Val, WrappedVal};
 use crate::domain::image::Image;
+use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::Ray;
 
 #[cfg_attr(test, mockall::automock)]

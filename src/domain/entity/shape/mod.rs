@@ -12,6 +12,6 @@ pub use instance::{Instance, MeshConstructorInstance};
 pub use mesh::{MeshConstructor, MeshPolygon, MeshTriangle, TryNewMeshError};
 pub use plane::Plane;
 pub use polygon::{Polygon, TryNewPolygonError};
-pub use shape::{DisRange, RayIntersection, Shape, ShapeConstructor, ShapeKind, SurfaceSide};
+pub use shape::{Shape, ShapeConstructor, ShapeKind};
 pub use sphere::{Sphere, TryNewSphereError};
 pub use triangle::{Triangle, TryNewTriangleError};

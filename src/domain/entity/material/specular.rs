@@ -1,7 +1,7 @@
 use crate::domain::color::Color;
-use crate::domain::entity::shape::{DisRange, RayIntersection};
-use crate::domain::geometry::{Product, Val};
-use crate::domain::ray::Ray;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::Renderer;
 
 use super::{Material, MaterialKind};

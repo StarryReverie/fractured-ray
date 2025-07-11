@@ -1,6 +1,6 @@
 use crate::domain::camera::Resolution;
 use crate::domain::color::Color;
-use crate::domain::geometry::Val;
+use crate::domain::math::numeric::Val;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Image {
