@@ -13,108 +13,134 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct Mesh {
-    vertices: SmallVec<[Point; 8]>,
+pub struct MeshConstructor {
+    vertices: Arc<[Point]>,
+    triangles: Arc<[(u32, u32, u32)]>,
+    polygons: Arc<[SmallVec<[u32; 5]>]>,
 }
 
-impl Mesh {
-    fn new(vertices: SmallVec<[Point; 8]>) -> Self {
-        Self { vertices }
-    }
-
-    pub fn shapes(
-        vertices: SmallVec<[Point; 8]>,
-        mut vertex_indices: Vec<SmallVec<[usize; 3]>>,
-    ) -> Result<(Vec<MeshTriangle>, Vec<MeshPolygon>), CreateMeshShapeError> {
+impl MeshConstructor {
+    pub fn new(
+        vertices: Vec<Point>,
+        mut vertex_indices: Vec<Vec<usize>>,
+    ) -> Result<Self, TryNewMeshError> {
         Self::validate_vertex_uniqueness(&vertices)?;
-        let data = Arc::new(Mesh::new(vertices));
 
-        let triangles = vertex_indices.extract_if(.., |s| s.len() == 3).collect();
-        let polygons = vertex_indices;
+        let triangle_indices = vertex_indices
+            .extract_if(.., |s| s.len() == 3)
+            .collect::<Vec<_>>();
+        let triangles = Self::validate_and_create_triangles(&vertices, &triangle_indices)?;
 
-        Ok((
-            Self::create_triangles(&data, triangles)?,
-            Self::create_polygon(&data, polygons)?,
-        ))
+        let polygon_indices = vertex_indices;
+        let polygons = Self::validate_and_create_polygons(&vertices, &polygon_indices)?;
+
+        Ok(Self {
+            vertices: vertices.into(),
+            triangles: triangles.into(),
+            polygons: polygons.into(),
+        })
     }
 
-    fn validate_vertex_uniqueness(vertices: &[Point]) -> Result<(), CreateMeshShapeError> {
+    fn validate_vertex_uniqueness(vertices: &[Point]) -> Result<(), TryNewMeshError> {
         let mut buc = HashMap::new();
         for (i, v) in vertices.iter().enumerate() {
             if let Some(former) = buc.insert(*v, i) {
-                return Err(CreateMeshShapeError::DuplicatedVertices { former, latter: i });
+                return Err(TryNewMeshError::DuplicatedVertices { former, latter: i });
             }
         }
         Ok(())
     }
 
-    fn create_triangles(
-        data: &Arc<Mesh>,
-        triangles: Vec<SmallVec<[usize; 3]>>,
-    ) -> Result<Vec<MeshTriangle>, CreateMeshShapeError> {
+    fn validate_and_create_triangles(
+        vertices: &[Point],
+        triangles: &[Vec<usize>],
+    ) -> Result<Vec<(u32, u32, u32)>, TryNewMeshError> {
         let mut res = Vec::with_capacity(triangles.len());
 
-        for (surface, triangle) in triangles.into_iter().enumerate() {
+        for (face, triangle) in triangles.iter().enumerate() {
             let vertices = (triangle.iter())
-                .map(|&index| (index, data.vertices.get(index)))
-                .map(|(index, res)| res.context(OutOfBoundSnafu { surface, index }))
+                .map(|&index| (index, vertices.get(index)))
+                .map(|(index, res)| res.context(OutOfBoundSnafu { face, index }))
                 .collect::<Result<SmallVec<[_; 3]>, _>>()?;
 
             assert!(vertices.len() == 3);
             Triangle::validate_vertices(vertices[0], vertices[1], vertices[2])
-                .context(TriangleSnafu { surface })?;
+                .context(TriangleSnafu { face })?;
 
             assert!(triangle.len() == 3);
-            res.push(MeshTriangle {
-                data: data.clone(),
-                vertex0: triangle[0],
-                vertex1: triangle[1],
-                vertex2: triangle[2],
-            });
+            res.push((triangle[0] as u32, triangle[1] as u32, triangle[2] as u32));
         }
 
         Ok(res)
     }
 
-    fn create_polygon(
-        data: &Arc<Mesh>,
-        polygons: Vec<SmallVec<[usize; 3]>>,
-    ) -> Result<Vec<MeshPolygon>, CreateMeshShapeError> {
+    fn validate_and_create_polygons(
+        vertices: &[Point],
+        polygons: &[Vec<usize>],
+    ) -> Result<Vec<SmallVec<[u32; 5]>>, TryNewMeshError> {
         let mut res = Vec::with_capacity(polygons.len());
 
-        for (surface, polygon) in polygons.into_iter().enumerate() {
+        for (face, polygon) in polygons.iter().enumerate() {
             let vertices = (polygon.iter())
-                .map(|&index| (index, data.vertices.get(index).cloned()))
-                .map(|(index, res)| res.context(OutOfBoundSnafu { surface, index }))
+                .map(|&index| (index, vertices.get(index).cloned()))
+                .map(|(index, res)| res.context(OutOfBoundSnafu { face, index }))
                 .collect::<Result<Vec<_>, _>>()?;
 
-            let _ = Polygon::new(vertices).context(PolygonSnafu { surface })?;
+            let _ = Polygon::new(vertices).context(PolygonSnafu { face })?;
 
-            res.push(MeshPolygon {
-                data: data.clone(),
-                vertex_indices: polygon.into_iter().collect(),
-            });
+            res.push(polygon.iter().map(|&i| i as u32).collect());
         }
 
         Ok(res)
     }
+
+    pub fn construct(self) -> (Vec<MeshTriangle>, Vec<MeshPolygon>) {
+        let data = Arc::new(Mesh {
+            vertices: self.vertices,
+            triangles: self.triangles,
+            polygons: self.polygons,
+        });
+
+        let mesh_triangles = (0..data.triangles.len())
+            .map(|index| MeshTriangle {
+                data: data.clone(),
+                index,
+            })
+            .collect();
+
+        let mesh_polygons = (0..data.polygons.len())
+            .map(|index| MeshPolygon {
+                data: data.clone(),
+                index,
+            })
+            .collect();
+
+        (mesh_triangles, mesh_polygons)
+    }
+}
+
+#[derive(Debug)]
+pub struct Mesh {
+    vertices: Arc<[Point]>,
+    triangles: Arc<[(u32, u32, u32)]>,
+    polygons: Arc<[SmallVec<[u32; 5]>]>,
 }
 
 #[derive(Debug, Snafu, Clone, PartialEq, Eq)]
 #[non_exhaustive]
-pub enum CreateMeshShapeError {
+pub enum TryNewMeshError {
     #[snafu(display("mesh has duplicated vertices {former} and {latter}"))]
     DuplicatedVertices { former: usize, latter: usize },
-    #[snafu(display("index {index} for vertex in surface {surface} is out of bound"))]
-    OutOfBound { surface: usize, index: usize },
-    #[snafu(display("could not create mesh surface {surface} as triangle"))]
+    #[snafu(display("index {index} for vertex in face {face} is out of bound"))]
+    OutOfBound { face: usize, index: usize },
+    #[snafu(display("could not create mesh face {face} as triangle"))]
     Triangle {
-        surface: usize,
+        face: usize,
         source: TryNewTriangleError,
     },
-    #[snafu(display("could not create mesh surface {surface} as polygon"))]
+    #[snafu(display("could not create mesh face {face} as polygon"))]
     Polygon {
-        surface: usize,
+        face: usize,
         source: TryNewPolygonError,
     },
 }
@@ -122,9 +148,18 @@ pub enum CreateMeshShapeError {
 #[derive(Debug, Clone)]
 pub struct MeshTriangle {
     data: Arc<Mesh>,
-    vertex0: usize,
-    vertex1: usize,
-    vertex2: usize,
+    index: usize,
+}
+
+impl MeshTriangle {
+    fn get_vertices(&self) -> (&Point, &Point, &Point) {
+        let vertices = &self.data.vertices;
+        let triangles = &self.data.triangles;
+        let v0 = &vertices[triangles[self.index].0 as usize];
+        let v1 = &vertices[triangles[self.index].1 as usize];
+        let v2 = &vertices[triangles[self.index].2 as usize];
+        (v0, v1, v2)
+    }
 }
 
 impl Shape for MeshTriangle {
@@ -133,22 +168,12 @@ impl Shape for MeshTriangle {
     }
 
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
-        let v0 = (self.data.vertices.get(self.vertex0))
-            .expect("vertex0 index has been checked during mesh construction");
-        let v1 = (self.data.vertices.get(self.vertex1))
-            .expect("vertex1 index has been checked during mesh construction");
-        let v2 = (self.data.vertices.get(self.vertex2))
-            .expect("vertex2 index has been checked during mesh construction");
+        let (v0, v1, v2) = self.get_vertices();
         Triangle::calc_ray_intersection(ray, range, v0, v1, v2)
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {
-        let v0 = (self.data.vertices.get(self.vertex0))
-            .expect("vertex0 index has been checked during mesh construction");
-        let v1 = (self.data.vertices.get(self.vertex1))
-            .expect("vertex1 index has been checked during mesh construction");
-        let v2 = (self.data.vertices.get(self.vertex2))
-            .expect("vertex2 index has been checked during mesh construction");
+        let (v0, v1, v2) = self.get_vertices();
         let min = v0.component_min(v1).component_min(v2);
         let max = v0.component_max(v1).component_max(v2);
         Some(BoundingBox::new(min, max))
@@ -158,7 +183,18 @@ impl Shape for MeshTriangle {
 #[derive(Debug, Clone)]
 pub struct MeshPolygon {
     data: Arc<Mesh>,
-    vertex_indices: SmallVec<[usize; 6]>,
+    index: usize,
+}
+
+impl MeshPolygon {
+    fn get_vertices(&self) -> SmallVec<[&Point; 5]> {
+        let vertices = &self.data.vertices;
+        let polygons = &self.data.polygons;
+        polygons[self.index]
+            .iter()
+            .map(|index| &vertices[*index as usize])
+            .collect::<SmallVec<[_; 5]>>()
+    }
 }
 
 impl Shape for MeshPolygon {
@@ -167,12 +203,7 @@ impl Shape for MeshPolygon {
     }
 
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
-        let vertices = (self.vertex_indices.iter())
-            .map(|index| {
-                (self.data.vertices.get(*index))
-                    .expect("index has been checked during mesh construction")
-            })
-            .collect::<SmallVec<[_; 6]>>();
+        let vertices = self.get_vertices();
 
         assert!(vertices.len() > 3);
         let normal = (*vertices[1] - *vertices[0])
@@ -184,10 +215,7 @@ impl Shape for MeshPolygon {
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {
-        let mut vertices = (self.vertex_indices.iter()).map(|index| {
-            (self.data.vertices.get(*index))
-                .expect("index has been checked during mesh construction")
-        });
+        let mut vertices = self.get_vertices().into_iter();
         let init = *vertices.next().expect("init should exist");
         let (min, max) = vertices.fold((init, init), |(min, max), vertex| {
             (min.component_min(vertex), max.component_max(vertex))
@@ -198,16 +226,14 @@ impl Shape for MeshPolygon {
 
 #[cfg(test)]
 mod tests {
-    use smallvec::smallvec;
-
     use crate::domain::geometry::Val;
 
     use super::*;
 
     #[test]
     fn mesh_shapes_succeeds() {
-        let (triangles, polygons) = Mesh::shapes(
-            smallvec![
+        let (triangles, polygons) = MeshConstructor::new(
+            vec![
                 Point::new(Val(1.0), Val(1.0), Val(0.0)),
                 Point::new(Val(-1.0), Val(1.0), Val(0.0)),
                 Point::new(Val(-1.0), Val(-1.0), Val(0.0)),
@@ -215,14 +241,15 @@ mod tests {
                 Point::new(Val(0.0), Val(0.0), Val(2.0)),
             ],
             vec![
-                smallvec![0, 1, 2, 3],
-                smallvec![0, 1, 4],
-                smallvec![1, 2, 4],
-                smallvec![2, 3, 4],
-                smallvec![3, 1, 4],
+                vec![0, 1, 2, 3],
+                vec![0, 1, 4],
+                vec![1, 2, 4],
+                vec![2, 3, 4],
+                vec![3, 1, 4],
             ],
         )
-        .unwrap();
+        .unwrap()
+        .construct();
 
         assert_eq!(triangles.len(), 4);
         assert_eq!(polygons.len(), 1);
@@ -230,17 +257,18 @@ mod tests {
 
     #[test]
     fn mesh_bounding_box_succeeds() {
-        let (triangles, polygons) = Mesh::shapes(
-            smallvec![
+        let (triangles, polygons) = MeshConstructor::new(
+            vec![
                 Point::new(Val(1.0), Val(1.0), Val(0.0)),
                 Point::new(Val(-1.0), Val(1.0), Val(0.0)),
                 Point::new(Val(-1.0), Val(-1.0), Val(0.0)),
                 Point::new(Val(1.0), Val(-1.0), Val(0.0)),
                 Point::new(Val(0.0), Val(0.0), Val(2.0)),
             ],
-            vec![smallvec![0, 1, 2, 3], smallvec![0, 1, 4]],
+            vec![vec![0, 1, 2, 3], vec![0, 1, 4]],
         )
-        .unwrap();
+        .unwrap()
+        .construct();
 
         assert_eq!(
             triangles[0].bounding_box(),

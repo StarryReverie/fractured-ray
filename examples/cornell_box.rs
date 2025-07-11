@@ -1,8 +1,6 @@
 use std::error::Error;
 use std::fs::File;
 
-use smallvec::smallvec;
-
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::SceneBuilder;
@@ -91,7 +89,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Short Block
     builder.add_mesh(
-        smallvec![
+        vec![
             Point::new(Val(130.0), Val(165.0), Val(65.0)),
             Point::new(Val(82.0), Val(165.0), Val(225.0)),
             Point::new(Val(240.0), Val(165.0), Val(272.0)),
@@ -102,19 +100,19 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(82.0), Val(0.0), Val(225.0)),
         ],
         vec![
-            smallvec![0, 1, 2, 3],
-            smallvec![3, 0, 6, 4],
-            smallvec![3, 4, 5, 2],
-            smallvec![2, 5, 7, 1],
-            smallvec![1, 7, 6, 0],
-            smallvec![4, 6, 7, 5],
+            vec![0, 1, 2, 3],
+            vec![3, 0, 6, 4],
+            vec![3, 4, 5, 2],
+            vec![2, 5, 7, 1],
+            vec![1, 7, 6, 0],
+            vec![4, 6, 7, 5],
         ],
         Diffuse::new(Color::WHITE),
     )?;
 
     // Tall Block
     builder.add_mesh(
-        smallvec![
+        vec![
             Point::new(Val(423.0), Val(330.0), Val(247.0)),
             Point::new(Val(265.0), Val(330.0), Val(296.0)),
             Point::new(Val(314.0), Val(330.0), Val(456.0)),
@@ -122,15 +120,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(423.0), Val(0.0), Val(247.0)),
             Point::new(Val(472.0), Val(0.0), Val(406.0)),
             Point::new(Val(314.0), Val(0.0), Val(456.0)),
-            Point::new(Val(265.0), Val(0.0), Val(296.0))
+            Point::new(Val(265.0), Val(0.0), Val(296.0)),
         ],
         vec![
-            smallvec![0, 1, 2, 3],
-            smallvec![4, 0, 3, 5],
-            smallvec![5, 3, 2, 6],
-            smallvec![6, 2, 1, 7],
-            smallvec![7, 1, 0, 4],
-            smallvec![4, 5, 6, 7],
+            vec![0, 1, 2, 3],
+            vec![4, 0, 3, 5],
+            vec![5, 3, 2, 6],
+            vec![6, 2, 1, 7],
+            vec![7, 1, 0, 4],
+            vec![4, 5, 6, 7],
         ],
         Diffuse::new(Color::WHITE),
     )?;

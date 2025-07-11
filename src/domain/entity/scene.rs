@@ -4,7 +4,9 @@ use crate::domain::geometry::{Point, Val};
 use crate::domain::ray::Ray;
 
 use super::material::Material;
-use super::shape::{BoundingBox, CreateMeshShapeError, DisRange, Mesh, RayIntersection, Shape};
+use super::shape::{
+    BoundingBox, DisRange, MeshConstructor, RayIntersection, Shape, TryNewMeshError,
+};
 use super::{EntityId, EntityPool};
 
 #[derive(Debug)]
@@ -30,20 +32,25 @@ impl SceneBuilder {
 
     pub fn add_mesh<M: Material>(
         &mut self,
-        vertices: SmallVec<[Point; 8]>,
-        vertex_indices: Vec<SmallVec<[usize; 3]>>,
+        vertices: Vec<Point>,
+        vertex_indices: Vec<Vec<usize>>,
         material: M,
-    ) -> Result<&mut Self, CreateMeshShapeError> {
-        let (triangles, polygons) = Mesh::shapes(vertices, vertex_indices)?;
+    ) -> Result<&mut Self, TryNewMeshError> {
+        let ctor = MeshConstructor::new(vertices, vertex_indices)?;
+        let (triangles, polygons) = ctor.construct();
+
         let material_id = self.entities.add_material(material);
+
         for triangle in triangles {
             let shape_id = self.entities.add_shape(triangle);
             self.ids.push(EntityId::new(shape_id, material_id));
         }
+
         for polygon in polygons {
             let shape_id = self.entities.add_shape(polygon);
             self.ids.push(EntityId::new(shape_id, material_id));
         }
+
         Ok(self)
     }
 

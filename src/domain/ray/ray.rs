@@ -1,6 +1,4 @@
-use crate::domain::geometry::{
-    AllTransformation, Point, Transform, Transformation, UnitVector, Val,
-};
+use crate::domain::geometry::{AllTransformation, Point, Transform, UnitVector, Val};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Ray {

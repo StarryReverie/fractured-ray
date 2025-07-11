@@ -2,8 +2,6 @@ use std::error::Error;
 use std::fs::File;
 use std::sync::Arc;
 
-use smallvec::smallvec;
-
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::SceneBuilder;
@@ -92,7 +90,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     builder.add_mesh(
-        smallvec![
+        vec![
             Point::new(Val(3.0), Val(0.0), Val(1.0)),
             Point::new(Val(1.0), Val(0.0), Val(1.0)),
             Point::new(Val(1.0), Val(0.0), Val(-1.0)),
@@ -100,11 +98,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(2.0), Val(2.0), Val(0.0)),
         ],
         vec![
-            smallvec![0, 1, 2, 3],
-            smallvec![0, 1, 4],
-            smallvec![1, 2, 4],
-            smallvec![2, 3, 4],
-            smallvec![3, 1, 4],
+            vec![0, 1, 2, 3],
+            vec![0, 1, 4],
+            vec![1, 2, 4],
+            vec![2, 3, 4],
+            vec![3, 1, 4],
         ],
         Diffuse::new(Color::WHITE),
     )?;
