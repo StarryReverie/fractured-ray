@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use std::ops::{Bound, RangeBounds};
 
+use crate::domain::entity::{ShapeContainer, ShapeId};
 use crate::domain::geometry::{AllTransformation, Point, Transform, UnitVector, Val};
 use crate::domain::ray::Ray;
 
@@ -23,6 +24,10 @@ pub trait Shape: Debug + Send + Sync + 'static {
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection>;
 
     fn bounding_box(&self) -> Option<BoundingBox>;
+}
+
+pub trait ShapeConstructor: Debug + Send + Sync + 'static {
+    fn construct<C: ShapeContainer>(self, container: &mut C) -> Vec<ShapeId>;
 }
 
 #[derive(Debug, Clone, PartialEq)]

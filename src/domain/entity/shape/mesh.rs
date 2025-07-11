@@ -4,15 +4,16 @@ use std::sync::Arc;
 use smallvec::SmallVec;
 use snafu::prelude::*;
 
-use crate::domain::geometry::{Point, Product};
+use crate::domain::entity::{ShapeContainer, ShapeId};
+use crate::domain::geometry::{AllTransformation, Point, Product, Transform};
 use crate::domain::ray::Ray;
 
 use super::{
-    BoundingBox, DisRange, Polygon, RayIntersection, Shape, ShapeKind, Triangle,
+    BoundingBox, DisRange, Polygon, RayIntersection, Shape, ShapeConstructor, ShapeKind, Triangle,
     TryNewPolygonError, TryNewTriangleError,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MeshConstructor {
     vertices: Arc<[Point]>,
     triangles: Arc<[(u32, u32, u32)]>,
@@ -94,11 +95,17 @@ impl MeshConstructor {
         Ok(res)
     }
 
-    pub fn construct(self) -> (Vec<MeshTriangle>, Vec<MeshPolygon>) {
+    pub fn construct_impl(
+        self,
+        transformation: Option<AllTransformation>,
+        inv_transformation: Option<AllTransformation>,
+    ) -> (Vec<MeshTriangle>, Vec<MeshPolygon>) {
         let data = Arc::new(Mesh {
-            vertices: self.vertices,
-            triangles: self.triangles,
-            polygons: self.polygons,
+            vertices: Arc::clone(&self.vertices),
+            triangles: Arc::clone(&self.triangles),
+            polygons: Arc::clone(&self.polygons),
+            transformation,
+            inv_transformation,
         });
 
         let mesh_triangles = (0..data.triangles.len())
@@ -119,11 +126,28 @@ impl MeshConstructor {
     }
 }
 
+impl ShapeConstructor for MeshConstructor {
+    fn construct<C: ShapeContainer>(self, container: &mut C) -> Vec<ShapeId> {
+        let (triangles, polygons) = self.construct_impl(None, None);
+
+        let mut ids = Vec::with_capacity(triangles.len() + polygons.len());
+        for triangle in triangles {
+            ids.push(container.add_shape(triangle));
+        }
+        for polygon in polygons {
+            ids.push(container.add_shape(polygon));
+        }
+        ids
+    }
+}
+
 #[derive(Debug)]
 pub struct Mesh {
     vertices: Arc<[Point]>,
     triangles: Arc<[(u32, u32, u32)]>,
     polygons: Arc<[SmallVec<[u32; 5]>]>,
+    transformation: Option<AllTransformation>,
+    inv_transformation: Option<AllTransformation>,
 }
 
 #[derive(Debug, Snafu, Clone, PartialEq, Eq)]
@@ -169,14 +193,28 @@ impl Shape for MeshTriangle {
 
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         let (v0, v1, v2) = self.get_vertices();
-        Triangle::calc_ray_intersection(ray, range, v0, v1, v2)
+        let tr = &self.data.transformation;
+        let inv_tr = &self.data.inv_transformation;
+
+        match tr.as_ref().zip(inv_tr.as_ref()) {
+            None => Triangle::calc_ray_intersection(ray, range, v0, v1, v2),
+            Some((tr, inv_tr)) => {
+                let ray = ray.transform(inv_tr);
+                let res = Triangle::calc_ray_intersection(&ray, range, v0, v1, v2)?;
+                Some(res.transform(tr))
+            }
+        }
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {
         let (v0, v1, v2) = self.get_vertices();
         let min = v0.component_min(v1).component_min(v2);
         let max = v0.component_max(v1).component_max(v2);
-        Some(BoundingBox::new(min, max))
+
+        match &self.data.transformation {
+            None => Some(BoundingBox::new(min, max)),
+            Some(tr) => Some(BoundingBox::new(min, max).transform(tr)),
+        }
     }
 }
 
@@ -211,7 +249,17 @@ impl Shape for MeshPolygon {
             .normalize()
             .expect("normal existence has been checked during mesh construction");
 
-        Polygon::calc_ray_intersection(ray, range, &vertices, &normal)
+        let tr = &self.data.transformation;
+        let inv_tr = &self.data.inv_transformation;
+
+        match tr.as_ref().zip(inv_tr.as_ref()) {
+            None => Polygon::calc_ray_intersection(ray, range, &vertices, &normal),
+            Some((tr, inv_tr)) => {
+                let ray = ray.transform(inv_tr);
+                let res = Polygon::calc_ray_intersection(&ray, range, &vertices, &normal)?;
+                Some(res.transform(tr))
+            }
+        }
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {
@@ -220,7 +268,11 @@ impl Shape for MeshPolygon {
         let (min, max) = vertices.fold((init, init), |(min, max), vertex| {
             (min.component_min(vertex), max.component_max(vertex))
         });
-        Some(BoundingBox::new(min, max))
+
+        match &self.data.transformation {
+            None => Some(BoundingBox::new(min, max)),
+            Some(tr) => Some(BoundingBox::new(min, max).transform(tr)),
+        }
     }
 }
 
@@ -249,7 +301,7 @@ mod tests {
             ],
         )
         .unwrap()
-        .construct();
+        .construct_impl(None, None);
 
         assert_eq!(triangles.len(), 4);
         assert_eq!(polygons.len(), 1);
@@ -268,7 +320,7 @@ mod tests {
             vec![vec![0, 1, 2, 3], vec![0, 1, 4]],
         )
         .unwrap()
-        .construct();
+        .construct_impl(None, None);
 
         assert_eq!(
             triangles[0].bounding_box(),

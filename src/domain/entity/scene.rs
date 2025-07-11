@@ -1,13 +1,13 @@
 use smallvec::SmallVec;
 
-use crate::domain::geometry::{Point, Val};
+use crate::domain::geometry::Val;
 use crate::domain::ray::Ray;
 
 use super::material::Material;
 use super::shape::{
-    BoundingBox, DisRange, MeshConstructor, RayIntersection, Shape, TryNewMeshError,
+    BoundingBox, DisRange, RayIntersection, Shape, ShapeConstructor, TryNewMeshError,
 };
-use super::{EntityId, EntityPool};
+use super::{EntityId, EntityPool, MaterialContainer, ShapeContainer};
 
 #[derive(Debug)]
 pub struct SceneBuilder {
@@ -30,24 +30,19 @@ impl SceneBuilder {
         self
     }
 
-    pub fn add_mesh<M: Material>(
+    pub fn add_constructor<C, M>(
         &mut self,
-        vertices: Vec<Point>,
-        vertex_indices: Vec<Vec<usize>>,
+        constructor: C,
         material: M,
-    ) -> Result<&mut Self, TryNewMeshError> {
-        let ctor = MeshConstructor::new(vertices, vertex_indices)?;
-        let (triangles, polygons) = ctor.construct();
-
+    ) -> Result<&mut Self, TryNewMeshError>
+    where
+        C: ShapeConstructor,
+        M: Material,
+    {
+        let shape_ids = constructor.construct(self.entities.as_mut());
         let material_id = self.entities.add_material(material);
 
-        for triangle in triangles {
-            let shape_id = self.entities.add_shape(triangle);
-            self.ids.push(EntityId::new(shape_id, material_id));
-        }
-
-        for polygon in polygons {
-            let shape_id = self.entities.add_shape(polygon);
+        for shape_id in shape_ids {
             self.ids.push(EntityId::new(shape_id, material_id));
         }
 
@@ -60,7 +55,8 @@ impl SceneBuilder {
         let mut unboundeds = Vec::new();
 
         for id in self.ids {
-            match self.entities.get_shape(id).unwrap().bounding_box() {
+            let sid = id.shape_id();
+            match self.entities.get_shape(sid).unwrap().bounding_box() {
                 Some(bbox) => bboxes.push((id, bbox)),
                 None => unboundeds.push(id),
             }
@@ -327,9 +323,9 @@ impl Scene {
                 }
             }
             BvhNode::Leaf { id, .. } => {
-                let shape = self.entities.get_shape(*id).unwrap();
+                let shape = self.entities.get_shape(id.shape_id()).unwrap();
                 if let Some(intersection) = shape.hit(ray, range) {
-                    let material = self.entities.get_material(*id).unwrap();
+                    let material = self.entities.get_material(id.material_id()).unwrap();
                     // println!("id = {id:?}, shape = {shape:#?}, intersection = {intersection:#?}");
                     Some((intersection, material))
                 } else {
@@ -352,7 +348,7 @@ impl Scene {
         let mut closet: Option<(RayIntersection, EntityId)> = None;
 
         for id in ids {
-            let shape = self.entities.get_shape(*id).unwrap();
+            let shape = self.entities.get_shape(id.shape_id()).unwrap();
             if let Some((closet, _)) = &closet {
                 range = range.shrink_end(closet.distance());
             }
@@ -362,7 +358,7 @@ impl Scene {
         }
 
         if let Some((intersection, id)) = closet {
-            let material = self.entities.get_material(id).unwrap();
+            let material = self.entities.get_material(id.material_id()).unwrap();
             Some((intersection, material))
         } else {
             None
@@ -427,7 +423,7 @@ mod tests {
     use crate::domain::color::Color;
     use crate::domain::entity::material::Diffuse;
     use crate::domain::entity::shape::{Polygon, Sphere, Triangle};
-    use crate::domain::geometry::Vector;
+    use crate::domain::geometry::{Point, Vector};
 
     use super::*;
 

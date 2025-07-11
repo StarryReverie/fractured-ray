@@ -1,4 +1,5 @@
 use std::any::{Any, TypeId};
+use std::fmt::Debug;
 use std::mem::ManuallyDrop;
 
 use super::material::{Diffuse, Emissive, Material, MaterialKind, Refractive, Specular};
@@ -16,6 +17,14 @@ impl ShapeId {
     pub fn new(kind: ShapeKind, index: u32) -> Self {
         Self { kind, index }
     }
+
+    pub fn kind(&self) -> ShapeKind {
+        self.kind
+    }
+
+    pub fn index(&self) -> u32 {
+        self.index
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -27,6 +36,14 @@ pub struct MaterialId {
 impl MaterialId {
     pub fn new(kind: MaterialKind, index: u32) -> Self {
         Self { kind, index }
+    }
+
+    pub fn kind(&self) -> MaterialKind {
+        self.kind
+    }
+
+    pub fn index(&self) -> u32 {
+        self.index
     }
 }
 
@@ -48,21 +65,25 @@ impl EntityId {
         }
     }
 
-    pub fn shape_kind(&self) -> ShapeKind {
-        self.shape_kind
+    pub fn shape_id(&self) -> ShapeId {
+        ShapeId::new(self.shape_kind, self.shape_index)
     }
 
-    pub fn shape_index(&self) -> u32 {
-        self.shape_index
+    pub fn material_id(&self) -> MaterialId {
+        MaterialId::new(self.material_kind, self.material_index)
     }
+}
 
-    pub fn material_kind(&self) -> MaterialKind {
-        self.material_kind
-    }
+pub trait ShapeContainer: Debug + Send + Sync + 'static {
+    fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId;
 
-    pub fn material_index(&self) -> u32 {
-        self.material_index
-    }
+    fn get_shape(&self, id: ShapeId) -> Option<&dyn Shape>;
+}
+
+pub trait MaterialContainer: Debug + Send + Sync + 'static {
+    fn add_material<M: Material>(&mut self, material: M) -> MaterialId;
+
+    fn get_material(&self, id: MaterialId) -> Option<&dyn Material>;
 }
 
 #[derive(Debug, Default)]
@@ -75,23 +96,25 @@ impl EntityPool {
     pub fn new() -> Self {
         Self::default()
     }
+}
 
-    pub fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId {
-        self.shapes.add(shape)
+impl ShapeContainer for EntityPool {
+    fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId {
+        self.shapes.add_shape(shape)
     }
 
-    pub fn add_material<M: Material>(&mut self, material: M) -> MaterialId {
-        self.materials.add(material)
+    fn get_shape(&self, id: ShapeId) -> Option<&dyn Shape> {
+        self.shapes.get_shape(id)
+    }
+}
+
+impl MaterialContainer for EntityPool {
+    fn add_material<M: Material>(&mut self, material: M) -> MaterialId {
+        self.materials.add_material(material)
     }
 
-    pub fn get_shape(&self, id: EntityId) -> Option<&dyn Shape> {
-        self.shapes
-            .get(ShapeId::new(id.shape_kind(), id.shape_index()))
-    }
-
-    pub fn get_material(&self, id: EntityId) -> Option<&dyn Material> {
-        self.materials
-            .get(MaterialId::new(id.material_kind(), id.material_index()))
+    fn get_material(&self, id: MaterialId) -> Option<&dyn Material> {
+        self.materials.get_material(id)
     }
 }
 
@@ -107,7 +130,22 @@ struct ShapePool {
 }
 
 impl ShapePool {
-    pub fn add<S: Shape>(&mut self, shape: S) -> ShapeId {
+    fn downcast_and_push<S: Shape>(shape: impl Shape + Any, collection: &mut Vec<S>) -> u32 {
+        assert_eq!(TypeId::of::<S>(), shape.type_id());
+        // SAFETY: Already checked that S == impl Shape + Any.
+        let shape = unsafe { std::mem::transmute_copy(&ManuallyDrop::new(shape)) };
+
+        collection.push(shape);
+        collection.len() as u32 - 1
+    }
+
+    fn upcast<S: Shape>(shape: &S) -> &dyn Shape {
+        shape
+    }
+}
+
+impl ShapeContainer for ShapePool {
+    fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId {
         let kind = shape.shape_kind();
         let type_id = TypeId::of::<S>();
 
@@ -137,16 +175,7 @@ impl ShapePool {
         }
     }
 
-    fn downcast_and_push<S: Shape>(shape: impl Shape + Any, collection: &mut Vec<S>) -> u32 {
-        assert_eq!(TypeId::of::<S>(), shape.type_id());
-        // SAFETY: Already checked that S == impl Shape + Any.
-        let shape = unsafe { std::mem::transmute_copy(&ManuallyDrop::new(shape)) };
-
-        collection.push(shape);
-        collection.len() as u32 - 1
-    }
-
-    pub fn get(&self, shape_id: ShapeId) -> Option<&dyn Shape> {
+    fn get_shape(&self, shape_id: ShapeId) -> Option<&dyn Shape> {
         let index = shape_id.index as usize;
         match shape_id.kind {
             ShapeKind::Instance => self.instances.get(index).map(Self::upcast),
@@ -157,10 +186,6 @@ impl ShapePool {
             ShapeKind::Triangle => self.triangles.get(index).map(Self::upcast),
             ShapeKind::Sphere => self.spheres.get(index).map(Self::upcast),
         }
-    }
-
-    fn upcast<S: Shape>(shape: &S) -> &dyn Shape {
-        shape
     }
 }
 
@@ -173,7 +198,25 @@ struct MaterialPool {
 }
 
 impl MaterialPool {
-    pub fn add<M: Material>(&mut self, material: M) -> MaterialId {
+    fn downcast_and_push<M: Material>(
+        material: impl Material + Any,
+        collection: &mut Vec<M>,
+    ) -> u32 {
+        assert_eq!(TypeId::of::<M>(), material.type_id());
+        // SAFETY: Already checked that M == impl Material + Any.
+        let material = unsafe { std::mem::transmute_copy(&ManuallyDrop::new(material)) };
+
+        collection.push(material);
+        collection.len() as u32 - 1
+    }
+
+    fn upcast<S: Material>(material: &S) -> &dyn Material {
+        material
+    }
+}
+
+impl MaterialContainer for MaterialPool {
+    fn add_material<M: Material>(&mut self, material: M) -> MaterialId {
         let kind = material.material_kind();
         let type_id = TypeId::of::<M>();
 
@@ -194,19 +237,7 @@ impl MaterialPool {
         }
     }
 
-    fn downcast_and_push<M: Material>(
-        material: impl Material + Any,
-        collection: &mut Vec<M>,
-    ) -> u32 {
-        assert_eq!(TypeId::of::<M>(), material.type_id());
-        // SAFETY: Already checked that M == impl Material + Any.
-        let material = unsafe { std::mem::transmute_copy(&ManuallyDrop::new(material)) };
-
-        collection.push(material);
-        collection.len() as u32 - 1
-    }
-
-    pub fn get(&self, material_id: MaterialId) -> Option<&dyn Material> {
+    fn get_material(&self, material_id: MaterialId) -> Option<&dyn Material> {
         let index = material_id.index as usize;
         match material_id.kind {
             MaterialKind::Diffuse => self.diffuse.get(index).map(Self::upcast),
@@ -214,10 +245,6 @@ impl MaterialPool {
             MaterialKind::Refractive => self.refractive.get(index).map(Self::upcast),
             MaterialKind::Specular => self.specular.get(index).map(Self::upcast),
         }
-    }
-
-    fn upcast<S: Material>(material: &S) -> &dyn Material {
-        material
     }
 }
 
@@ -235,9 +262,12 @@ mod tests {
             .add_shape(Sphere::new(Point::new(Val(0.0), Val(0.0), Val(0.0)), Val(1.0)).unwrap());
         let material_id = pool.add_material(Diffuse::new(Color::WHITE));
         let id = EntityId::new(shape_id, material_id);
-        assert_eq!(pool.get_shape(id).unwrap().shape_kind(), ShapeKind::Sphere);
         assert_eq!(
-            pool.get_material(id).unwrap().material_kind(),
+            pool.get_shape(id.shape_id()).unwrap().shape_kind(),
+            ShapeKind::Sphere
+        );
+        assert_eq!(
+            pool.get_material(id.material_id()).unwrap().material_kind(),
             MaterialKind::Diffuse,
         );
     }

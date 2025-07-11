@@ -1,12 +1,13 @@
 use std::error::Error;
 use std::fs::File;
-use std::sync::Arc;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::SceneBuilder;
 use fractured_ray::domain::entity::material::{Diffuse, Emissive, Refractive, Specular};
-use fractured_ray::domain::entity::shape::{Instance, Plane, Polygon, Sphere};
+use fractured_ray::domain::entity::shape::{
+    MeshConstructor, MeshConstructorInstance, Plane, Polygon, Sphere,
+};
 use fractured_ray::domain::geometry::{Point, Rotation, UnitVector, Val};
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::infrastructure::image::PngWriter;
@@ -66,13 +67,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     builder.add(
-        Instance::of(Arc::new(Polygon::new([
+        Polygon::new([
             Point::new(Val(-2.0), Val(3.999), Val(-2.0)),
             Point::new(Val(2.0), Val(3.999), Val(-2.0)),
             Point::new(Val(2.0), Val(3.999), Val(2.0)),
             Point::new(Val(-2.0), Val(3.999), Val(2.0)),
-        ])?))
-        .rotate(Rotation::new(Val::PI / Val(3.0), Val(0.0), Val(0.0))),
+        ])?,
         Emissive::new(Color::WHITE),
     );
 
@@ -89,21 +89,24 @@ fn main() -> Result<(), Box<dyn Error>> {
         Diffuse::new(Color::YELLOW),
     );
 
-    builder.add_mesh(
-        vec![
-            Point::new(Val(3.0), Val(0.0), Val(1.0)),
-            Point::new(Val(1.0), Val(0.0), Val(1.0)),
-            Point::new(Val(1.0), Val(0.0), Val(-1.0)),
-            Point::new(Val(3.0), Val(0.0), Val(-1.0)),
-            Point::new(Val(2.0), Val(2.0), Val(0.0)),
-        ],
-        vec![
-            vec![0, 1, 2, 3],
-            vec![0, 1, 4],
-            vec![1, 2, 4],
-            vec![2, 3, 4],
-            vec![3, 1, 4],
-        ],
+    builder.add_constructor(
+        MeshConstructorInstance::wrap(MeshConstructor::new(
+            vec![
+                Point::new(Val(3.0), Val(0.0), Val(1.0)),
+                Point::new(Val(1.0), Val(0.0), Val(1.0)),
+                Point::new(Val(1.0), Val(0.0), Val(-1.0)),
+                Point::new(Val(3.0), Val(0.0), Val(-1.0)),
+                Point::new(Val(2.0), Val(2.0), Val(0.0)),
+            ],
+            vec![
+                vec![0, 1, 2, 3],
+                vec![0, 1, 4],
+                vec![1, 2, 4],
+                vec![2, 3, 4],
+                vec![3, 1, 4],
+            ],
+        )?)
+        .rotate(Rotation::new(Val::PI / Val(-12.0), Val(0.0), Val(0.0))),
         Diffuse::new(Color::WHITE),
     )?;
 
