@@ -41,24 +41,21 @@ impl Refractive {
         ray: &Ray,
         intersection: &RayIntersection,
         cos_i: Val,
-        refractive_index: Val,
+        ri: Val,
     ) -> Option<Ray> {
         let normal = intersection.normal();
         let dir_inci = ray.direction();
 
-        let dir_inci_perp = -cos_i * normal;
-        let dir_inci_para = dir_inci - dir_inci_perp;
-        let sin_i = (Val(1.0) - cos_i * cos_i).sqrt();
+        let dir_refr_perp = (dir_inci + cos_i * normal) / ri;
 
-        let sin_r = sin_i / refractive_index;
-
-        if sin_r > Val(1.0) {
+        let tmp = Val(1.0) - dir_refr_perp.norm_squared();
+        if tmp.is_sign_negative() {
             return None;
         }
 
-        let cos_r = (Val(1.0) - sin_r * sin_r).sqrt();
-        let dir_refr_para = (sin_r * cos_i) / (cos_r * sin_i) * dir_inci_para;
-        let dir_refr = (dir_refr_para + dir_inci_perp)
+        let dir_refr_para = -tmp.sqrt() * normal;
+
+        let dir_refr = (dir_refr_para + dir_refr_perp)
             .normalize()
             .expect("dir_refr should not be zero vector");
 
