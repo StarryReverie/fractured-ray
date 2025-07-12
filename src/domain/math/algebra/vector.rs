@@ -190,14 +190,14 @@ mod tests {
 
     #[test]
     fn vector_rotation_transform_succeeds() {
-        let v = Vector::new(Val(1.0), Val(0.0), Val(0.0));
-        let v = v.transform(&Rotation::new(
-            Val::PI / Val(3.0),
-            Val::PI / Val(3.0),
-            Val(0.0),
-        ));
-        assert_eq!(v.x(), Val(0.25));
-        assert_eq!(v.y(), Val(3.0).sqrt() / Val(2.0));
-        assert_eq!(v.z(), -Val(3.0).sqrt() / Val(4.0));
+        let rotation = Rotation::new(
+            -UnitVector::z_direction(),
+            Vector::new(Val(-1.0), Val(1.0), Val(0.0))
+                .normalize()
+                .unwrap(),
+            Val::PI / Val(4.0),
+        );
+        let v = Vector::new(Val(1.0), Val(0.0), Val(0.0)).transform(&rotation);
+        assert_eq!(v, Vector::new(Val(0.0), Val(0.0), Val(-1.0)));
     }
 }

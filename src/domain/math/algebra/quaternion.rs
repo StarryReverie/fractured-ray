@@ -13,17 +13,6 @@ impl Quaternion {
         Self(w, x, y, z)
     }
 
-    pub fn euler(yaw: Val, pitch: Val, roll: Val) -> Self {
-        let (sy, cy) = (Val(0.5) * yaw).sin_cos();
-        let (sp, cp) = (Val(0.5) * pitch).sin_cos();
-        let (sr, cr) = (Val(0.5) * roll).sin_cos();
-        let w = cy * cp * cr - sy * sp * sr;
-        let x = cy * sp * cr - sy * cp * sr;
-        let y = cy * sp * sr + sy * cp * cr;
-        let z = -cy * cp * sr - sy * sp * cr;
-        Self::new(w, x, y, z).normalize()
-    }
-
     pub fn w(&self) -> Val {
         self.0
     }

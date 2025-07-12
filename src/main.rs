@@ -105,20 +105,19 @@ fn main() -> Result<(), Box<dyn Error>> {
                 vec![0, 1, 4],
                 vec![1, 2, 4],
                 vec![2, 3, 4],
-                vec![3, 1, 4],
+                vec![3, 0, 4],
             ],
         )?)
         .rotate(Rotation::new(
-            Val::PI / Val(2.0),
-            Val::PI / Val(6.0),
-            Val::PI / Val(6.0),
+            UnitVector::y_direction(),
+            UnitVector::z_direction(),
+            Val::PI / Val(3.0),
         ))
         .translate(Translation::new(Vector::new(Val(2.0), Val(0.0), Val(0.0)))),
         Diffuse::new(Color::WHITE),
     )?;
 
     let scene = builder.build();
-    println!("init");
 
     let renderer = CoreRenderer::new(
         camera,

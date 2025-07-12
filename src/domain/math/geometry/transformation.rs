@@ -1,4 +1,4 @@
-use crate::domain::math::algebra::{Quaternion, Vector};
+use crate::domain::math::algebra::{Product, Quaternion, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 
 pub trait Transformation {
@@ -48,8 +48,22 @@ pub struct Rotation {
 }
 
 impl Rotation {
-    pub fn new(yaw: Val, pitch: Val, roll: Val) -> Self {
-        Quaternion::euler(yaw, pitch, roll).into()
+    pub fn new(init_dir: UnitVector, final_dir: UnitVector, roll: Val) -> Self {
+        if let Ok(axis) = init_dir.cross(final_dir).normalize() {
+            let angle = init_dir.dot(final_dir).acos();
+            let rotation1 = Self::get_rotation(axis, angle);
+            let rotation2 = Self::get_rotation(final_dir, roll);
+            let quaternion = rotation2 * rotation1;
+            Self { quaternion }
+        } else {
+            let quaternion = Self::get_rotation(final_dir, roll);
+            Self { quaternion }
+        }
+    }
+
+    fn get_rotation(axis: UnitVector, angle: Val) -> Quaternion {
+        let (sa, ca) = (Val(0.5) * angle).sin_cos();
+        Quaternion::new(ca, sa * axis.x(), sa * axis.y(), sa * axis.z())
     }
 
     pub fn quaternion(&self) -> Quaternion {
