@@ -1,12 +1,11 @@
 use rand::prelude::*;
 
 use crate::domain::color::Color;
+use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::Renderer;
-
-use super::{Material, MaterialKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Diffuse {

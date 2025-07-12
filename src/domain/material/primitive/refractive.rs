@@ -2,12 +2,11 @@ use rand::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::color::Color;
+use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Product;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::Renderer;
-
-use super::{Material, MaterialKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Refractive {

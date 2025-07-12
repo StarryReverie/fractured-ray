@@ -5,8 +5,9 @@ use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
 
-use super::{BoundingBox, Plane, Shape, ShapeKind, Triangle, TryNewTriangleError};
+use super::{Plane, Triangle, TryNewTriangleError};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Polygon(PolygonInner);

@@ -1,11 +1,12 @@
 use smallvec::SmallVec;
 
+use crate::domain::material::def::{Material, MaterialContainer};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::shape::def::{BoundingBox, Shape, ShapeConstructor, ShapeContainer};
+use crate::domain::shape::mesh::TryNewMeshError;
 
-use super::material::Material;
-use super::shape::{BoundingBox, Shape, ShapeConstructor, TryNewMeshError};
-use super::{EntityId, EntityPool, MaterialContainer, ShapeContainer};
+use super::{EntityId, EntityPool};
 
 #[derive(Debug)]
 pub struct SceneBuilder {
@@ -324,7 +325,6 @@ impl Scene {
                 let shape = self.entities.get_shape(id.shape_id()).unwrap();
                 if let Some(intersection) = shape.hit(ray, range) {
                     let material = self.entities.get_material(id.material_id()).unwrap();
-                    // println!("id = {id:?}, shape = {shape:#?}, intersection = {intersection:#?}");
                     Some((intersection, material))
                 } else {
                     None
@@ -419,10 +419,10 @@ impl BvhNode {
 #[cfg(test)]
 mod tests {
     use crate::domain::color::Color;
-    use crate::domain::entity::material::Diffuse;
-    use crate::domain::entity::shape::{Polygon, Sphere, Triangle};
+    use crate::domain::material::primitive::Diffuse;
     use crate::domain::math::algebra::Vector;
     use crate::domain::math::geometry::Point;
+    use crate::domain::shape::primitive::{Polygon, Sphere, Triangle};
 
     use super::*;
 
@@ -453,7 +453,6 @@ mod tests {
             Diffuse::new(Color::WHITE),
         );
         let scene = builder.build();
-        println!("{:#?}", scene.nodes);
 
         let (intersection, _) = scene
             .find_intersection(

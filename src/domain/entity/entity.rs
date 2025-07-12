@@ -2,50 +2,12 @@ use std::any::{Any, TypeId};
 use std::fmt::Debug;
 use std::mem::ManuallyDrop;
 
-use super::material::{Diffuse, Emissive, Material, MaterialKind, Refractive, Specular};
-use super::shape::{
-    Instance, MeshPolygon, MeshTriangle, Plane, Polygon, Shape, ShapeKind, Sphere, Triangle,
-};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ShapeId {
-    kind: ShapeKind,
-    index: u32,
-}
-
-impl ShapeId {
-    pub fn new(kind: ShapeKind, index: u32) -> Self {
-        Self { kind, index }
-    }
-
-    pub fn kind(&self) -> ShapeKind {
-        self.kind
-    }
-
-    pub fn index(&self) -> u32 {
-        self.index
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct MaterialId {
-    kind: MaterialKind,
-    index: u32,
-}
-
-impl MaterialId {
-    pub fn new(kind: MaterialKind, index: u32) -> Self {
-        Self { kind, index }
-    }
-
-    pub fn kind(&self) -> MaterialKind {
-        self.kind
-    }
-
-    pub fn index(&self) -> u32 {
-        self.index
-    }
-}
+use crate::domain::material::def::{Material, MaterialContainer, MaterialId, MaterialKind};
+use crate::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
+use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId, ShapeKind};
+use crate::domain::shape::instance::Instance;
+use crate::domain::shape::mesh::{MeshPolygon, MeshTriangle};
+use crate::domain::shape::primitive::{Plane, Polygon, Sphere, Triangle};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EntityId {
@@ -58,10 +20,10 @@ pub struct EntityId {
 impl EntityId {
     pub fn new(shape_id: ShapeId, material_id: MaterialId) -> Self {
         Self {
-            shape_kind: shape_id.kind,
-            shape_index: shape_id.index,
-            material_kind: material_id.kind,
-            material_index: material_id.index,
+            shape_kind: shape_id.kind(),
+            shape_index: shape_id.index(),
+            material_kind: material_id.kind(),
+            material_index: material_id.index(),
         }
     }
 
@@ -72,18 +34,6 @@ impl EntityId {
     pub fn material_id(&self) -> MaterialId {
         MaterialId::new(self.material_kind, self.material_index)
     }
-}
-
-pub trait ShapeContainer: Debug + Send + Sync + 'static {
-    fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId;
-
-    fn get_shape(&self, id: ShapeId) -> Option<&dyn Shape>;
-}
-
-pub trait MaterialContainer: Debug + Send + Sync + 'static {
-    fn add_material<M: Material>(&mut self, material: M) -> MaterialId;
-
-    fn get_material(&self, id: MaterialId) -> Option<&dyn Material>;
 }
 
 #[derive(Debug, Default)]
@@ -176,8 +126,8 @@ impl ShapeContainer for ShapePool {
     }
 
     fn get_shape(&self, shape_id: ShapeId) -> Option<&dyn Shape> {
-        let index = shape_id.index as usize;
-        match shape_id.kind {
+        let index = shape_id.index() as usize;
+        match shape_id.kind() {
             ShapeKind::Instance => self.instances.get(index).map(Self::upcast),
             ShapeKind::MeshPolygon => self.mesh_polygons.get(index).map(Self::upcast),
             ShapeKind::MeshTriangle => self.mesh_triangles.get(index).map(Self::upcast),
@@ -238,8 +188,8 @@ impl MaterialContainer for MaterialPool {
     }
 
     fn get_material(&self, material_id: MaterialId) -> Option<&dyn Material> {
-        let index = material_id.index as usize;
-        match material_id.kind {
+        let index = material_id.index() as usize;
+        match material_id.kind() {
             MaterialKind::Diffuse => self.diffuse.get(index).map(Self::upcast),
             MaterialKind::Emissive => self.emissive.get(index).map(Self::upcast),
             MaterialKind::Refractive => self.refractive.get(index).map(Self::upcast),

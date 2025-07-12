@@ -4,8 +4,7 @@ use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-
-use super::{BoundingBox, Shape, ShapeKind};
+use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane {

@@ -4,14 +4,14 @@ use std::fs::File;
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::SceneBuilder;
-use fractured_ray::domain::entity::material::{Diffuse, Emissive, Refractive};
-use fractured_ray::domain::entity::shape::{
-    MeshConstructor, MeshConstructorInstance, Plane, Polygon,
-};
+use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive};
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
 use fractured_ray::domain::math::geometry::{Point, Rotation, Translation};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
+use fractured_ray::domain::shape::instance::MeshConstructorInstance;
+use fractured_ray::domain::shape::mesh::MeshConstructor;
+use fractured_ray::domain::shape::primitive::{Plane, Polygon};
 use fractured_ray::infrastructure::image::PngWriter;
 
 fn main() -> Result<(), Box<dyn Error>> {
