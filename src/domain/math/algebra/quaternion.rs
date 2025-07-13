@@ -29,19 +29,6 @@ impl Quaternion {
         self.3
     }
 
-    pub fn norm_squared(&self) -> Val {
-        self.0 * self.0 + self.1 * self.1 + self.2 * self.2 + self.3 * self.3
-    }
-
-    pub fn norm(&self) -> Val {
-        self.norm_squared().sqrt()
-    }
-
-    pub fn normalize(self) -> Self {
-        let norm = self.norm();
-        Self::new(self.0 / norm, self.1 / norm, self.2 / norm, self.3 / norm)
-    }
-
     pub fn conjugate(self) -> Self {
         Self::new(self.0, -self.1, -self.2, -self.3)
     }
@@ -76,5 +63,20 @@ impl Mul<Quaternion> for Quaternion {
         let y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2;
         let z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2;
         Self::new(w, x, y, z)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn quaternion_mul_succeeds() {
+        let q1 = Quaternion::new(Val(1.0), Val(2.0), Val(3.0), Val(4.0));
+        let q2 = Quaternion::new(Val(-1.0), Val(1.0), Val(-0.5), Val(0.5));
+        assert_eq!(
+            q1 * q2,
+            Quaternion::new(Val(-3.5), Val(2.5), Val(-0.5), Val(-7.5)),
+        );
     }
 }

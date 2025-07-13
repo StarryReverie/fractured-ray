@@ -111,3 +111,50 @@ impl Transformation for Translation {
         Self::new(-self.displacement)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rotation_new_succeeds() {
+        let rotation = Rotation::new(
+            -UnitVector::z_direction(),
+            Vector::new(Val(-1.0), Val(1.0), Val(0.0))
+                .normalize()
+                .unwrap(),
+            Val::PI / Val(4.0),
+        );
+
+        assert_eq!(
+            rotation.quaternion(),
+            Quaternion::new(
+                Val(0.6532814824381883),
+                Val(0.2705980500730986),
+                Val(0.6532814824381883),
+                Val(-0.2705980500730985),
+            ),
+        );
+    }
+
+    #[test]
+    fn rotation_inverse_succeeds() {
+        let rotation = Rotation::new(
+            -UnitVector::z_direction(),
+            Vector::new(Val(-1.0), Val(1.0), Val(0.0))
+                .normalize()
+                .unwrap(),
+            Val::PI / Val(4.0),
+        );
+
+        assert_eq!(
+            rotation.inverse().quaternion(),
+            Quaternion::new(
+                Val(0.6532814824381883),
+                Val(-0.2705980500730986),
+                Val(-0.6532814824381883),
+                Val(0.2705980500730985),
+            ),
+        );
+    }
+}

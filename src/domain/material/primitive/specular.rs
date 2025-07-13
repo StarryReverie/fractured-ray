@@ -44,3 +44,41 @@ impl Material for Specular {
         color * self.albedo
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::domain::math::algebra::{UnitVector, Vector};
+    use crate::domain::math::geometry::Point;
+    use crate::domain::ray::SurfaceSide;
+
+    use super::*;
+
+    #[test]
+    fn specular_calc_reflective_ray_succeeds() {
+        let sqrt3_2 = Val(3.0).sqrt() / Val(2.0);
+
+        let ray = Ray::new(
+            Point::new(sqrt3_2, Val(0.5), Val(0.0)),
+            Vector::new(-sqrt3_2, Val(-0.5), Val(0.0))
+                .normalize()
+                .unwrap(),
+        );
+
+        let intersection = RayIntersection::new(
+            Val(1.0),
+            Point::new(Val(0.0), Val(0.0), Val(0.0)),
+            UnitVector::y_direction(),
+            SurfaceSide::Back,
+        );
+
+        let specular = Specular::new(Color::WHITE);
+
+        let exiting_ray = specular.calc_reflective_ray(&ray, intersection);
+        assert_eq!(
+            exiting_ray.direction(),
+            Vector::new(-sqrt3_2, Val(0.5), Val(0.0))
+                .normalize()
+                .unwrap(),
+        );
+    }
+}

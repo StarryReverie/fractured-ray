@@ -28,6 +28,10 @@ impl Instance {
         }
     }
 
+    pub fn wrap<S: Shape>(prototype: S) -> Self {
+        Self::of(Arc::new(prototype))
+    }
+
     pub fn rotate(self, rotation: Rotation) -> Self {
         Self {
             transformation: AllTransformation {
@@ -64,5 +68,50 @@ impl Shape for Instance {
     fn bounding_box(&self) -> Option<BoundingBox> {
         let bbox = self.prototype.bounding_box()?;
         Some(bbox.transform(&self.transformation))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::domain::math::algebra::{UnitVector, Vector};
+    use crate::domain::math::geometry::Point;
+    use crate::domain::math::numeric::Val;
+    use crate::domain::ray::SurfaceSide;
+    use crate::domain::shape::primitive::Polygon;
+
+    use super::*;
+
+    #[test]
+    fn instance_hit_succeeds() {
+        let prototype = Polygon::new([
+            Point::new(Val(2.0), Val(1.0), Val(1.0)),
+            Point::new(Val(2.0), Val(1.0), Val(-1.0)),
+            Point::new(Val(2.0), Val(-1.0), Val(-1.0)),
+            Point::new(Val(2.0), Val(-1.0), Val(1.0)),
+        ])
+        .unwrap();
+
+        let instance = Instance::wrap(prototype)
+            .rotate(Rotation::new(
+                UnitVector::x_direction(),
+                UnitVector::z_direction(),
+                Val::PI / Val(4.0),
+            ))
+            .translate(Translation::new(Vector::new(Val(0.0), Val(0.0), Val(-2.0))));
+
+        let ray = Ray::new(
+            Point::new(Val(0.0), Val(2.0).sqrt(), Val(-1.0)),
+            UnitVector::z_direction(),
+        );
+
+        let intersection = instance.hit(&ray, DisRange::positive()).unwrap();
+
+        assert_eq!(intersection.distance(), Val(1.0));
+        assert_eq!(
+            intersection.position(),
+            Point::new(Val(0.0), Val(2.0).sqrt(), Val(0.0))
+        );
+        assert_eq!(intersection.normal(), -UnitVector::z_direction());
+        assert_eq!(intersection.side(), SurfaceSide::Front);
     }
 }

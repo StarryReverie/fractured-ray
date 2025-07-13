@@ -141,10 +141,7 @@ impl ShapeConstructor for MeshConstructor {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::{
-        math::numeric::Val,
-        shape::def::{BoundingBox, Shape},
-    };
+    use crate::domain::math::numeric::Val;
 
     use super::*;
 
