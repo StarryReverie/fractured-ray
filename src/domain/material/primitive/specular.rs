@@ -3,7 +3,7 @@ use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Product;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::Renderer;
+use crate::domain::renderer::Context;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Specular {
@@ -34,11 +34,12 @@ impl Material for Specular {
 
     fn shade(
         &self,
-        renderer: &dyn Renderer,
+        context: &Context<'_>,
         ray: Ray,
         intersection: RayIntersection,
         depth: usize,
     ) -> Color {
+        let renderer = context.renderer();
         let reflective_ray = self.calc_reflective_ray(&ray, intersection);
         let color = renderer.trace(reflective_ray, DisRange::positive(), depth + 1);
         color * self.albedo

@@ -6,7 +6,7 @@ use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Product;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-use crate::domain::renderer::Renderer;
+use crate::domain::renderer::{Context, Renderer};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Refractive {
@@ -103,7 +103,7 @@ impl Material for Refractive {
 
     fn shade(
         &self,
-        renderer: &dyn Renderer,
+        context: &Context<'_>,
         ray: Ray,
         intersection: RayIntersection,
         depth: usize,
@@ -111,7 +111,7 @@ impl Material for Refractive {
         let mut rng = rand::rng();
         let reflection_determination = Val(rng.random::<WrappedVal>());
         let exiting_ray = self.calc_exiting_ray(ray, intersection, reflection_determination);
-        self.shade_impl(renderer, exiting_ray, depth)
+        self.shade_impl(context.renderer(), exiting_ray, depth)
     }
 }
 

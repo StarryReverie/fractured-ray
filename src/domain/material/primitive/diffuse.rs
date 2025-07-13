@@ -5,7 +5,7 @@ use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::Renderer;
+use crate::domain::renderer::{Context, Renderer};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Diffuse {
@@ -44,16 +44,17 @@ impl Material for Diffuse {
     fn material_kind(&self) -> MaterialKind {
         MaterialKind::Diffuse
     }
+
     fn shade(
         &self,
-        renderer: &dyn Renderer,
+        context: &Context<'_>,
         _ray: Ray,
         intersection: RayIntersection,
         depth: usize,
     ) -> Color {
         let mut rng = rand::rng();
         let reflective_ray = self.generate_reflective_ray(&intersection, &mut rng);
-        self.shade_impl(renderer, reflective_ray, depth)
+        self.shade_impl(context.renderer(), reflective_ray, depth)
     }
 }
 

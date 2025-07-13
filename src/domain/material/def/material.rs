@@ -2,14 +2,14 @@ use std::fmt::Debug;
 
 use crate::domain::color::Color;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::Renderer;
+use crate::domain::renderer::Context;
 
 pub trait Material: Debug + Send + Sync + 'static {
     fn material_kind(&self) -> MaterialKind;
 
     fn shade(
         &self,
-        renderer: &dyn Renderer,
+        context: &Context<'_>,
         ray: Ray,
         intersection: RayIntersection,
         depth: usize,

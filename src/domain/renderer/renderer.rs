@@ -12,6 +12,8 @@ use crate::domain::image::Image;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::Ray;
 
+use super::Context;
+
 #[cfg_attr(test, mockall::automock)]
 pub trait Renderer: Send + Sync + 'static {
     fn render(&self) -> Image;
@@ -112,7 +114,8 @@ impl Renderer for CoreRenderer {
 
         let res = self.scene.find_intersection(&ray, range);
         if let Some((intersection, entity)) = res {
-            entity.shade(self, ray, intersection, depth)
+            let context = Context::new(self);
+            entity.shade(&context, ray, intersection, depth)
         } else {
             self.config.background_color
         }

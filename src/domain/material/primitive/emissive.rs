@@ -1,7 +1,7 @@
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::Renderer;
+use crate::domain::renderer::Context;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Emissive {
@@ -20,7 +20,7 @@ impl Material for Emissive {
     }
     fn shade(
         &self,
-        _renderer: &dyn Renderer,
+        _context: &Context<'_>,
         _ray: Ray,
         _intersection: RayIntersection,
         _depth: usize,
