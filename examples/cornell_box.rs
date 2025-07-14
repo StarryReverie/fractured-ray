@@ -3,7 +3,7 @@ use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
-use fractured_ray::domain::entity::SceneBuilder;
+use fractured_ray::domain::entity::BvhSceneBuilder;
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::UnitVector;
 use fractured_ray::domain::math::geometry::Point;
@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         Val(0.035),
     )?;
 
-    let mut builder = SceneBuilder::new();
+    let mut builder = BvhSceneBuilder::new();
 
     // Light
     builder.add(

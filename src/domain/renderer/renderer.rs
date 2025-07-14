@@ -7,7 +7,7 @@ use snafu::prelude::*;
 
 use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Color;
-use crate::domain::entity::Scene;
+use crate::domain::entity::{BvhScene, Scene};
 use crate::domain::image::Image;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::Ray;
@@ -24,14 +24,14 @@ pub trait Renderer: Send + Sync + 'static {
 #[derive(Debug)]
 pub struct CoreRenderer {
     camera: Camera,
-    scene: Scene,
+    scene: BvhScene,
     config: Configuration,
 }
 
 impl CoreRenderer {
     pub fn new(
         camera: Camera,
-        scene: Scene,
+        scene: BvhScene,
         config: Configuration,
     ) -> Result<Self, ConfigurationError> {
         ensure!(config.ssaa_samples > 0, InvalidSsaaSamplesSnafu);
@@ -114,7 +114,7 @@ impl Renderer for CoreRenderer {
 
         let res = self.scene.find_intersection(&ray, range);
         if let Some((intersection, entity)) = res {
-            let context = Context::new(self);
+            let context = Context::new(self, &self.scene);
             entity.shade(&context, ray, intersection, depth)
         } else {
             self.config.background_color

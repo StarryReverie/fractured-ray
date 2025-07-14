@@ -21,6 +21,7 @@ pub enum MaterialKind {
     Diffuse,
     Emissive,
     Refractive,
+    Scattering,
     Specular,
 }
 

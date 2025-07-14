@@ -8,13 +8,21 @@ use crate::domain::shape::mesh::TryNewMeshError;
 
 use super::{EntityId, EntityPool};
 
+pub trait Scene: Send + Sync + 'static {
+    fn find_intersection(
+        &self,
+        ray: &Ray,
+        range: DisRange,
+    ) -> Option<(RayIntersection, &dyn Material)>;
+}
+
 #[derive(Debug)]
-pub struct SceneBuilder {
+pub struct BvhSceneBuilder {
     entities: Box<EntityPool>,
     ids: Vec<EntityId>,
 }
 
-impl SceneBuilder {
+impl BvhSceneBuilder {
     pub fn new() -> Self {
         Self {
             entities: Box::new(EntityPool::new()),
@@ -48,7 +56,7 @@ impl SceneBuilder {
         Ok(self)
     }
 
-    pub fn build(self) -> Scene {
+    pub fn build(self) -> BvhScene {
         let mut nodes = Vec::with_capacity(self.ids.len() * 2);
         let mut bboxes = Vec::with_capacity(self.ids.len());
         let mut unboundeds = Vec::new();
@@ -65,7 +73,7 @@ impl SceneBuilder {
             Self::build_bvh(&mut nodes, bboxes);
         }
 
-        Scene {
+        BvhScene {
             entities: self.entities,
             nodes,
             unboundeds,
@@ -240,29 +248,13 @@ impl PartitionBucket {
 }
 
 #[derive(Debug)]
-pub struct Scene {
+pub struct BvhScene {
     entities: Box<EntityPool>,
     nodes: Vec<BvhNode>,
     unboundeds: Vec<EntityId>,
 }
 
-impl Scene {
-    pub fn find_intersection(
-        &self,
-        ray: &Ray,
-        range: DisRange,
-    ) -> Option<(RayIntersection, &dyn Material)> {
-        if let Some(mut res) = self.find_intersection_with_unboundeds(ray, range) {
-            let range = range.shrink_end(res.0.distance());
-            if let Some(bvh_res) = self.find_intersection_in_bvh(ray, range) {
-                res = bvh_res
-            }
-            Some(res)
-        } else {
-            self.find_intersection_in_bvh(ray, range)
-        }
-    }
-
+impl BvhScene {
     fn find_intersection_with_unboundeds(
         &self,
         ray: &Ray,
@@ -364,6 +356,24 @@ impl Scene {
     }
 }
 
+impl Scene for BvhScene {
+    fn find_intersection(
+        &self,
+        ray: &Ray,
+        range: DisRange,
+    ) -> Option<(RayIntersection, &dyn Material)> {
+        if let Some(mut res) = self.find_intersection_with_unboundeds(ray, range) {
+            let range = range.shrink_end(res.0.distance());
+            if let Some(bvh_res) = self.find_intersection_in_bvh(ray, range) {
+                res = bvh_res
+            }
+            Some(res)
+        } else {
+            self.find_intersection_in_bvh(ray, range)
+        }
+    }
+}
+
 #[derive(Debug)]
 enum BvhNode {
     Internal {
@@ -428,7 +438,7 @@ mod tests {
 
     #[test]
     fn scene_build_bvh_succeeds() {
-        let mut builder = SceneBuilder::new();
+        let mut builder = BvhSceneBuilder::new();
         builder.add(
             Sphere::new(Point::new(Val(1.0), Val(0.0), Val(2.0)), Val(1.0)).unwrap(),
             Diffuse::new(Color::WHITE),

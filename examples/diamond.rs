@@ -3,8 +3,8 @@ use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
-use fractured_ray::domain::entity::SceneBuilder;
-use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive};
+use fractured_ray::domain::entity::BvhSceneBuilder;
+use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Scattering};
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
 use fractured_ray::domain::math::geometry::{Point, Rotation, Translation};
 use fractured_ray::domain::math::numeric::Val;
@@ -15,7 +15,7 @@ use fractured_ray::domain::shape::primitive::{Plane, Polygon};
 use fractured_ray::infrastructure::image::PngWriter;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut scene = SceneBuilder::new();
+    let mut scene = BvhSceneBuilder::new();
 
     let diamond = get_diamond_mesh()?;
 
@@ -36,6 +36,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             UnitVector::y_direction(),
         ),
         Diffuse::new(Color::new(Val(0.404), Val(0.309), Val(0.275))),
+    );
+
+    scene.add(
+        Plane::new(
+            Point::new(Val(0.0), Val(0.0), Val(-40.0)),
+            -UnitVector::z_direction(),
+        ),
+        Scattering::new(Color::WHITE, Val(0.001))?,
     );
 
     scene.add(
@@ -60,7 +68,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene.build(),
         Configuration {
-            ssaa_samples: 4096,
+            ssaa_samples: 128,
             background_color: Color::WHITE * Val(0.01),
             ..Configuration::default()
         },
