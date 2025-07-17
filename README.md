@@ -29,9 +29,11 @@ Diamond
 - [x] Algorithms
   - [x] Recursive rendering
   - [x] Fast ray-object intersection solving
-  - [ ] Importance sampling
+  - [x] BSDF & cosine-weighted sampling
   - [ ] Light sampling
-  - [ ] Physics-based illumination
+  - [ ] Multiple importance sampling
+  - [ ] Photon mapping
+  - [ ] Physics-based color model
 - [ ] Shapes
   - [x] Common shape primitives
     - [x] Planes
