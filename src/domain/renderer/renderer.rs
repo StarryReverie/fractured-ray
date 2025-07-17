@@ -18,7 +18,13 @@ use super::Context;
 pub trait Renderer: Send + Sync + 'static {
     fn render(&self) -> Image;
 
-    fn trace(&self, ray: Ray, range: DisRange, depth: usize) -> Color;
+    fn trace<'a>(
+        &'a self,
+        context: &mut Context<'a>,
+        ray: Ray,
+        range: DisRange,
+        depth: usize,
+    ) -> Color;
 }
 
 #[derive(Debug)]
@@ -62,7 +68,14 @@ impl CoreRenderer {
             .normalize()
             .expect("focal length should be positive");
 
-        self.trace(Ray::new(point, direction), DisRange::positive(), 1)
+        let mut rng = rand::rng();
+        let mut context = Context::new(self, &self.scene, &mut rng);
+        self.trace(
+            &mut context,
+            Ray::new(point, direction),
+            DisRange::positive(),
+            1,
+        )
     }
 
     fn init_progress_bar(&self) -> ProgressBar {
@@ -107,15 +120,20 @@ impl Renderer for CoreRenderer {
         image
     }
 
-    fn trace(&self, ray: Ray, range: DisRange, depth: usize) -> Color {
+    fn trace<'a>(
+        &'a self,
+        context: &mut Context<'a>,
+        ray: Ray,
+        range: DisRange,
+        depth: usize,
+    ) -> Color {
         if depth > self.config.tracing_depth {
             return Color::BLACK;
         }
 
         let res = self.scene.find_intersection(&ray, range);
         if let Some((intersection, entity)) = res {
-            let context = Context::new(self, &self.scene);
-            entity.shade(&context, ray, intersection, depth)
+            entity.shade(context, ray, intersection, depth)
         } else {
             self.config.background_color
         }

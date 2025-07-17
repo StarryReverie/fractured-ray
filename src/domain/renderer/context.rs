@@ -1,3 +1,5 @@
+use rand::prelude::*;
+
 use crate::domain::entity::Scene;
 
 use super::Renderer;
@@ -5,11 +7,16 @@ use super::Renderer;
 pub struct Context<'a> {
     renderer: &'a dyn Renderer,
     scene: &'a dyn Scene,
+    rng: &'a mut dyn RngCore,
 }
 
 impl<'a> Context<'a> {
-    pub fn new(renderer: &'a dyn Renderer, scene: &'a dyn Scene) -> Self {
-        Self { renderer, scene }
+    pub fn new(renderer: &'a dyn Renderer, scene: &'a dyn Scene, rng: &'a mut dyn RngCore) -> Self {
+        Self {
+            renderer,
+            scene,
+            rng,
+        }
     }
 
     pub fn renderer(&self) -> &'a (dyn Renderer + 'static) {
@@ -18,5 +25,9 @@ impl<'a> Context<'a> {
 
     pub fn scene(&self) -> &'a (dyn Scene + 'static) {
         self.scene
+    }
+
+    pub fn rng(&mut self) -> &mut &'a mut dyn RngCore {
+        &mut self.rng
     }
 }

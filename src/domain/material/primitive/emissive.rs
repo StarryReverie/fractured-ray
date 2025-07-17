@@ -29,7 +29,7 @@ impl Material for Emissive {
 
     fn shade(
         &self,
-        _context: &Context<'_>,
+        _context: &mut Context<'_>,
         _ray: Ray,
         _intersection: RayIntersection,
         _depth: usize,

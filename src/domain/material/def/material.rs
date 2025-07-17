@@ -13,18 +13,17 @@ pub trait Material: CoefSampling + Debug + Send + Sync + 'static {
 
     fn shade(
         &self,
-        context: &Context<'_>,
+        context: &mut Context<'_>,
         ray: Ray,
         intersection: RayIntersection,
         depth: usize,
     ) -> Color {
-        let mut rng = rand::rng();
-        let sample = self.coef_sample(&ray, &intersection, &mut rng);
+        let sample = self.coef_sample(&ray, &intersection, *context.rng());
         let coefficient = self.albedo() * sample.coefficient();
         let ray_next = sample.into_ray();
 
         let renderer = context.renderer();
-        let radiance = renderer.trace(ray_next, DisRange::positive(), depth + 1);
+        let radiance = renderer.trace(context, ray_next, DisRange::positive(), depth + 1);
         coefficient * radiance
     }
 }

@@ -45,13 +45,11 @@ impl Material for Scattering {
 
     fn shade(
         &self,
-        context: &Context<'_>,
+        context: &mut Context<'_>,
         ray: Ray,
         intersection: RayIntersection,
         depth: usize,
     ) -> Color {
-        let mut rng = rand::rng();
-
         let ray = Ray::new(intersection.position(), ray.direction());
         let closet = context
             .scene()
@@ -59,14 +57,15 @@ impl Material for Scattering {
         let closet_distance = closet.as_ref().map_or(Val::INFINITY, |c| c.0.distance());
 
         let exp_distr = Exp::new(self.density.0).expect("self.density should be positive");
-        let scatter_distance = Val(rng.sample(exp_distr));
+        let scatter_distance = Val((*context.rng()).sample(exp_distr));
 
         if scatter_distance < closet_distance {
             let start = ray.at(scatter_distance);
-            let scattering_ray = self.generate_next_ray(start, &mut rng);
-            let color = context
-                .renderer()
-                .trace(scattering_ray, DisRange::positive(), depth + 1);
+            let scattering_ray = self.generate_next_ray(start, *context.rng());
+            let color =
+                context
+                    .renderer()
+                    .trace(context, scattering_ray, DisRange::positive(), depth + 1);
             color * self.albedo
         } else if let Some((intersection, material)) = closet {
             let kind = material.material_kind();
@@ -77,9 +76,11 @@ impl Material for Scattering {
                 let passthrough_ray = Ray::new(boundary, ray.direction());
                 context
                     .renderer()
-                    .trace(passthrough_ray, DisRange::positive(), depth)
+                    .trace(context, passthrough_ray, DisRange::positive(), depth)
             } else {
-                context.renderer().trace(ray, DisRange::positive(), depth)
+                context
+                    .renderer()
+                    .trace(context, ray, DisRange::positive(), depth)
             }
         } else {
             unreachable!("closet should not be None otherwise 1st branch is executed")
