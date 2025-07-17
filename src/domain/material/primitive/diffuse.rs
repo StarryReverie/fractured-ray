@@ -2,8 +2,8 @@ use rand::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::math::algebra::{Product, Vector};
-use crate::domain::math::numeric::{Val, WrappedVal};
+use crate::domain::math::algebra::{Product, UnitVector};
+use crate::domain::math::numeric::Val;
 use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection};
 
@@ -37,12 +37,9 @@ impl CoefSampling for Diffuse {
     ) -> CoefSample {
         let normal = intersection.normal();
         let direction = loop {
-            let (x, y, z) = rng.random::<(WrappedVal, WrappedVal, WrappedVal)>();
-            let (x, y, z) = (Val(x * 2.0 - 1.0), Val(y * 2.0 - 1.0), Val(z * 2.0 - 1.0));
-            if let Ok(unit) = Vector::new(x, y, z).normalize() {
-                if let Ok(direction) = (normal + unit).normalize() {
-                    break direction;
-                }
+            let unit = UnitVector::random(rng);
+            if let Ok(direction) = (normal + unit).normalize() {
+                break direction;
             }
         };
 

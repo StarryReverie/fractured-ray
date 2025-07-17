@@ -4,9 +4,9 @@ use snafu::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::math::algebra::Vector;
+use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
-use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
+use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::Context;
@@ -24,13 +24,8 @@ impl Scattering {
     }
 
     fn generate_next_ray(&self, start: Point, rng: &mut dyn RngCore) -> Ray {
-        loop {
-            let (x, y, z) = rng.random::<(WrappedVal, WrappedVal, WrappedVal)>();
-            let (x, y, z) = (Val(x * 2.0 - 1.0), Val(y * 2.0 - 1.0), Val(z * 2.0 - 1.0));
-            if let Ok(direction) = Vector::new(x, y, z).normalize() {
-                return Ray::new(start, direction);
-            }
-        }
+        let direction = UnitVector::random(rng);
+        return Ray::new(start, direction);
     }
 }
 

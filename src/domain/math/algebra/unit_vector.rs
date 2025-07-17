@@ -1,17 +1,23 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
+use rand::prelude::*;
+use rand_distr::UnitSphere;
+
 use snafu::prelude::*;
 
 use super::{Product, Vector};
-use crate::domain::math::{
-    geometry::{Rotation, Transform, Translation},
-    numeric::Val,
-};
+use crate::domain::math::geometry::{Rotation, Transform, Translation};
+use crate::domain::math::numeric::Val;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UnitVector(Vector);
 
 impl UnitVector {
+    pub fn random(rng: &mut dyn RngCore) -> Self {
+        let [x, y, z] = UnitSphere.sample(rng);
+        Self(Vector::new(Val(x), Val(y), Val(z)))
+    }
+
     pub fn x_direction() -> Self {
         Self(Vector::new(Val(1.0), Val(0.0), Val(0.0)))
     }
