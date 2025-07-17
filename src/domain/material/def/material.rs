@@ -1,11 +1,15 @@
 use std::fmt::Debug;
 
 use crate::domain::color::Color;
+use crate::domain::math::numeric::DisRange;
+use crate::domain::ray::sampling::CoefSampling;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::Context;
 
-pub trait Material: Debug + Send + Sync + 'static {
+pub trait Material: CoefSampling + Debug + Send + Sync + 'static {
     fn material_kind(&self) -> MaterialKind;
+
+    fn albedo(&self) -> Color;
 
     fn shade(
         &self,
@@ -13,7 +17,16 @@ pub trait Material: Debug + Send + Sync + 'static {
         ray: Ray,
         intersection: RayIntersection,
         depth: usize,
-    ) -> Color;
+    ) -> Color {
+        let mut rng = rand::rng();
+        let sample = self.coef_sample(&ray, &intersection, &mut rng);
+        let coefficient = self.albedo() * sample.coefficient();
+        let ray_next = sample.into_ray();
+
+        let renderer = context.renderer();
+        let radiance = renderer.trace(ray_next, DisRange::positive(), depth + 1);
+        coefficient * radiance
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

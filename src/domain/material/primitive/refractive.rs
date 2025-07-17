@@ -4,9 +4,9 @@ use snafu::prelude::*;
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Product;
-use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
+use crate::domain::math::numeric::Val;
+use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-use crate::domain::renderer::{Context, Renderer};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Refractive {
@@ -24,7 +24,7 @@ impl Refractive {
         })
     }
 
-    fn calc_reflective_ray(&self, ray: &Ray, intersection: &RayIntersection) -> Ray {
+    fn calc_next_reflective_ray(&self, ray: &Ray, intersection: &RayIntersection) -> Ray {
         let normal = intersection.normal();
         let dir = ray.direction();
         Ray::new(
@@ -35,7 +35,7 @@ impl Refractive {
         )
     }
 
-    fn calc_refractive_ray(
+    fn calc_next_refractive_direction(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
@@ -67,10 +67,10 @@ impl Refractive {
         r0 + (Val(1.0) - r0) * (Val(1.0) - cos_i).powi(5)
     }
 
-    fn calc_exiting_ray(
+    fn calc_next_ray(
         &self,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
         reflection_determination: Val,
     ) -> Ray {
         let cos_i = ray.direction().dot(intersection.normal()).abs();
@@ -82,17 +82,14 @@ impl Refractive {
 
         let reflectance = self.calc_reflectance(cos_i, ri);
         if reflection_determination < reflectance {
-            self.calc_reflective_ray(&ray, &intersection)
-        } else if let Some(ray) = self.calc_refractive_ray(&ray, &intersection, cos_i, ri) {
+            self.calc_next_reflective_ray(&ray, &intersection)
+        } else if let Some(ray) =
+            self.calc_next_refractive_direction(&ray, &intersection, cos_i, ri)
+        {
             ray
         } else {
-            self.calc_reflective_ray(&ray, &intersection)
+            self.calc_next_reflective_ray(&ray, &intersection)
         }
-    }
-
-    fn shade_impl(&self, renderer: &dyn Renderer, ray: Ray, depth: usize) -> Color {
-        let color = renderer.trace(ray, DisRange::positive(), depth + 1);
-        color * self.albedo
     }
 }
 
@@ -101,17 +98,26 @@ impl Material for Refractive {
         MaterialKind::Refractive
     }
 
-    fn shade(
+    fn albedo(&self) -> Color {
+        self.albedo
+    }
+}
+
+impl CoefSampling for Refractive {
+    fn coef_sample(
         &self,
-        context: &Context<'_>,
-        ray: Ray,
-        intersection: RayIntersection,
-        depth: usize,
-    ) -> Color {
-        let mut rng = rand::rng();
-        let reflection_determination = Val(rng.random::<WrappedVal>());
-        let exiting_ray = self.calc_exiting_ray(ray, intersection, reflection_determination);
-        self.shade_impl(context.renderer(), exiting_ray, depth)
+        ray: &Ray,
+        intersection: &RayIntersection,
+        rng: &mut dyn RngCore,
+    ) -> CoefSample {
+        let reflection_determination = Val(rng.random());
+        let direction = self.calc_next_ray(ray, intersection, reflection_determination);
+        let pdf = self.coef_pdf(ray, intersection, &direction);
+        CoefSample::new(direction, Val(1.0), pdf)
+    }
+
+    fn coef_pdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+        Val(1.0)
     }
 }
 
@@ -138,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn refractive_calc_exiting_ray_succeeds_returning_refractive_ray() {
+    fn refractive_calc_next_ray_succeeds_returning_refractive_ray() {
         let sqrt3_2 = Val(3.0).sqrt() / Val(2.0);
 
         let ray = Ray::new(
@@ -157,9 +163,9 @@ mod tests {
 
         let refractive = Refractive::new(Color::WHITE, Val(3.0).sqrt()).unwrap();
 
-        let exiting_ray = refractive.calc_exiting_ray(ray, intersection, Val(1.0));
+        let ray_next = refractive.calc_next_ray(&ray, &intersection, Val(1.0));
         assert_eq!(
-            exiting_ray.direction(),
+            ray_next.direction(),
             Vector::new(Val(-0.5), -sqrt3_2, Val(0.0))
                 .normalize()
                 .unwrap(),
@@ -167,7 +173,7 @@ mod tests {
     }
 
     #[test]
-    fn refractive_calc_exiting_ray_succeeds_when_total_internal_reflection_occurs() {
+    fn refractive_calc_next_ray_succeeds_when_total_internal_reflection_occurs() {
         let sqrt3_2 = Val(3.0).sqrt() / Val(2.0);
 
         let ray = Ray::new(
@@ -186,9 +192,9 @@ mod tests {
 
         let refractive = Refractive::new(Color::WHITE, Val(3.0).sqrt()).unwrap();
 
-        let exiting_ray = refractive.calc_exiting_ray(ray, intersection, Val(1.0));
+        let ray_next = refractive.calc_next_ray(&ray, &intersection, Val(1.0));
         assert_eq!(
-            exiting_ray.direction(),
+            ray_next.direction(),
             Vector::new(-sqrt3_2, Val(0.5), Val(0.0))
                 .normalize()
                 .unwrap(),
@@ -196,7 +202,7 @@ mod tests {
     }
 
     #[test]
-    fn refractive_calc_exiting_ray_succeeds_when_reflectance_is_high() {
+    fn refractive_calc_next_ray_succeeds_when_reflectance_is_high() {
         let sqrt3_2 = Val(3.0).sqrt() / Val(2.0);
 
         let ray = Ray::new(
@@ -215,9 +221,9 @@ mod tests {
 
         let refractive = Refractive::new(Color::WHITE, Val(3.0).sqrt()).unwrap();
 
-        let exiting_ray = refractive.calc_exiting_ray(ray, intersection, Val(0.0));
+        let ray_next = refractive.calc_next_ray(&ray, &intersection, Val(0.0));
         assert_eq!(
-            exiting_ray.direction(),
+            ray_next.direction(),
             Vector::new(-sqrt3_2, Val(0.5), Val(0.0))
                 .normalize()
                 .unwrap(),

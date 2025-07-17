@@ -1,3 +1,5 @@
+pub mod sampling;
+
 mod intersection;
 mod ray;
 

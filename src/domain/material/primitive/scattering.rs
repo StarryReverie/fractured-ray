@@ -7,6 +7,7 @@ use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
+use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::Context;
 
@@ -22,7 +23,7 @@ impl Scattering {
         Ok(Self { albedo, density })
     }
 
-    fn generate_scattering_ray(&self, start: Point, rng: &mut dyn RngCore) -> Ray {
+    fn generate_next_ray(&self, start: Point, rng: &mut dyn RngCore) -> Ray {
         loop {
             let (x, y, z) = rng.random::<(WrappedVal, WrappedVal, WrappedVal)>();
             let (x, y, z) = (Val(x * 2.0 - 1.0), Val(y * 2.0 - 1.0), Val(z * 2.0 - 1.0));
@@ -36,6 +37,10 @@ impl Scattering {
 impl Material for Scattering {
     fn material_kind(&self) -> MaterialKind {
         MaterialKind::Scattering
+    }
+
+    fn albedo(&self) -> Color {
+        self.albedo
     }
 
     fn shade(
@@ -58,7 +63,7 @@ impl Material for Scattering {
 
         if scatter_distance < closet_distance {
             let start = ray.at(scatter_distance);
-            let scattering_ray = self.generate_scattering_ray(start, &mut rng);
+            let scattering_ray = self.generate_next_ray(start, &mut rng);
             let color = context
                 .renderer()
                 .trace(scattering_ray, DisRange::positive(), depth + 1);
@@ -79,6 +84,21 @@ impl Material for Scattering {
         } else {
             unreachable!("closet should not be None otherwise 1st branch is executed")
         }
+    }
+}
+
+impl CoefSampling for Scattering {
+    fn coef_sample(
+        &self,
+        _ray: &Ray,
+        _intersection: &RayIntersection,
+        _rng: &mut dyn RngCore,
+    ) -> CoefSample {
+        todo!("BSSRDF sampling is not yet implemented")
+    }
+
+    fn coef_pdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+        todo!("BSSRDF sampling is not yet implemented")
     }
 }
 

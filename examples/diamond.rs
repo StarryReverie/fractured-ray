@@ -59,7 +59,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let camera = Camera::new(
         Point::new(Val(0.0), Val(5.0), Val(80.0)),
         -UnitVector::z_direction(),
-        Resolution::new(1440, (16, 9))?,
+        Resolution::new(720, (16, 9))?,
         Val(2.0),
         Val(5.0),
     )?;
@@ -68,7 +68,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene.build(),
         Configuration {
-            ssaa_samples: 128,
+            ssaa_samples: 4096,
             background_color: Color::WHITE * Val(0.01),
             ..Configuration::default()
         },

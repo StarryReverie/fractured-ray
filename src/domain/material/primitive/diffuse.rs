@@ -2,10 +2,10 @@ use rand::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::math::algebra::Vector;
-use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
+use crate::domain::math::algebra::{Product, Vector};
+use crate::domain::math::numeric::{Val, WrappedVal};
+use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{Context, Renderer};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Diffuse {
@@ -16,28 +16,6 @@ impl Diffuse {
     pub fn new(albedo: Color) -> Self {
         Self { albedo }
     }
-
-    fn generate_reflective_ray(
-        &self,
-        intersection: &RayIntersection,
-        rng: &mut dyn RngCore,
-    ) -> Ray {
-        let normal = intersection.normal();
-        loop {
-            let (x, y, z) = rng.random::<(WrappedVal, WrappedVal, WrappedVal)>();
-            let (x, y, z) = (Val(x * 2.0 - 1.0), Val(y * 2.0 - 1.0), Val(z * 2.0 - 1.0));
-            if let Ok(unit) = Vector::new(x, y, z).normalize() {
-                if let Ok(direction) = (normal + unit).normalize() {
-                    return Ray::new(intersection.position(), direction);
-                }
-            }
-        }
-    }
-
-    fn shade_impl(&self, renderer: &dyn Renderer, ray: Ray, depth: usize) -> Color {
-        let color = renderer.trace(ray, DisRange::positive(), depth + 1);
-        color * self.albedo
-    }
 }
 
 impl Material for Diffuse {
@@ -45,48 +23,35 @@ impl Material for Diffuse {
         MaterialKind::Diffuse
     }
 
-    fn shade(
-        &self,
-        context: &Context<'_>,
-        _ray: Ray,
-        intersection: RayIntersection,
-        depth: usize,
-    ) -> Color {
-        let mut rng = rand::rng();
-        let reflective_ray = self.generate_reflective_ray(&intersection, &mut rng);
-        self.shade_impl(context.renderer(), reflective_ray, depth)
+    fn albedo(&self) -> Color {
+        self.albedo
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::domain::math::geometry::Point;
-    use crate::domain::renderer::MockRenderer;
+impl CoefSampling for Diffuse {
+    fn coef_sample(
+        &self,
+        ray: &Ray,
+        intersection: &RayIntersection,
+        rng: &mut dyn RngCore,
+    ) -> CoefSample {
+        let normal = intersection.normal();
+        let direction = loop {
+            let (x, y, z) = rng.random::<(WrappedVal, WrappedVal, WrappedVal)>();
+            let (x, y, z) = (Val(x * 2.0 - 1.0), Val(y * 2.0 - 1.0), Val(z * 2.0 - 1.0));
+            if let Ok(unit) = Vector::new(x, y, z).normalize() {
+                if let Ok(direction) = (normal + unit).normalize() {
+                    break direction;
+                }
+            }
+        };
 
-    use super::*;
+        let ray_next = Ray::new(intersection.position(), direction);
+        let pdf = self.coef_pdf(&ray, &intersection, &ray_next);
+        CoefSample::new(ray_next, Val(1.0), pdf)
+    }
 
-    #[test]
-    fn diffuse_shade_impl_succeeds() {
-        let diffuse = Diffuse::new(Color::new(Val(0.8), Val(0.8), Val(0.8)));
-
-        let mut renderer = MockRenderer::new();
-        renderer
-            .expect_trace()
-            .returning(|_, _, _| Color::new(Val(0.6), Val(0.6), Val(0.6)));
-
-        let ray = Ray::new(
-            Point::new(Val(0.0), Val(1.0), Val(-2.0)),
-            Vector::new(Val(1.0), Val(-2.0), Val(-2.0))
-                .normalize()
-                .unwrap(),
-        );
-
-        let color = diffuse.shade_impl(&renderer, ray, 1);
-
-        let expected =
-            Color::new(Val(0.6), Val(0.6), Val(0.6)) * Color::new(Val(0.8), Val(0.8), Val(0.8));
-        assert_eq!(color.red(), expected.red());
-        assert_eq!(color.green(), expected.green());
-        assert_eq!(color.blue(), expected.blue());
+    fn coef_pdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+        ray_next.direction().dot(intersection.normal())
     }
 }
