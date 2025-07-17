@@ -2,7 +2,6 @@ use crate::domain::material::def::{Material, MaterialContainer};
 use crate::domain::math::numeric::DisRange;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer};
-use crate::domain::shape::mesh::TryNewMeshError;
 
 use super::{Bvh, EntityId, EntityPool};
 
@@ -35,11 +34,7 @@ impl BvhSceneBuilder {
         self
     }
 
-    pub fn add_constructor<C, M>(
-        &mut self,
-        constructor: C,
-        material: M,
-    ) -> Result<&mut Self, TryNewMeshError>
+    pub fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self
     where
         C: ShapeConstructor,
         M: Material,
@@ -51,7 +46,7 @@ impl BvhSceneBuilder {
             self.ids.push(EntityId::new(shape_id, material_id));
         }
 
-        Ok(self)
+        self
     }
 
     pub fn build(self) -> BvhScene {

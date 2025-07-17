@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             ))
             .translate(Translation::new(Vector::new(Val(4.0), Val(0.0), Val(-2.0)))),
         Refractive::new(Color::WHITE * Val(0.9), Val(2.417))?,
-    )?;
+    );
 
     scene.add(
         Plane::new(

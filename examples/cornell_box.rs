@@ -113,7 +113,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             ],
         )?,
         Diffuse::new(Color::WHITE),
-    )?;
+    );
 
     // Tall Block
     builder.add_constructor(
@@ -138,7 +138,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             ],
         )?,
         Diffuse::new(Color::WHITE),
-    )?;
+    );
 
     // Specular Ball
     builder.add(

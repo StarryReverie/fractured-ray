@@ -115,7 +115,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ))
         .translate(Translation::new(Vector::new(Val(2.0), Val(0.0), Val(0.0)))),
         Diffuse::new(Color::WHITE),
-    )?;
+    );
 
     let scene = builder.build();
 
