@@ -25,7 +25,7 @@ impl Scattering {
 
     fn generate_next_ray(&self, start: Point, rng: &mut dyn RngCore) -> Ray {
         let direction = UnitVector::random(rng);
-        return Ray::new(start, direction);
+        Ray::new(start, direction)
     }
 }
 

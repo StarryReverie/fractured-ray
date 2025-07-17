@@ -44,7 +44,7 @@ impl CoefSampling for Diffuse {
         };
 
         let ray_next = Ray::new(intersection.position(), direction);
-        let pdf = self.coef_pdf(&ray, &intersection, &ray_next);
+        let pdf = self.coef_pdf(ray, intersection, &ray_next);
         CoefSample::new(ray_next, Val(1.0), pdf)
     }
 
