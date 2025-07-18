@@ -14,6 +14,7 @@ pub struct Val(pub WrappedVal);
 impl Val {
     pub const PRECISION: WrappedVal = 1e-8;
     pub const PI: Self = Self(std::f64::consts::PI);
+    pub const FRAC_1_PI: Self = Self(std::f64::consts::FRAC_1_PI);
     pub const INFINITY: Self = Self(f64::INFINITY);
 
     #[inline(always)]

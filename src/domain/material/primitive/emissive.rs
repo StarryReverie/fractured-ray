@@ -27,6 +27,10 @@ impl Material for Emissive {
         Color::WHITE
     }
 
+    fn bsdf(&self, _ray: &Ray, _intersectionn: &RayIntersection, _ray_next: &Ray) -> Val {
+        unimplemented!("rays should not bounce again if hitting an emissive material")
+    }
+
     fn shade(
         &self,
         _context: &mut Context<'_>,

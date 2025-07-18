@@ -38,6 +38,10 @@ impl Material for Scattering {
         self.albedo
     }
 
+    fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+        todo!("BSSRDF sampling is not yet implemented")
+    }
+
     fn shade(
         &self,
         context: &mut Context<'_>,

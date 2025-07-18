@@ -2,12 +2,12 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use rand::prelude::*;
 use rand_distr::UnitSphere;
-
 use snafu::prelude::*;
 
-use super::{Product, Vector};
 use crate::domain::math::geometry::{Rotation, Transform, Translation};
 use crate::domain::math::numeric::Val;
+
+use super::{Product, Vector};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UnitVector(Vector);

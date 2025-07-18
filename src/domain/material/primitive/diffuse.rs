@@ -26,6 +26,14 @@ impl Material for Diffuse {
     fn albedo(&self) -> Color {
         self.albedo
     }
+
+    fn bsdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+        if intersection.normal().dot(ray_next.direction()) > Val(0.0) {
+            Val::FRAC_1_PI
+        } else {
+            Val(0.0)
+        }
+    }
 }
 
 impl CoefSampling for Diffuse {
@@ -49,6 +57,7 @@ impl CoefSampling for Diffuse {
     }
 
     fn coef_pdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
-        ray_next.direction().dot(intersection.normal())
+        let cos = ray_next.direction().dot(intersection.normal());
+        cos.max(Val(0.0)) * Val::FRAC_1_PI
     }
 }

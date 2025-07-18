@@ -37,6 +37,10 @@ impl Material for Specular {
     fn albedo(&self) -> Color {
         self.albedo
     }
+
+    fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+        unimplemented!("dirac function in refractive BSDF can't be represented")
+    }
 }
 
 impl CoefSampling for Specular {
