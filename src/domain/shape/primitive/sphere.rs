@@ -5,8 +5,9 @@ use snafu::prelude::*;
 use crate::domain::math::algebra::{Product, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::sampling::{LightSampling, SphereSampler};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
+use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Sphere {
@@ -84,6 +85,10 @@ impl Shape for Sphere {
     fn bounding_box(&self) -> Option<BoundingBox> {
         let d = Vector::new(self.radius, self.radius, self.radius);
         Some(BoundingBox::new(self.center - d, self.center + d))
+    }
+
+    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        Some(Box::new(SphereSampler::new(shape_id, self.clone())))
     }
 }
 

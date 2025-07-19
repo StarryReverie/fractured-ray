@@ -3,8 +3,9 @@ use std::ops::RangeBounds;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::sampling::LightSampling;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
+use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plane {
@@ -62,6 +63,10 @@ impl Shape for Plane {
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {
+        None
+    }
+
+    fn get_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         None
     }
 }

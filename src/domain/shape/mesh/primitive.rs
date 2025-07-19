@@ -5,8 +5,9 @@ use smallvec::SmallVec;
 use crate::domain::math::algebra::Product;
 use crate::domain::math::geometry::{Point, Transform};
 use crate::domain::math::numeric::DisRange;
+use crate::domain::ray::sampling::LightSampling;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
+use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 use crate::domain::shape::primitive::{Polygon, Triangle};
 
 use super::MeshData;
@@ -57,6 +58,10 @@ impl Shape for MeshTriangle {
             None => Some(BoundingBox::new(min, max)),
             Some(tr) => Some(BoundingBox::new(min, max).transform(tr)),
         }
+    }
+
+    fn get_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        todo!()
     }
 }
 
@@ -115,6 +120,10 @@ impl Shape for MeshPolygon {
             None => Some(BoundingBox::new(min, max)),
             Some(tr) => Some(BoundingBox::new(min, max).transform(tr)),
         }
+    }
+
+    fn get_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        todo!()
     }
 }
 

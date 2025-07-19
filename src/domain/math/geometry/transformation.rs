@@ -52,8 +52,12 @@ impl Rotation {
         if let Ok(axis) = init_dir.cross(final_dir).normalize() {
             let angle = init_dir.dot(final_dir).acos();
             let rotation1 = Self::get_rotation(axis, angle);
-            let rotation2 = Self::get_rotation(final_dir, roll);
-            let quaternion = rotation2 * rotation1;
+            let quaternion = if roll == Val(0.0) {
+                rotation1
+            } else {
+                let rotation2 = Self::get_rotation(final_dir, roll);
+                rotation2 * rotation1
+            };
             Self { quaternion }
         } else {
             let quaternion = Self::get_rotation(final_dir, roll);

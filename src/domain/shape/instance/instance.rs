@@ -4,8 +4,9 @@ use crate::domain::math::geometry::{
     AllTransformation, Rotation, Transform, Transformation, Translation,
 };
 use crate::domain::math::numeric::DisRange;
+use crate::domain::ray::sampling::LightSampling;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
+use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone)]
 pub struct Instance {
@@ -68,6 +69,10 @@ impl Shape for Instance {
     fn bounding_box(&self) -> Option<BoundingBox> {
         let bbox = self.prototype.bounding_box()?;
         Some(bbox.transform(&self.transformation))
+    }
+
+    fn get_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        todo!()
     }
 }
 

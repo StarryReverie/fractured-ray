@@ -1,7 +1,9 @@
 use rand::prelude::*;
 
+use crate::domain::material::def::Material;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::shape::def::ShapeId;
 
 pub trait CoefSampling {
     fn coef_sample(
@@ -44,5 +46,56 @@ impl CoefSample {
 
     pub fn pdf(&self) -> Val {
         self.pdf
+    }
+}
+
+pub trait LightSampling {
+    fn light_sample(
+        &self,
+        ray: &Ray,
+        intersection: &RayIntersection,
+        material: &dyn Material,
+        rng: &mut dyn RngCore,
+    ) -> Option<LightSample>;
+
+    fn light_pdf(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val;
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LightSample {
+    ray: Ray,
+    coefficient: Val,
+    pdf: Val,
+    shape_id: ShapeId,
+}
+
+impl LightSample {
+    pub fn new(ray: Ray, coefficient: Val, pdf: Val, shape_id: ShapeId) -> Self {
+        Self {
+            ray,
+            coefficient,
+            pdf,
+            shape_id,
+        }
+    }
+
+    pub fn ray(&self) -> &Ray {
+        &self.ray
+    }
+
+    pub fn into_ray(self) -> Ray {
+        self.ray
+    }
+
+    pub fn coefficient(&self) -> Val {
+        self.coefficient
+    }
+
+    pub fn pdf(&self) -> Val {
+        self.pdf
+    }
+
+    pub fn shape_id(&self) -> ShapeId {
+        self.shape_id
     }
 }

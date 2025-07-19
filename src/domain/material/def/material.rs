@@ -13,9 +13,9 @@ pub trait Material: CoefSampling + Debug + Send + Sync + 'static {
 
     fn bsdf(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val;
 
-    fn shade(
+    fn shade<'a>(
         &self,
-        context: &mut Context<'_>,
+        context: &mut Context<'a>,
         ray: Ray,
         intersection: RayIntersection,
         depth: usize,
