@@ -132,8 +132,10 @@ impl Renderer for CoreRenderer {
         }
 
         let res = self.scene.find_intersection(&ray, range);
-        if let Some((intersection, entity)) = res {
-            entity.shade(context, ray, intersection, depth)
+        if let Some((intersection, id)) = res {
+            let entities = context.scene().get_entities();
+            let material = entities.get_material(id.material_id()).unwrap();
+            material.shade(context, ray, intersection, depth)
         } else {
             self.config.background_color
         }

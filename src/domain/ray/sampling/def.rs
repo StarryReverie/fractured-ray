@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use rand::prelude::*;
 
 use crate::domain::material::def::Material;
@@ -5,7 +7,7 @@ use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::ShapeId;
 
-pub trait CoefSampling {
+pub trait CoefSampling: Debug + Send + Sync {
     fn coef_sample(
         &self,
         ray: &Ray,
@@ -49,7 +51,7 @@ impl CoefSample {
     }
 }
 
-pub trait LightSampling {
+pub trait LightSampling: Debug + Send + Sync {
     fn light_sample(
         &self,
         ray: &Ray,

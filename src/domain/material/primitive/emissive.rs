@@ -40,6 +40,10 @@ impl Material for Emissive {
     ) -> Color {
         self.radiance
     }
+
+    fn as_dyn(&self) -> &dyn Material {
+        self
+    }
 }
 
 impl CoefSampling for Emissive {

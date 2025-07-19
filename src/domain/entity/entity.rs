@@ -36,6 +36,8 @@ impl EntityId {
     }
 }
 
+pub trait EntityContainer: ShapeContainer + MaterialContainer {}
+
 #[derive(Debug, Default)]
 pub struct EntityPool {
     shapes: ShapePool,
@@ -49,7 +51,10 @@ impl EntityPool {
 }
 
 impl ShapeContainer for EntityPool {
-    fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId {
+    fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId
+    where
+        Self: Sized,
+    {
         self.shapes.add_shape(shape)
     }
 
@@ -59,7 +64,10 @@ impl ShapeContainer for EntityPool {
 }
 
 impl MaterialContainer for EntityPool {
-    fn add_material<M: Material>(&mut self, material: M) -> MaterialId {
+    fn add_material<M: Material>(&mut self, material: M) -> MaterialId
+    where
+        Self: Sized,
+    {
         self.materials.add_material(material)
     }
 
@@ -67,6 +75,8 @@ impl MaterialContainer for EntityPool {
         self.materials.get_material(id)
     }
 }
+
+impl EntityContainer for EntityPool {}
 
 #[derive(Debug, Default)]
 struct ShapePool {

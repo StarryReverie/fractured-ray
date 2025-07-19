@@ -66,7 +66,9 @@ impl Material for Scattering {
                     .renderer()
                     .trace(context, scattering_ray, DisRange::positive(), depth + 1);
             color * self.albedo
-        } else if let Some((intersection, material)) = closet {
+        } else if let Some((intersection, id)) = closet {
+            let entities = context.scene().get_entities();
+            let material = entities.get_material(id.material_id()).unwrap();
             let kind = material.material_kind();
             let side = intersection.side();
 
@@ -84,6 +86,10 @@ impl Material for Scattering {
         } else {
             unreachable!("closet should not be None otherwise 1st branch is executed")
         }
+    }
+
+    fn as_dyn(&self) -> &dyn Material {
+        self
     }
 }
 

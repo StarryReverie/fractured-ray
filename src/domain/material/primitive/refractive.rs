@@ -4,9 +4,10 @@ use snafu::prelude::*;
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Product;
-use crate::domain::math::numeric::Val;
+use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
+use crate::domain::renderer::Context;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Refractive {
@@ -103,6 +104,26 @@ impl Material for Refractive {
 
     fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
         unimplemented!("dirac function in refractive BSDF can't be represented")
+    }
+
+    fn shade(
+        &self,
+        context: &mut Context<'_>,
+        ray: Ray,
+        intersection: RayIntersection,
+        depth: usize,
+    ) -> Color {
+        let sample = self.coef_sample(&ray, &intersection, *context.rng());
+        let coefficient = sample.coefficient();
+        let ray_next = sample.into_ray();
+
+        let renderer = context.renderer();
+        let radiance = renderer.trace(context, ray_next, DisRange::positive(), depth + 1);
+        self.albedo() * coefficient * radiance
+    }
+
+    fn as_dyn(&self) -> &dyn Material {
+        self
     }
 }
 

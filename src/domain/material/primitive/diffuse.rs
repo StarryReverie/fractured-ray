@@ -34,6 +34,10 @@ impl Material for Diffuse {
             Val(0.0)
         }
     }
+
+    fn as_dyn(&self) -> &dyn Material {
+        self
+    }
 }
 
 impl CoefSampling for Diffuse {

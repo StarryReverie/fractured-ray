@@ -1,22 +1,41 @@
-use crate::domain::material::def::{Material, MaterialContainer};
+use crate::domain::material::def::{Material, MaterialContainer, MaterialKind};
 use crate::domain::math::numeric::DisRange;
+use crate::domain::ray::sampling::{EmptySampler, LightSampling};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer};
+use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer, ShapeId};
 
-use super::{Bvh, EntityId, EntityPool};
+use super::{Bvh, EntityContainer, EntityId, EntityPool};
 
 pub trait Scene: Send + Sync + 'static {
-    fn find_intersection(
+    fn get_entities(&self) -> &dyn EntityContainer;
+
+    fn get_lights(&self) -> &dyn LightSampling;
+
+    fn find_intersection(&self, ray: &Ray, range: DisRange) -> Option<(RayIntersection, EntityId)>;
+
+    fn test_intersection(
         &self,
         ray: &Ray,
         range: DisRange,
-    ) -> Option<(RayIntersection, &dyn Material)>;
+        shape_id: ShapeId,
+    ) -> Option<(RayIntersection, EntityId)> {
+        if let Some((intersection, id)) = self.find_intersection(ray, range) {
+            if id.shape_id() == shape_id {
+                Some((intersection, id))
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct BvhSceneBuilder {
     entities: Box<EntityPool>,
     ids: Vec<EntityId>,
+    lights: Vec<Box<dyn LightSampling>>,
 }
 
 impl BvhSceneBuilder {
@@ -24,13 +43,20 @@ impl BvhSceneBuilder {
         Self {
             entities: Box::new(EntityPool::new()),
             ids: Vec::new(),
+            lights: Vec::new(),
         }
     }
 
-    pub fn add<S: Shape, M: Material>(&mut self, shape: S, material: M) -> &mut Self {
+    pub fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
+    where
+        S: Shape,
+        M: Material,
+    {
         let shape_id = self.entities.add_shape(shape);
         let material_id = self.entities.add_material(material);
-        self.ids.push(EntityId::new(shape_id, material_id));
+        let entity_id = EntityId::new(shape_id, material_id);
+        self.ids.push(entity_id);
+        self.post_add_entity(entity_id);
         self
     }
 
@@ -43,10 +69,26 @@ impl BvhSceneBuilder {
         let material_id = self.entities.add_material(material);
 
         for shape_id in shape_ids {
-            self.ids.push(EntityId::new(shape_id, material_id));
+            let entity_id = EntityId::new(shape_id, material_id);
+            self.ids.push(entity_id);
+            self.post_add_entity(entity_id);
         }
 
         self
+    }
+
+    fn post_add_entity(&mut self, entity_id: EntityId) {
+        self.register_light(entity_id);
+    }
+
+    fn register_light(&mut self, entity_id: EntityId) {
+        if entity_id.material_id().kind() == MaterialKind::Emissive {
+            let shape_id = entity_id.shape_id();
+            let shape = self.entities.get_shape(shape_id).unwrap();
+            if let Some(sampler) = shape.get_sampler(shape_id) {
+                self.lights.push(sampler);
+            }
+        }
     }
 
     pub fn build(self) -> BvhScene {
@@ -65,6 +107,11 @@ impl BvhSceneBuilder {
             entities: self.entities,
             bvh: Bvh::new(bboxes),
             unboundeds,
+            lights: self
+                .lights
+                .into_iter()
+                .next()
+                .unwrap_or(Box::new(EmptySampler::new())),
         }
     }
 }
@@ -74,6 +121,7 @@ pub struct BvhScene {
     entities: Box<EntityPool>,
     bvh: Bvh,
     unboundeds: Vec<EntityId>,
+    lights: Box<dyn LightSampling>,
 }
 
 impl BvhScene {
@@ -81,7 +129,7 @@ impl BvhScene {
         &self,
         ray: &Ray,
         mut range: DisRange,
-    ) -> Option<(RayIntersection, &dyn Material)> {
+    ) -> Option<(RayIntersection, EntityId)> {
         let mut closet: Option<(RayIntersection, EntityId)> = None;
 
         for id in &self.unboundeds {
@@ -94,39 +142,28 @@ impl BvhScene {
             };
         }
 
-        if let Some((intersection, id)) = closet {
-            let material = self.entities.get_material(id.material_id()).unwrap();
-            Some((intersection, material))
-        } else {
-            None
-        }
-    }
-
-    fn find_intersection_in_bvh(
-        &self,
-        ray: &Ray,
-        range: DisRange,
-    ) -> Option<(RayIntersection, &dyn Material)> {
-        let res = self.bvh.search(ray, range, &*self.entities)?;
-        let material = self.entities.get_material(res.1.material_id()).unwrap();
-        Some((res.0, material))
+        closet
     }
 }
 
 impl Scene for BvhScene {
-    fn find_intersection(
-        &self,
-        ray: &Ray,
-        range: DisRange,
-    ) -> Option<(RayIntersection, &dyn Material)> {
+    fn get_entities(&self) -> &dyn EntityContainer {
+        &*self.entities
+    }
+
+    fn get_lights(&self) -> &dyn LightSampling {
+        &*self.lights
+    }
+
+    fn find_intersection(&self, ray: &Ray, range: DisRange) -> Option<(RayIntersection, EntityId)> {
         if let Some(mut res) = self.find_intersection_with_unboundeds(ray, range) {
             let range = range.shrink_end(res.0.distance());
-            if let Some(bvh_res) = self.find_intersection_in_bvh(ray, range) {
+            if let Some(bvh_res) = self.bvh.search(ray, range, &*self.entities) {
                 res = bvh_res
             }
             Some(res)
         } else {
-            self.find_intersection_in_bvh(ray, range)
+            self.bvh.search(ray, range, &*self.entities)
         }
     }
 }

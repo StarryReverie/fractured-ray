@@ -25,13 +25,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut builder = BvhSceneBuilder::new();
 
     // Light
+    // builder.add(
+    //     Polygon::new([
+    //         Point::new(Val(343.0), Val(548.0), Val(227.0)),
+    //         Point::new(Val(343.0), Val(548.0), Val(332.0)),
+    //         Point::new(Val(213.0), Val(548.0), Val(332.0)),
+    //         Point::new(Val(213.0), Val(548.0), Val(227.0)),
+    //     ])?,
+    //     Emissive::new(Color::new(Val(0.9), Val(0.85), Val(0.4)) * Val(5.0)),
+    // );
     builder.add(
-        Polygon::new([
-            Point::new(Val(343.0), Val(548.0), Val(227.0)),
-            Point::new(Val(343.0), Val(548.0), Val(332.0)),
-            Point::new(Val(213.0), Val(548.0), Val(332.0)),
-            Point::new(Val(213.0), Val(548.0), Val(227.0)),
-        ])?,
+        Sphere::new(Point::new(Val(278.0), Val(548.0), Val(279.5)), Val(65.0))?,
         Emissive::new(Color::new(Val(0.9), Val(0.85), Val(0.4)) * Val(5.0)),
     );
 
