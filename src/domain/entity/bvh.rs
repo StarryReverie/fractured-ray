@@ -105,11 +105,11 @@ where
         total_surface_area: Val,
     ) -> Option<usize> {
         assert_eq!(partition.len(), BvhNode::<SI>::SAH_PARTITION);
-        let mut cost = vec![BvhNode::<SI>::TRAVERSAL_COST; BvhNode::<SI>::SAH_PARTITION - 1];
+        let mut cost = [BvhNode::<SI>::TRAVERSAL_COST; BvhNode::<ShapeId>::SAH_PARTITION - 1];
 
         let mut merged_bbox: Option<BoundingBox> = None;
         let mut num = 0;
-        let mut num_pre = vec![0; BvhNode::<SI>::SAH_PARTITION - 1];
+        let mut num_pre = [0; BvhNode::<ShapeId>::SAH_PARTITION - 1];
         for i in 0..BvhNode::<SI>::SAH_PARTITION - 1 {
             num += partition[i].items.len();
             num_pre[i] = num;
@@ -119,13 +119,13 @@ where
             let surface_area = merged_bbox
                 .as_ref()
                 .map_or(Val(0.0), BoundingBox::surface_area);
-            cost[i] += BvhNode::<SI>::INTERSECTION_COST * Val::from(num) * surface_area
+            cost[i] += BvhNode::<ShapeId>::INTERSECTION_COST * Val::from(num) * surface_area
                 / total_surface_area;
         }
 
         num = 0;
         merged_bbox = None;
-        let mut num_suf = vec![0; BvhNode::<SI>::SAH_PARTITION - 1];
+        let mut num_suf = [0; BvhNode::<ShapeId>::SAH_PARTITION - 1];
         for i in (0..BvhNode::<SI>::SAH_PARTITION - 1).rev() {
             num += partition[i + 1].items.len();
             num_suf[i] = num;

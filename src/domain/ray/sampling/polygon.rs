@@ -5,7 +5,7 @@ use crate::domain::material::def::Material;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::shape::def::{Shape, ShapeId, ShapeKind};
+use crate::domain::shape::def::{Shape, ShapeId};
 use crate::domain::shape::primitive::{Polygon, Triangle};
 
 use super::{LightSample, LightSampling, TriangleSampler};
@@ -27,7 +27,7 @@ impl PolygonSampler {
 
         let mut weights = triangles.iter().map(Triangle::area).collect::<Vec<_>>();
         let area_inv = weights.iter().cloned().sum::<Val>().recip();
-        weights.iter_mut().for_each(|w| *w = *w * area_inv);
+        weights.iter_mut().for_each(|w| *w *= area_inv);
         let normal = triangles[0].normal();
         let index_sampler = WeightedIndex::new(weights.iter().map(|v| v.0)).unwrap();
 

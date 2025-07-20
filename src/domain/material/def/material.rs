@@ -76,7 +76,7 @@ fn shade_scattering(
     let renderer = context.renderer();
     let lights = context.scene().get_lights();
 
-    let sample = material.coef_sample(&ray, &intersection, *context.rng());
+    let sample = material.coef_sample(ray, intersection, *context.rng());
     let ray_next = sample.ray();
 
     let pdf_scattering = sample.pdf();

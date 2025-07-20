@@ -78,8 +78,7 @@ impl LightSampling for SphereSampler {
         let cos_ray_center = ray_next.direction().dot(to_center.normalize().unwrap());
         if cos_ray_center >= cos_max_half_cone_angle {
             let solid_angle = Val(2.0) * Val::PI * (Val(1.0) - cos_max_half_cone_angle);
-            let pdf = solid_angle.recip();
-            pdf
+            solid_angle.recip()
         } else {
             Val(0.0)
         }
