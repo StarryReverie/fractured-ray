@@ -36,6 +36,18 @@ impl EntityId {
     }
 }
 
+impl From<EntityId> for ShapeId {
+    fn from(value: EntityId) -> Self {
+        value.shape_id()
+    }
+}
+
+impl From<EntityId> for MaterialId {
+    fn from(value: EntityId) -> Self {
+        value.material_id()
+    }
+}
+
 pub trait EntityContainer: ShapeContainer + MaterialContainer {}
 
 #[derive(Debug, Default)]

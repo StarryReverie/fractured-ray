@@ -119,7 +119,7 @@ impl BvhSceneBuilder {
 #[derive(Debug)]
 pub struct BvhScene {
     entities: Box<EntityPool>,
-    bvh: Bvh,
+    bvh: Bvh<EntityId>,
     unboundeds: Vec<EntityId>,
     lights: Box<dyn LightSampling>,
 }

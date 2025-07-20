@@ -2,17 +2,21 @@ use smallvec::SmallVec;
 
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::shape::def::{BoundingBox, ShapeContainer};
-
-use super::EntityId;
+use crate::domain::shape::def::{BoundingBox, ShapeContainer, ShapeId};
 
 #[derive(Debug)]
-pub struct Bvh {
-    nodes: Vec<BvhNode>,
+pub struct Bvh<SI>
+where
+    SI: Eq + Copy + Into<ShapeId>,
+{
+    nodes: Vec<BvhNode<SI>>,
 }
 
-impl Bvh {
-    pub fn new(bboxes: Vec<(EntityId, BoundingBox)>) -> Self {
+impl<SI> Bvh<SI>
+where
+    SI: Eq + Copy + Into<ShapeId>,
+{
+    pub fn new(bboxes: Vec<(SI, BoundingBox)>) -> Self {
         let mut nodes = Vec::with_capacity(bboxes.len() * 2);
 
         if !bboxes.is_empty() {
@@ -22,7 +26,7 @@ impl Bvh {
         Self { nodes }
     }
 
-    fn build(nodes: &mut Vec<BvhNode>, bboxes: Vec<(EntityId, BoundingBox)>) -> usize {
+    fn build(nodes: &mut Vec<BvhNode<SI>>, bboxes: Vec<(SI, BoundingBox)>) -> usize {
         if bboxes.len() == 1 {
             let (id, bbox) = bboxes
                 .into_iter()
@@ -75,16 +79,16 @@ impl Bvh {
     fn partition_bboxes(
         axis: usize,
         node_bbox: &BoundingBox,
-        bboxes: Vec<(EntityId, BoundingBox)>,
-    ) -> Vec<PartitionBucket> {
+        bboxes: Vec<(SI, BoundingBox)>,
+    ) -> Vec<PartitionBucket<SI>> {
         let mut buckets = Vec::new();
-        buckets.resize(BvhNode::SAH_PARTITION, PartitionBucket::new());
+        buckets.resize(BvhNode::<SI>::SAH_PARTITION, PartitionBucket::new());
         let range = (node_bbox.min().axis(axis), node_bbox.max().axis(axis));
-        let bucket_span = (range.1 - range.0) / BvhNode::SAH_PARTITION.into();
+        let bucket_span = (range.1 - range.0) / BvhNode::<SI>::SAH_PARTITION.into();
 
         for (id, bbox) in bboxes {
             let fraction = (bbox.centroid().axis(axis) - range.0) / bucket_span;
-            let index = usize::from(fraction).clamp(0, BvhNode::SAH_PARTITION - 1);
+            let index = usize::from(fraction).clamp(0, BvhNode::<SI>::SAH_PARTITION - 1);
             buckets[index].items.push((id, bbox));
         }
 
@@ -96,17 +100,17 @@ impl Bvh {
     }
 
     fn calc_split_point(
-        partition: &[PartitionBucket],
+        partition: &[PartitionBucket<SI>],
         bbox_num: usize,
         total_surface_area: Val,
     ) -> Option<usize> {
-        assert_eq!(partition.len(), BvhNode::SAH_PARTITION);
-        let mut cost = [BvhNode::TRAVERSAL_COST; BvhNode::SAH_PARTITION - 1];
+        assert_eq!(partition.len(), BvhNode::<SI>::SAH_PARTITION);
+        let mut cost = vec![BvhNode::<SI>::TRAVERSAL_COST; BvhNode::<SI>::SAH_PARTITION - 1];
 
         let mut merged_bbox: Option<BoundingBox> = None;
         let mut num = 0;
-        let mut num_pre = [0; BvhNode::SAH_PARTITION - 1];
-        for i in 0..BvhNode::SAH_PARTITION - 1 {
+        let mut num_pre = vec![0; BvhNode::<SI>::SAH_PARTITION - 1];
+        for i in 0..BvhNode::<SI>::SAH_PARTITION - 1 {
             num += partition[i].items.len();
             num_pre[i] = num;
             merged_bbox = merged_bbox
@@ -115,14 +119,14 @@ impl Bvh {
             let surface_area = merged_bbox
                 .as_ref()
                 .map_or(Val(0.0), BoundingBox::surface_area);
-            cost[i] +=
-                BvhNode::INTERSECTION_COST * Val::from(num) * surface_area / total_surface_area;
+            cost[i] += BvhNode::<SI>::INTERSECTION_COST * Val::from(num) * surface_area
+                / total_surface_area;
         }
 
         num = 0;
         merged_bbox = None;
-        let mut num_suf = [0; BvhNode::SAH_PARTITION - 1];
-        for i in (0..BvhNode::SAH_PARTITION - 1).rev() {
+        let mut num_suf = vec![0; BvhNode::<SI>::SAH_PARTITION - 1];
+        for i in (0..BvhNode::<SI>::SAH_PARTITION - 1).rev() {
             num += partition[i + 1].items.len();
             num_suf[i] = num;
             merged_bbox = merged_bbox
@@ -131,12 +135,12 @@ impl Bvh {
             let surface_area = merged_bbox
                 .as_ref()
                 .map_or(Val(0.0), BoundingBox::surface_area);
-            cost[i] +=
-                BvhNode::INTERSECTION_COST * Val::from(num) * surface_area / total_surface_area;
+            cost[i] += BvhNode::<SI>::INTERSECTION_COST * Val::from(num) * surface_area
+                / total_surface_area;
         }
 
         let mut res = 0;
-        for i in 1..BvhNode::SAH_PARTITION - 1 {
+        for i in 1..BvhNode::<SI>::SAH_PARTITION - 1 {
             if cost[i] < cost[res] {
                 res = i
             } else if cost[i] == cost[res] {
@@ -149,7 +153,7 @@ impl Bvh {
             }
         }
 
-        let leaf_cost = Val::from(bbox_num) * BvhNode::TRAVERSAL_COST;
+        let leaf_cost = Val::from(bbox_num) * BvhNode::<SI>::TRAVERSAL_COST;
         if num_pre[res] != 0 && num_suf[res] != 0 && cost[res] < leaf_cost {
             Some(res + 1)
         } else {
@@ -171,7 +175,7 @@ impl Bvh {
         ray: &Ray,
         range: DisRange,
         shapes: &SC,
-    ) -> Option<(RayIntersection, EntityId)>
+    ) -> Option<(RayIntersection, SI)>
     where
         SC: ShapeContainer,
     {
@@ -189,7 +193,7 @@ impl Bvh {
         ray: &Ray,
         range: DisRange,
         shapes: &SC,
-    ) -> Option<(RayIntersection, EntityId)>
+    ) -> Option<(RayIntersection, SI)>
     where
         SC: ShapeContainer,
     {
@@ -225,7 +229,7 @@ impl Bvh {
                 }
             }
             BvhNode::Leaf { id, .. } => {
-                let shape = shapes.get_shape(id.shape_id()).unwrap();
+                let shape = shapes.get_shape((*id).into()).unwrap();
                 shape.hit(ray, range).map(|res| (res, *id))
             }
             BvhNode::ClusterLeaf { ids, .. } => {
@@ -241,14 +245,15 @@ impl Bvh {
         mut range: DisRange,
         ids: I,
         shapes: &SC,
-    ) -> Option<(RayIntersection, EntityId)>
+    ) -> Option<(RayIntersection, SI)>
     where
-        I: Iterator<Item = &'a EntityId>,
+        I: Iterator<Item = &'a SI>,
         SC: ShapeContainer,
+        SI: 'a,
     {
-        let mut closet: Option<(RayIntersection, EntityId)> = None;
+        let mut closet: Option<(RayIntersection, SI)> = None;
         for id in ids {
-            let shape = shapes.get_shape(id.shape_id()).unwrap();
+            let shape = shapes.get_shape((*id).into()).unwrap();
             if let Some((closet, _)) = &closet {
                 range = range.shrink_end(closet.distance());
             }
@@ -261,12 +266,18 @@ impl Bvh {
 }
 
 #[derive(Clone)]
-struct PartitionBucket {
+struct PartitionBucket<SI>
+where
+    SI: Eq + Copy + Into<ShapeId>,
+{
     overall_bbox: Option<BoundingBox>,
-    items: Vec<(EntityId, BoundingBox)>,
+    items: Vec<(SI, BoundingBox)>,
 }
 
-impl PartitionBucket {
+impl<SI> PartitionBucket<SI>
+where
+    SI: Eq + Copy + Into<ShapeId>,
+{
     fn new() -> Self {
         Self {
             overall_bbox: None,
@@ -283,22 +294,28 @@ impl PartitionBucket {
 }
 
 #[derive(Debug)]
-enum BvhNode {
+enum BvhNode<SI>
+where
+    SI: Eq + Copy + Into<ShapeId>,
+{
     Internal {
         bounding_box: BoundingBox,
         right: usize,
     },
     Leaf {
         bounding_box: BoundingBox,
-        id: EntityId,
+        id: SI,
     },
     ClusterLeaf {
         bounding_box: BoundingBox,
-        ids: Box<SmallVec<[EntityId; 8]>>,
+        ids: Box<SmallVec<[SI; 8]>>,
     },
 }
 
-impl BvhNode {
+impl<SI> BvhNode<SI>
+where
+    SI: Eq + Copy + Into<ShapeId>,
+{
     const INDEX_PLACEHOLDER: usize = usize::MAX;
     const SAH_PARTITION: usize = 12;
     const TRAVERSAL_COST: Val = Val(1.0);
@@ -311,13 +328,13 @@ impl BvhNode {
         }
     }
 
-    fn leaf(bounding_box: BoundingBox, id: EntityId) -> Self {
+    fn leaf(bounding_box: BoundingBox, id: SI) -> Self {
         Self::Leaf { bounding_box, id }
     }
 
     fn cluster_leaf<I>(bounding_box: BoundingBox, ids: I) -> Self
     where
-        I: Iterator<Item = EntityId>,
+        I: Iterator<Item = SI>,
     {
         Self::ClusterLeaf {
             bounding_box,
