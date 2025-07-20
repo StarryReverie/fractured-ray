@@ -20,10 +20,8 @@ pub struct TriangleSampler {
 
 impl TriangleSampler {
     pub fn new(id: ShapeId, shape: Triangle) -> Self {
-        let side1 = shape.vertex1() - shape.vertex0();
-        let side2 = shape.vertex2() - shape.vertex0();
         let normal = shape.normal();
-        let area_inv = (Val(0.5) * side1.cross(side2).norm()).recip();
+        let area_inv = shape.area().recip();
         Self {
             id,
             shape,

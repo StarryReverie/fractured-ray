@@ -30,8 +30,8 @@ Diamond
   - [x] Recursive rendering
   - [x] Fast ray-object intersection solving
   - [x] BSDF & cosine-weighted sampling
-  - [ ] Light sampling
-  - [ ] Multiple importance sampling
+  - [x] Light sampling
+  - [x] Multiple importance sampling
   - [ ] Photon mapping
   - [ ] Physics-based color model
 - [ ] Shapes
@@ -49,7 +49,7 @@ Diamond
   - [ ] Common material primitives
     - [x] Diffuse
     - [x] Emissive
-    - [ ] Glossy
+    - [x] Glossy
     - [ ] Mixed
     - [x] Refractive
     - [x] Scattering

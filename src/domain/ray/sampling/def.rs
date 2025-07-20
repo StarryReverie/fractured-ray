@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use rand::prelude::*;
 
 use crate::domain::material::def::Material;
+use crate::domain::math::geometry::{AllTransformation, Transform};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{Shape, ShapeId};
@@ -111,5 +112,16 @@ impl LightSample {
             pdf: self.pdf * multiplier,
             ..self
         }
+    }
+}
+
+impl Transform<AllTransformation> for LightSample {
+    fn transform(&self, transformation: &AllTransformation) -> Self {
+        LightSample::new(
+            self.ray.transform(transformation),
+            self.coefficient,
+            self.pdf,
+            self.shape_id,
+        )
     }
 }

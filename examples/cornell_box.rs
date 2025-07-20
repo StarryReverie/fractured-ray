@@ -10,7 +10,7 @@ use fractured_ray::domain::math::geometry::Point;
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::shape::mesh::MeshConstructor;
-use fractured_ray::domain::shape::primitive::{Polygon, Sphere, Triangle};
+use fractured_ray::domain::shape::primitive::{Polygon, Sphere};
 use fractured_ray::infrastructure::image::PngWriter;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -25,29 +25,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut builder = BvhSceneBuilder::new();
 
     // Light
-    // builder.add(
-    //     Polygon::new([
-    //         Point::new(Val(343.0), Val(548.0), Val(227.0)),
-    //         Point::new(Val(343.0), Val(548.0), Val(332.0)),
-    //         Point::new(Val(213.0), Val(548.0), Val(332.0)),
-    //         Point::new(Val(213.0), Val(548.0), Val(227.0)),
-    //     ])?,
-    //     Emissive::new(Color::new(Val(0.9), Val(0.85), Val(0.4)) * Val(5.0)),
-    // );
     builder.add(
-        Triangle::new(
+        Polygon::new([
             Point::new(Val(343.0), Val(548.0), Val(227.0)),
             Point::new(Val(343.0), Val(548.0), Val(332.0)),
             Point::new(Val(213.0), Val(548.0), Val(332.0)),
-        )?,
-        Emissive::new(Color::new(Val(0.9), Val(0.85), Val(0.4)) * Val(5.0)),
-    );
-    builder.add(
-        Triangle::new(
-            Point::new(Val(213.0), Val(548.0), Val(332.0)),
             Point::new(Val(213.0), Val(548.0), Val(227.0)),
-            Point::new(Val(343.0), Val(548.0), Val(227.0)),
-        )?,
+        ])?,
         Emissive::new(Color::new(Val(0.9), Val(0.85), Val(0.4)) * Val(5.0)),
     );
 
@@ -174,7 +158,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene,
         Configuration {
-            ssaa_samples: 512,
+            ssaa_samples: 128,
             ..Configuration::default()
         },
     )?;

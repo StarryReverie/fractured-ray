@@ -1,10 +1,11 @@
 use smallvec::SmallVec;
 use snafu::prelude::*;
+use spade::{DelaunayTriangulation, Point2, Triangulation};
 
 use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::Point;
-use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::LightSampling;
+use crate::domain::math::geometry::{Point, Rotation, Transform, Transformation};
+use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
+use crate::domain::ray::sampling::{LightSampling, PolygonSampler};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -139,7 +140,7 @@ impl Polygon {
             .collect::<Vec<_>>()
     }
 
-    pub fn calc_angle_sum(to_vertices: Vec<(Val, Val)>) -> Val {
+    fn calc_angle_sum(to_vertices: Vec<(Val, Val)>) -> Val {
         (to_vertices.iter().skip(1))
             .chain(to_vertices.iter().take(1))
             .zip(to_vertices.iter())
@@ -150,6 +151,42 @@ impl Polygon {
                 angle * cross.signum()
             })
             .sum::<Val>()
+    }
+
+    pub fn triangulate(&self) -> Vec<Triangle> {
+        match &self.0 {
+            PolygonInner::Triangle(triangle) => vec![triangle.clone(); 1],
+            PolygonInner::General { vertices, normal } => {
+                assert!(vertices.len() >= 3);
+
+                let tr = Rotation::new(*normal, UnitVector::z_direction(), Val(0.0));
+                let z = vertices[0].transform(&tr).z();
+                let vertices_2d = vertices
+                    .iter()
+                    .map(|v| v.transform(&tr))
+                    .map(|v| Point2::new(v.x().0, v.y().0))
+                    .collect();
+                let triangulation =
+                    DelaunayTriangulation::<Point2<WrappedVal>>::bulk_load_stable(vertices_2d)
+                        .unwrap();
+
+                let inv_tr = tr.inverse();
+                let mut triangles = Vec::with_capacity(triangulation.num_inner_faces());
+                for face in triangulation.inner_faces() {
+                    let [v0, v1, v2] = face.vertices().map(|vertex| {
+                        let pos = vertex.position();
+                        Point::new(Val(pos.x), Val(pos.y), z).transform(&inv_tr)
+                    });
+                    let triangle_normal = (v1 - v0).cross(v2 - v0);
+                    if triangle_normal.dot(*normal) > Val(0.0) {
+                        triangles.push(Triangle::new(v0, v1, v2).unwrap());
+                    } else {
+                        triangles.push(Triangle::new(v0, v2, v1).unwrap());
+                    }
+                }
+                triangles
+            }
+        }
     }
 }
 
@@ -181,8 +218,13 @@ impl Shape for Polygon {
         }
     }
 
-    fn get_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        todo!()
+    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        match &self.0 {
+            PolygonInner::Triangle(triangle) => triangle.get_sampler(shape_id),
+            PolygonInner::General { .. } => {
+                Some(Box::new(PolygonSampler::new(shape_id, self.clone())))
+            }
+        }
     }
 }
 
@@ -345,5 +387,19 @@ mod tests {
                 Point::new(Val(1.0), Val(2.0), Val(3.0)),
             )),
         )
+    }
+
+    #[test]
+    fn polygon_trangulate_succeeds() {
+        let polygon = Polygon::new([
+            Point::new(Val(1.0), Val(0.0), Val(0.0)),
+            Point::new(Val(0.0), Val(2.0), Val(1.0)),
+            Point::new(Val(-1.0), Val(1.0), Val(3.0)),
+            Point::new(Val(0.0), Val(-1.0), Val(2.0)),
+        ])
+        .unwrap();
+
+        let triangles = dbg!(polygon.triangulate());
+        assert_eq!(triangles.len(), 2);
     }
 }

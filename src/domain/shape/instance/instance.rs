@@ -4,7 +4,7 @@ use crate::domain::math::geometry::{
     AllTransformation, Rotation, Transform, Transformation, Translation,
 };
 use crate::domain::math::numeric::DisRange;
-use crate::domain::ray::sampling::LightSampling;
+use crate::domain::ray::sampling::{InstanceSampler, LightSampling};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -52,6 +52,14 @@ impl Instance {
             ..self
         }
     }
+
+    pub fn prototype(&self) -> &dyn Shape {
+        &*self.prototype
+    }
+
+    pub fn transformation(&self) -> &AllTransformation {
+        &self.transformation
+    }
 }
 
 impl Shape for Instance {
@@ -71,8 +79,8 @@ impl Shape for Instance {
         Some(bbox.transform(&self.transformation))
     }
 
-    fn get_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        todo!()
+    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        Some(Box::new(InstanceSampler::new(shape_id, self.clone())))
     }
 }
 

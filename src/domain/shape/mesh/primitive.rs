@@ -60,8 +60,15 @@ impl Shape for MeshTriangle {
         }
     }
 
-    fn get_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        todo!()
+    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        let (v0, v1, v2) = self.get_vertices();
+        if let Some(tr) = &self.data.transformation {
+            Triangle::new(v0.transform(tr), v1.transform(tr), v2.transform(tr))
+                .unwrap()
+                .get_sampler(shape_id)
+        } else {
+            Triangle::new(*v0, *v1, *v2).unwrap().get_sampler(shape_id)
+        }
     }
 }
 
@@ -122,8 +129,14 @@ impl Shape for MeshPolygon {
         }
     }
 
-    fn get_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        todo!()
+    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        if let Some(tr) = &self.data.transformation {
+            let vertices = self.get_vertices().into_iter().map(|v| v.transform(tr));
+            Polygon::new(vertices).unwrap().get_sampler(shape_id)
+        } else {
+            let vertices = self.get_vertices().into_iter().cloned();
+            Polygon::new(vertices).unwrap().get_sampler(shape_id)
+        }
     }
 }
 

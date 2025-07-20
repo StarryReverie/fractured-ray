@@ -65,6 +65,12 @@ impl Triangle {
             .expect("triangle's two sides should not parallel")
     }
 
+    pub fn area(&self) -> Val {
+        let side1 = self.vertex1 - self.vertex0;
+        let side2 = self.vertex2 - self.vertex0;
+        Val(0.5) * side1.cross(side2).norm()
+    }
+
     pub fn calc_ray_intersection(
         ray: &Ray,
         range: DisRange,
