@@ -5,35 +5,10 @@ use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::{Rotation, Transform};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::shape::def::ShapeId;
+use crate::domain::shape::def::{Shape, ShapeId};
 use crate::domain::shape::primitive::Sphere;
 
 use super::{LightSample, LightSampling};
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct EmptySampler {}
-
-impl EmptySampler {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-impl LightSampling for EmptySampler {
-    fn light_sample(
-        &self,
-        _ray: &Ray,
-        _intersection: &RayIntersection,
-        _material: &dyn Material,
-        _rng: &mut dyn RngCore,
-    ) -> Option<LightSample> {
-        None
-    }
-
-    fn light_pdf(&self, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
-        Val(0.0)
-    }
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SphereSampler {
@@ -48,6 +23,14 @@ impl SphereSampler {
 }
 
 impl LightSampling for SphereSampler {
+    fn id(&self) -> Option<ShapeId> {
+        Some(self.id)
+    }
+
+    fn shape(&self) -> Option<&dyn Shape> {
+        Some(&self.shape)
+    }
+
     fn light_sample(
         &self,
         ray: &Ray,
@@ -67,10 +50,12 @@ impl LightSampling for SphereSampler {
         let y = r1_2pi.sin() * tmp;
         let local_at_sphere = Vector::new(x, y, z) * self.shape.radius();
 
-        let global_dir = -to_center.normalize().unwrap();
+        let global_dir = -to_center.normalize().unwrap_or(UnitVector::z_direction());
         let tr = Rotation::new(UnitVector::z_direction(), global_dir, Val(0.0));
         let at_sphere = local_at_sphere.transform(&tr);
-        let direction = (to_center + at_sphere).normalize().unwrap();
+        let Ok(direction) = (to_center + at_sphere).normalize() else {
+            return None;
+        };
         let ray_next = Ray::new(intersection.position(), direction);
 
         let bsdf = material.bsdf(ray, intersection, &ray_next);

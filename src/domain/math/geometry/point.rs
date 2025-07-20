@@ -35,7 +35,7 @@ impl Point {
         }
     }
 
-    pub fn to_vector(&self) -> Vector {
+    pub fn into_vector(self) -> Vector {
         self.0
     }
 

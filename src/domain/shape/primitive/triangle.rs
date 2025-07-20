@@ -2,10 +2,10 @@ use std::ops::RangeBounds;
 
 use snafu::prelude::*;
 
-use crate::domain::math::algebra::Product;
+use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::LightSampling;
+use crate::domain::ray::sampling::{LightSampling, TriangleSampler};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -44,6 +44,25 @@ impl Triangle {
             ParallelSidesSnafu
         );
         Ok(())
+    }
+
+    pub fn vertex0(&self) -> Point {
+        self.vertex0
+    }
+
+    pub fn vertex1(&self) -> Point {
+        self.vertex1
+    }
+
+    pub fn vertex2(&self) -> Point {
+        self.vertex2
+    }
+
+    pub fn normal(&self) -> UnitVector {
+        (self.vertex1 - self.vertex0)
+            .cross(self.vertex2 - self.vertex0)
+            .normalize()
+            .expect("triangle's two sides should not parallel")
     }
 
     pub fn calc_ray_intersection(
@@ -109,8 +128,8 @@ impl Shape for Triangle {
         Some(BoundingBox::new(min, max))
     }
 
-    fn get_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        todo!()
+    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        Some(Box::new(TriangleSampler::new(shape_id, self.clone())))
     }
 }
 

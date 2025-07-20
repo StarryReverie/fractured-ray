@@ -5,7 +5,7 @@ use rand::prelude::*;
 use crate::domain::material::def::Material;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::shape::def::ShapeId;
+use crate::domain::shape::def::{Shape, ShapeId};
 
 pub trait CoefSampling: Debug + Send + Sync {
     fn coef_sample(
@@ -52,6 +52,10 @@ impl CoefSample {
 }
 
 pub trait LightSampling: Debug + Send + Sync {
+    fn id(&self) -> Option<ShapeId>;
+
+    fn shape(&self) -> Option<&dyn Shape>;
+
     fn light_sample(
         &self,
         ray: &Ray,
@@ -99,5 +103,13 @@ impl LightSample {
 
     pub fn shape_id(&self) -> ShapeId {
         self.shape_id
+    }
+
+    pub fn scale_pdf(self, multiplier: Val) -> Self {
+        Self {
+            coefficient: self.coefficient / multiplier,
+            pdf: self.pdf * multiplier,
+            ..self
+        }
     }
 }
