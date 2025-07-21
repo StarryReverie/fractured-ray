@@ -62,7 +62,7 @@ impl LightSampling for TriangleSampler {
         let ray_next = Ray::new(intersection.position(), direction);
 
         let bsdf = material.bsdf(ray, intersection, &ray_next);
-        if bsdf != Val(0.0) {
+        if bsdf.norm_squared() != Val(0.0) {
             let cos1 = direction.dot(intersection.normal());
             let cos2 = self.normal.dot(ray_next.direction()).abs();
             let dis_squared = (point - intersection.position()).norm_squared();

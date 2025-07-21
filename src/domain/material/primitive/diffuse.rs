@@ -2,19 +2,19 @@ use rand::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::math::algebra::{Product, UnitVector};
+use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Diffuse {
-    albedo: Color,
+    color: Color,
 }
 
 impl Diffuse {
-    pub fn new(albedo: Color) -> Self {
-        Self { albedo }
+    pub fn new(color: Color) -> Self {
+        Self { color }
     }
 }
 
@@ -23,15 +23,11 @@ impl Material for Diffuse {
         MaterialKind::Diffuse
     }
 
-    fn albedo(&self) -> Color {
-        self.albedo
-    }
-
-    fn bsdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+    fn bsdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Vector {
         if intersection.normal().dot(ray_next.direction()) > Val(0.0) {
-            Val::FRAC_1_PI
+            Val::FRAC_1_PI * self.color.to_vector()
         } else {
-            Val(0.0)
+            Vector::zero()
         }
     }
 
@@ -57,7 +53,7 @@ impl CoefSampling for Diffuse {
 
         let ray_next = Ray::new(intersection.position(), direction);
         let pdf = self.coef_pdf(ray, intersection, &ray_next);
-        CoefSample::new(ray_next, Val(1.0), pdf)
+        CoefSample::new(ray_next, self.color.to_vector(), pdf)
     }
 
     fn coef_pdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {

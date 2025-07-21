@@ -2,6 +2,7 @@ use rand::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
+use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection};
@@ -23,11 +24,7 @@ impl Material for Emissive {
         MaterialKind::Emissive
     }
 
-    fn albedo(&self) -> Color {
-        Color::WHITE
-    }
-
-    fn bsdf(&self, _ray: &Ray, _intersectionn: &RayIntersection, _ray_next: &Ray) -> Val {
+    fn bsdf(&self, _ray: &Ray, _intersectionn: &RayIntersection, _ray_next: &Ray) -> Vector {
         unimplemented!("rays should not bounce again if hitting an emissive material")
     }
 

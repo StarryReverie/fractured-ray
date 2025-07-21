@@ -4,7 +4,7 @@ use snafu::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::math::algebra::UnitVector;
+use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::{CoefSample, CoefSampling};
@@ -13,14 +13,14 @@ use crate::domain::renderer::Context;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scattering {
-    albedo: Color,
+    color: Color,
     density: Val,
 }
 
 impl Scattering {
-    pub fn new(albedo: Color, density: Val) -> Result<Self, TryNewScatteringError> {
+    pub fn new(color: Color, density: Val) -> Result<Self, TryNewScatteringError> {
         ensure!(density > Val(0.0), InvalidDensitySnafu);
-        Ok(Self { albedo, density })
+        Ok(Self { color, density })
     }
 
     fn generate_next_ray(&self, start: Point, rng: &mut dyn RngCore) -> Ray {
@@ -34,11 +34,7 @@ impl Material for Scattering {
         MaterialKind::Scattering
     }
 
-    fn albedo(&self) -> Color {
-        self.albedo
-    }
-
-    fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+    fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Vector {
         todo!("BSSRDF sampling is not yet implemented")
     }
 
@@ -65,7 +61,7 @@ impl Material for Scattering {
                 context
                     .renderer()
                     .trace(context, scattering_ray, DisRange::positive(), depth + 1);
-            color * self.albedo
+            color * self.color
         } else if let Some((intersection, id)) = closet {
             let entities = context.scene().get_entities();
             let material = entities.get_material(id.material_id()).unwrap();

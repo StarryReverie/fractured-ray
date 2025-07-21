@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul};
 
-use crate::domain::math::numeric::Val;
+use crate::domain::math::{algebra::Vector, numeric::Val};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Color {
@@ -37,6 +37,10 @@ impl Color {
 
     pub fn blue(&self) -> Val {
         self.blue
+    }
+
+    pub fn to_vector(&self) -> Vector {
+        (*self).into()
     }
 }
 
@@ -77,5 +81,35 @@ impl Mul<Color> for Val {
 
     fn mul(self, rhs: Color) -> Self::Output {
         Color::new(self * rhs.red, self * rhs.green, self * rhs.blue)
+    }
+}
+
+impl Mul<Vector> for Color {
+    type Output = Color;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        Self::new(
+            self.red * rhs.x(),
+            self.green * rhs.y(),
+            self.blue * rhs.z(),
+        )
+    }
+}
+
+impl Mul<Color> for Vector {
+    type Output = Color;
+
+    fn mul(self, rhs: Color) -> Self::Output {
+        Color::new(
+            self.x() * rhs.red,
+            self.y() * rhs.green,
+            self.z() * rhs.blue,
+        )
+    }
+}
+
+impl From<Color> for Vector {
+    fn from(value: Color) -> Self {
+        Self::new(value.red, value.green, value.blue)
     }
 }

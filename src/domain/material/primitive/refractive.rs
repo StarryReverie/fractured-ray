@@ -3,7 +3,7 @@ use snafu::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::math::algebra::Product;
+use crate::domain::math::algebra::{Product, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
@@ -11,16 +11,16 @@ use crate::domain::renderer::Context;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Refractive {
-    albedo: Color,
+    color: Color,
     refractive_index: Val,
 }
 
 impl Refractive {
-    pub fn new(albedo: Color, refractive_index: Val) -> Result<Self, TryNewRefractiveError> {
+    pub fn new(color: Color, refractive_index: Val) -> Result<Self, TryNewRefractiveError> {
         ensure!(refractive_index > Val(0.0), InvalidRefractiveIndexSnafu);
 
         Ok(Self {
-            albedo,
+            color,
             refractive_index,
         })
     }
@@ -98,11 +98,7 @@ impl Material for Refractive {
         MaterialKind::Refractive
     }
 
-    fn albedo(&self) -> Color {
-        self.albedo
-    }
-
-    fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+    fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Vector {
         unimplemented!("dirac function in refractive BSDF can't be represented")
     }
 
@@ -119,7 +115,7 @@ impl Material for Refractive {
 
         let renderer = context.renderer();
         let radiance = renderer.trace(context, ray_next, DisRange::positive(), depth + 1);
-        self.albedo() * coefficient * radiance
+        coefficient * radiance
     }
 
     fn as_dyn(&self) -> &dyn Material {
@@ -137,7 +133,7 @@ impl CoefSampling for Refractive {
         let reflection_determination = Val(rng.random());
         let direction = self.calc_next_ray(ray, intersection, reflection_determination);
         let pdf = self.coef_pdf(ray, intersection, &direction);
-        CoefSample::new(direction, Val(1.0), pdf)
+        CoefSample::new(direction, self.color.to_vector(), pdf)
     }
 
     fn coef_pdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {

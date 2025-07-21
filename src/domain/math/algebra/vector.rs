@@ -13,6 +13,14 @@ impl Vector {
         Self(x, y, z)
     }
 
+    pub const fn broadcast(x: Val) -> Self {
+        Self(x, x, x)
+    }
+
+    pub const fn zero() -> Self {
+        Self(Val(0.0), Val(0.0), Val(0.0))
+    }
+
     pub fn x(&self) -> Val {
         self.0
     }

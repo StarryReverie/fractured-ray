@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use crate::domain::color::Color;
+use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::CoefSampling;
 use crate::domain::ray::{Ray, RayIntersection};
@@ -9,9 +10,7 @@ use crate::domain::renderer::Context;
 pub trait Material: CoefSampling + Debug + Send + Sync + 'static {
     fn material_kind(&self) -> MaterialKind;
 
-    fn albedo(&self) -> Color;
-
-    fn bsdf(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val;
+    fn bsdf(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Vector;
 
     fn shade(
         &self,
@@ -63,7 +62,7 @@ fn shade_light(
     let coefficient = sample.coefficient();
     let ray_next = sample.into_ray();
     let radiance = light_material.shade(context, ray_next, intersection_next, 0);
-    material.albedo() * coefficient * radiance * weight
+    coefficient * radiance * weight
 }
 
 fn shade_scattering(
@@ -89,13 +88,14 @@ fn shade_scattering(
     let coefficient = sample.coefficient();
     let ray_next = sample.into_ray();
     let radiance = renderer.trace(context, ray_next, DisRange::positive(), depth + 1);
-    material.albedo() * coefficient * radiance * weight
+    coefficient * radiance * weight
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MaterialKind {
     Diffuse,
     Emissive,
+    Glossy,
     Refractive,
     Scattering,
     Specular,

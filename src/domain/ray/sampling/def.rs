@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use rand::prelude::*;
 
 use crate::domain::material::def::Material;
+use crate::domain::math::algebra::Vector;
 use crate::domain::math::geometry::{AllTransformation, Transform};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
@@ -22,12 +23,12 @@ pub trait CoefSampling: Debug + Send + Sync {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CoefSample {
     ray: Ray,
-    coefficient: Val,
+    coefficient: Vector,
     pdf: Val,
 }
 
 impl CoefSample {
-    pub fn new(ray: Ray, coefficient: Val, pdf: Val) -> Self {
+    pub fn new(ray: Ray, coefficient: Vector, pdf: Val) -> Self {
         Self {
             ray,
             coefficient,
@@ -43,7 +44,7 @@ impl CoefSample {
         self.ray
     }
 
-    pub fn coefficient(&self) -> Val {
+    pub fn coefficient(&self) -> Vector {
         self.coefficient
     }
 
@@ -71,13 +72,13 @@ pub trait LightSampling: Debug + Send + Sync {
 #[derive(Debug, Clone, PartialEq)]
 pub struct LightSample {
     ray: Ray,
-    coefficient: Val,
+    coefficient: Vector,
     pdf: Val,
     shape_id: ShapeId,
 }
 
 impl LightSample {
-    pub fn new(ray: Ray, coefficient: Val, pdf: Val, shape_id: ShapeId) -> Self {
+    pub fn new(ray: Ray, coefficient: Vector, pdf: Val, shape_id: ShapeId) -> Self {
         Self {
             ray,
             coefficient,
@@ -94,7 +95,7 @@ impl LightSample {
         self.ray
     }
 
-    pub fn coefficient(&self) -> Val {
+    pub fn coefficient(&self) -> Vector {
         self.coefficient
     }
 

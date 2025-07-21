@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::math::algebra::Product;
+use crate::domain::math::algebra::{Product, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection};
@@ -10,12 +10,12 @@ use crate::domain::renderer::Context;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Specular {
-    albedo: Color,
+    color: Color,
 }
 
 impl Specular {
     pub fn new(albedo: Color) -> Self {
-        Self { albedo }
+        Self { color: albedo }
     }
 
     fn calc_next_ray(&self, ray: &Ray, intersection: &RayIntersection) -> Ray {
@@ -35,11 +35,7 @@ impl Material for Specular {
         MaterialKind::Specular
     }
 
-    fn albedo(&self) -> Color {
-        self.albedo
-    }
-
-    fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+    fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Vector {
         unimplemented!("dirac function in refractive BSDF can't be represented")
     }
 
@@ -56,7 +52,7 @@ impl Material for Specular {
 
         let renderer = context.renderer();
         let radiance = renderer.trace(context, ray_next, DisRange::positive(), depth + 1);
-        self.albedo() * coefficient * radiance
+        coefficient * radiance
     }
 
     fn as_dyn(&self) -> &dyn Material {
@@ -73,7 +69,7 @@ impl CoefSampling for Specular {
     ) -> CoefSample {
         let direction = self.calc_next_ray(ray, intersection);
         let pdf = self.coef_pdf(ray, intersection, &direction);
-        CoefSample::new(direction, Val(1.0), pdf)
+        CoefSample::new(direction, self.color.to_vector(), pdf)
     }
 
     fn coef_pdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
