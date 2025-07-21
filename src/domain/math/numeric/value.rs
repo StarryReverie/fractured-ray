@@ -252,6 +252,11 @@ impl Val {
     pub const fn is_sign_negative(self) -> bool {
         self.0.is_sign_negative()
     }
+
+    #[inline(always)]
+    pub fn lerp(a: Self, b: Self, t: Self) -> Self {
+        a * (Val(1.0) - t) + b * t
+    }
 }
 
 impl PartialEq for Val {

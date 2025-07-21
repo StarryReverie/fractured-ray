@@ -9,7 +9,7 @@ use super::{Product, Quaternion, TryIntoUnitVectorError, UnitVector};
 pub struct Vector(Val, Val, Val);
 
 impl Vector {
-    pub fn new(x: Val, y: Val, z: Val) -> Self {
+    pub const fn new(x: Val, y: Val, z: Val) -> Self {
         Self(x, y, z)
     }
 
@@ -43,6 +43,10 @@ impl Vector {
 
     pub fn normalize(self) -> Result<UnitVector, TryIntoUnitVectorError> {
         self.try_into()
+    }
+
+    pub fn lerp(a: Self, b: Self, t: Val) -> Self {
+        a * (Val(1.0) - t) + b * t
     }
 
     pub fn is_perpendicular_to<V>(&self, rhs: V) -> bool

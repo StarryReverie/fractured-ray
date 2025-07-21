@@ -4,7 +4,9 @@ use std::fs::File;
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::BvhSceneBuilder;
-use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Scattering};
+use fractured_ray::domain::material::primitive::{
+    Emissive, Glossy, GlossyPredefinition, Refractive,
+};
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
 use fractured_ray::domain::math::geometry::{Point, Rotation, Translation};
 use fractured_ray::domain::math::numeric::Val;
@@ -26,7 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Vector::new(Val(-2.0), Val(2.5), Val(2.0)).normalize()?,
                 Val(0.0),
             ))
-            .translate(Translation::new(Vector::new(Val(4.0), Val(0.0), Val(-2.0)))),
+            .translate(Translation::new(Vector::new(Val(3.0), Val(0.0), Val(-2.0)))),
         Refractive::new(Color::WHITE * Val(0.9), Val(2.417))?,
     );
 
@@ -35,26 +37,22 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
             UnitVector::y_direction(),
         ),
-        Diffuse::new(Color::new(Val(0.404), Val(0.309), Val(0.275))),
+        Glossy::lookup(GlossyPredefinition::Iron, Val(0.3))?,
     );
 
-    scene.add(
-        Plane::new(
-            Point::new(Val(0.0), Val(0.0), Val(-40.0)),
-            -UnitVector::z_direction(),
-        ),
-        Scattering::new(Color::WHITE, Val(0.001))?,
-    );
-
-    scene.add(
-        Polygon::new([
-            Point::new(Val(-6.0), Val(18.0), Val(-6.0)),
-            Point::new(Val(6.0), Val(18.0), Val(-6.0)),
-            Point::new(Val(6.0), Val(18.0), Val(6.0)),
-            Point::new(Val(-6.0), Val(18.0), Val(6.0)),
-        ])?,
-        Emissive::new(Color::WHITE * Val(10.0)),
-    );
+    for (dx, dz) in [(1, 1), (1, -1), (-1, 1), (-1, -1)] {
+        let spacing = Val(6.0);
+        let (dx, dz) = (spacing * Val::from(dx), spacing * Val::from(dz));
+        scene.add(
+            Polygon::new([
+                Point::new(Val(-4.0) + dx, Val(18.0), Val(-4.0) + dz),
+                Point::new(Val(4.0) + dx, Val(18.0), Val(-4.0) + dz),
+                Point::new(Val(4.0) + dx, Val(18.0), Val(4.0) + dz),
+                Point::new(Val(-4.0) + dx, Val(18.0), Val(4.0) + dz),
+            ])?,
+            Emissive::new(Color::WHITE * Val(2.0)),
+        );
+    }
 
     let camera = Camera::new(
         Point::new(Val(0.0), Val(5.0), Val(80.0)),
@@ -68,7 +66,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene.build(),
         Configuration {
-            ssaa_samples: 4096,
+            ssaa_samples: 1024,
             background_color: Color::WHITE * Val(0.01),
             ..Configuration::default()
         },

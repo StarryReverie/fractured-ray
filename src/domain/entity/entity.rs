@@ -3,7 +3,9 @@ use std::fmt::Debug;
 use std::mem::ManuallyDrop;
 
 use crate::domain::material::def::{Material, MaterialContainer, MaterialId, MaterialKind};
-use crate::domain::material::primitive::{Diffuse, Emissive, Refractive, Scattering, Specular};
+use crate::domain::material::primitive::{
+    Diffuse, Emissive, Glossy, Refractive, Scattering, Specular,
+};
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId, ShapeKind};
 use crate::domain::shape::instance::Instance;
 use crate::domain::shape::mesh::{MeshPolygon, MeshTriangle};
@@ -165,6 +167,7 @@ impl ShapeContainer for ShapePool {
 struct MaterialPool {
     diffuse: Vec<Diffuse>,
     emissive: Vec<Emissive>,
+    glossy: Vec<Glossy>,
     refractive: Vec<Refractive>,
     scattering: Vec<Scattering>,
     specular: Vec<Specular>,
@@ -199,6 +202,9 @@ impl MaterialContainer for MaterialPool {
         } else if type_id == TypeId::of::<Emissive>() {
             let index = Self::downcast_and_push(material, &mut self.emissive);
             MaterialId::new(kind, index)
+        } else if type_id == TypeId::of::<Glossy>() {
+            let index = Self::downcast_and_push(material, &mut self.glossy);
+            MaterialId::new(kind, index)
         } else if type_id == TypeId::of::<Refractive>() {
             let index = Self::downcast_and_push(material, &mut self.refractive);
             MaterialId::new(kind, index)
@@ -218,6 +224,7 @@ impl MaterialContainer for MaterialPool {
         match material_id.kind() {
             MaterialKind::Diffuse => self.diffuse.get(index).map(Self::upcast),
             MaterialKind::Emissive => self.emissive.get(index).map(Self::upcast),
+            MaterialKind::Glossy => self.glossy.get(index).map(Self::upcast),
             MaterialKind::Refractive => self.refractive.get(index).map(Self::upcast),
             MaterialKind::Scattering => self.scattering.get(index).map(Self::upcast),
             MaterialKind::Specular => self.specular.get(index).map(Self::upcast),

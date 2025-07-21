@@ -54,6 +54,14 @@ impl UnitVector {
         self.0
     }
 
+    pub fn orthonormal_basis(&self) -> (UnitVector, UnitVector) {
+        let basis1 = Vector::new(-self.0.y(), self.0.x(), Val(0.0))
+            .normalize()
+            .unwrap_or(UnitVector::x_direction());
+        let basis2 = UnitVector(self.cross(basis1));
+        (basis1, basis2)
+    }
+
     pub fn is_perpendicular_to<V>(&self, rhs: V) -> bool
     where
         Self: Product<V, Output = Self>,
