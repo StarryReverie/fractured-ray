@@ -4,7 +4,7 @@ use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::sampling::{CoefSample, CoefSampling};
+use crate::domain::ray::sampling::{CoefficientSample, CoefficientSampling};
 use crate::domain::ray::{Ray, RayIntersection};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -41,13 +41,13 @@ impl Material for Diffuse {
     }
 }
 
-impl CoefSampling for Diffuse {
-    fn coef_sample(
+impl CoefficientSampling for Diffuse {
+    fn sample_coefficient(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
         rng: &mut dyn RngCore,
-    ) -> CoefSample {
+    ) -> CoefficientSample {
         let normal = intersection.normal();
         let direction = loop {
             let unit = UnitVector::random(rng);
@@ -57,11 +57,11 @@ impl CoefSampling for Diffuse {
         };
 
         let ray_next = Ray::new(intersection.position(), direction);
-        let pdf = self.coef_pdf(ray, intersection, &ray_next);
-        CoefSample::new(ray_next, self.color.to_vector(), pdf)
+        let pdf = self.pdf_coefficient(ray, intersection, &ray_next);
+        CoefficientSample::new(ray_next, self.color.to_vector(), pdf)
     }
 
-    fn coef_pdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+    fn pdf_coefficient(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         let cos = ray_next.direction().dot(intersection.normal());
         cos.max(Val(0.0)) * Val::FRAC_1_PI
     }

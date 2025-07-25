@@ -40,7 +40,7 @@ impl LightSampling for TriangleSampler {
         Some(&self.shape)
     }
 
-    fn light_sample(
+    fn sample_light(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
@@ -74,7 +74,7 @@ impl LightSampling for TriangleSampler {
         }
     }
 
-    fn light_pdf(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         if let Some(intersection_next) = self.shape.hit(ray_next, DisRange::positive()) {
             let cos = self.normal.dot(ray_next.direction()).abs();
             let point = intersection_next.position();
@@ -114,11 +114,11 @@ mod tests {
 
         let ray_next = Ray::new(intersection.position(), -UnitVector::z_direction());
         assert_eq!(
-            sampler.light_pdf(&intersection, &ray_next),
+            sampler.pdf_light(&intersection, &ray_next),
             Val(2.0).powi(2) / Val(1.5) / Val(0.6666666667),
         );
 
         let ray_next = Ray::new(intersection.position(), UnitVector::y_direction());
-        assert_eq!(sampler.light_pdf(&intersection, &ray_next), Val(0.0),);
+        assert_eq!(sampler.pdf_light(&intersection, &ray_next), Val(0.0),);
     }
 }

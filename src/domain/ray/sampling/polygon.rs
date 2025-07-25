@@ -56,7 +56,7 @@ impl LightSampling for PolygonSampler {
         Some(&self.polygon)
     }
 
-    fn light_sample(
+    fn sample_light(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
@@ -65,11 +65,11 @@ impl LightSampling for PolygonSampler {
     ) -> Option<LightSample> {
         let which = self.index_sampler.sample(rng);
         (self.triangles.get(which))
-            .and_then(|triangle| triangle.light_sample(ray, intersection, material, rng))
+            .and_then(|triangle| triangle.sample_light(ray, intersection, material, rng))
             .map(|sample| sample.scale_pdf(self.weights[which]))
     }
 
-    fn light_pdf(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         if let Some(intersection_next) = self.polygon.hit(ray_next, DisRange::positive()) {
             let cos = self.normal.dot(ray_next.direction()).abs();
             let point = intersection_next.position();

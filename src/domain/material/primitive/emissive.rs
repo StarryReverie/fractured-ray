@@ -4,7 +4,7 @@ use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::sampling::{CoefSample, CoefSampling};
+use crate::domain::ray::sampling::{CoefficientSample, CoefficientSampling};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::Context;
 
@@ -48,17 +48,17 @@ impl Material for Emissive {
     }
 }
 
-impl CoefSampling for Emissive {
-    fn coef_sample(
+impl CoefficientSampling for Emissive {
+    fn sample_coefficient(
         &self,
         _ray: &Ray,
         _intersection: &RayIntersection,
         _rng: &mut dyn RngCore,
-    ) -> CoefSample {
+    ) -> CoefficientSample {
         unimplemented!("rays should not bounce again if hitting an emissive material")
     }
 
-    fn coef_pdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+    fn pdf_coefficient(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
         unimplemented!("rays should not bounce again if hitting an emissive material")
     }
 }

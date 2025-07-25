@@ -39,7 +39,7 @@ impl LightSampling for InstanceSampler {
         Some(&self.instance)
     }
 
-    fn light_sample(
+    fn sample_light(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
@@ -50,18 +50,18 @@ impl LightSampling for InstanceSampler {
             let ray = ray.transform(&self.inv_transformation);
             let intersection = intersection.transform(&self.inv_transformation);
             sampler
-                .light_sample(&ray, &intersection, material, rng)
+                .sample_light(&ray, &intersection, material, rng)
                 .map(|sample| sample.transform(self.instance.transformation()))
         } else {
             None
         }
     }
 
-    fn light_pdf(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         if let Some(sampler) = &self.sampler {
             let intersection = intersection.transform(&self.inv_transformation);
             let ray_next = ray_next.transform(&self.inv_transformation);
-            sampler.light_pdf(&intersection, &ray_next)
+            sampler.pdf_light(&intersection, &ray_next)
         } else {
             Val(0.0)
         }

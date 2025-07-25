@@ -56,7 +56,7 @@ impl LightSampling for MultiLightSampler {
         unreachable!("MultiLightSampler doesn't have a unique inner shape")
     }
 
-    fn light_sample(
+    fn sample_light(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
@@ -66,15 +66,15 @@ impl LightSampling for MultiLightSampler {
         let which = rng.sample(Uniform::new(0, self.ids.len()).unwrap());
         let id = self.ids[which];
         (self.lights.lights.get(&id))
-            .and_then(|light| light.light_sample(ray, intersection, material, rng))
+            .and_then(|light| light.sample_light(ray, intersection, material, rng))
             .map(|sample| sample.scale_pdf(self.weight))
     }
 
-    fn light_pdf(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         let res = (self.bvh).search(ray_next, DisRange::positive(), &self.lights);
         if let Some((_, id)) = res {
             let light = self.lights.lights.get(&id).unwrap();
-            light.light_pdf(intersection, ray_next) * self.weight
+            light.pdf_light(intersection, ray_next) * self.weight
         } else {
             Val(0.0)
         }

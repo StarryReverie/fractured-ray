@@ -7,7 +7,7 @@ use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::{CoefSample, CoefSampling};
+use crate::domain::ray::sampling::{CoefficientSample, CoefficientSampling};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::Context;
 
@@ -94,17 +94,17 @@ impl Material for Scattering {
     }
 }
 
-impl CoefSampling for Scattering {
-    fn coef_sample(
+impl CoefficientSampling for Scattering {
+    fn sample_coefficient(
         &self,
         _ray: &Ray,
         _intersection: &RayIntersection,
         _rng: &mut dyn RngCore,
-    ) -> CoefSample {
+    ) -> CoefficientSample {
         todo!("BSSRDF sampling is not yet implemented")
     }
 
-    fn coef_pdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+    fn pdf_coefficient(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
         todo!("BSSRDF sampling is not yet implemented")
     }
 }

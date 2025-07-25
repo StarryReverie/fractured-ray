@@ -5,7 +5,7 @@ use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::{CoefSample, CoefSampling};
+use crate::domain::ray::sampling::{CoefficientSample, CoefficientSampling};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::Context;
 
@@ -114,9 +114,9 @@ impl Material for Refractive {
         intersection: RayIntersection,
         depth: usize,
     ) -> Color {
-        let sample = self.coef_sample(&ray, &intersection, *context.rng());
+        let sample = self.sample_coefficient(&ray, &intersection, *context.rng());
         let coefficient = sample.coefficient();
-        let ray_next = sample.into_ray();
+        let ray_next = sample.into_ray_next();
 
         let renderer = context.renderer();
         let radiance = renderer.trace(context, ray_next, DisRange::positive(), depth + 1);
@@ -128,20 +128,20 @@ impl Material for Refractive {
     }
 }
 
-impl CoefSampling for Refractive {
-    fn coef_sample(
+impl CoefficientSampling for Refractive {
+    fn sample_coefficient(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
         rng: &mut dyn RngCore,
-    ) -> CoefSample {
+    ) -> CoefficientSample {
         let reflection_determination = Val(rng.random());
         let direction = self.calc_next_ray(ray, intersection, reflection_determination);
-        let pdf = self.coef_pdf(ray, intersection, &direction);
-        CoefSample::new(direction, self.color.to_vector(), pdf)
+        let pdf = self.pdf_coefficient(ray, intersection, &direction);
+        CoefficientSample::new(direction, self.color.to_vector(), pdf)
     }
 
-    fn coef_pdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+    fn pdf_coefficient(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
         Val(1.0)
     }
 }

@@ -9,39 +9,39 @@ use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{Shape, ShapeId};
 
-pub trait CoefSampling: Debug + Send + Sync {
-    fn coef_sample(
+pub trait CoefficientSampling: Debug + Send + Sync {
+    fn sample_coefficient(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
         rng: &mut dyn RngCore,
-    ) -> CoefSample;
+    ) -> CoefficientSample;
 
-    fn coef_pdf(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val;
+    fn pdf_coefficient(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val;
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct CoefSample {
-    ray: Ray,
+pub struct CoefficientSample {
+    ray_next: Ray,
     coefficient: Vector,
     pdf: Val,
 }
 
-impl CoefSample {
-    pub fn new(ray: Ray, coefficient: Vector, pdf: Val) -> Self {
+impl CoefficientSample {
+    pub fn new(ray_next: Ray, coefficient: Vector, pdf: Val) -> Self {
         Self {
-            ray,
+            ray_next,
             coefficient,
             pdf,
         }
     }
 
-    pub fn ray(&self) -> &Ray {
-        &self.ray
+    pub fn ray_next(&self) -> &Ray {
+        &self.ray_next
     }
 
-    pub fn into_ray(self) -> Ray {
-        self.ray
+    pub fn into_ray_next(self) -> Ray {
+        self.ray_next
     }
 
     pub fn coefficient(&self) -> Vector {
@@ -58,7 +58,7 @@ pub trait LightSampling: Debug + Send + Sync {
 
     fn shape(&self) -> Option<&dyn Shape>;
 
-    fn light_sample(
+    fn sample_light(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
@@ -66,33 +66,33 @@ pub trait LightSampling: Debug + Send + Sync {
         rng: &mut dyn RngCore,
     ) -> Option<LightSample>;
 
-    fn light_pdf(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val;
+    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val;
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LightSample {
-    ray: Ray,
+    ray_next: Ray,
     coefficient: Vector,
     pdf: Val,
     shape_id: ShapeId,
 }
 
 impl LightSample {
-    pub fn new(ray: Ray, coefficient: Vector, pdf: Val, shape_id: ShapeId) -> Self {
+    pub fn new(ray_next: Ray, coefficient: Vector, pdf: Val, shape_id: ShapeId) -> Self {
         Self {
-            ray,
+            ray_next,
             coefficient,
             pdf,
             shape_id,
         }
     }
 
-    pub fn ray(&self) -> &Ray {
-        &self.ray
+    pub fn ray_next(&self) -> &Ray {
+        &self.ray_next
     }
 
-    pub fn into_ray(self) -> Ray {
-        self.ray
+    pub fn into_ray_next(self) -> Ray {
+        self.ray_next
     }
 
     pub fn coefficient(&self) -> Vector {
@@ -119,7 +119,7 @@ impl LightSample {
 impl Transform<AllTransformation> for LightSample {
     fn transform(&self, transformation: &AllTransformation) -> Self {
         LightSample::new(
-            self.ray.transform(transformation),
+            self.ray_next.transform(transformation),
             self.coefficient,
             self.pdf,
             self.shape_id,

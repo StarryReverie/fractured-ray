@@ -25,7 +25,7 @@ impl LightSampling for EmptySampler {
         None
     }
 
-    fn light_sample(
+    fn sample_light(
         &self,
         _ray: &Ray,
         _intersection: &RayIntersection,
@@ -35,7 +35,7 @@ impl LightSampling for EmptySampler {
         None
     }
 
-    fn light_pdf(&self, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+    fn pdf_light(&self, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
         Val(0.0)
     }
 }

@@ -31,7 +31,7 @@ impl LightSampling for SphereSampler {
         Some(&self.shape)
     }
 
-    fn light_sample(
+    fn sample_light(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
@@ -70,7 +70,7 @@ impl LightSampling for SphereSampler {
         }
     }
 
-    fn light_pdf(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         let radius2 = self.shape.radius().powi(2);
         let to_center = self.shape.center() - intersection.position();
         let cos_max_half_cone_angle = (Val(1.0) - radius2 / to_center.norm_squared()).sqrt();
@@ -115,7 +115,7 @@ mod tests {
         );
 
         assert_eq!(
-            sampler.light_pdf(&intersection, &ray_next),
+            sampler.pdf_light(&intersection, &ray_next),
             Val(1.187948667)
         );
     }

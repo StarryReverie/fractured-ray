@@ -3,11 +3,11 @@ use std::fmt::Debug;
 use crate::domain::color::Color;
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::CoefSampling;
+use crate::domain::ray::sampling::CoefficientSampling;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::Context;
 
-pub trait Material: CoefSampling + Debug + Send + Sync + 'static {
+pub trait Material: CoefficientSampling + Debug + Send + Sync + 'static {
     fn material_kind(&self) -> MaterialKind;
 
     fn bsdf(
@@ -41,12 +41,12 @@ fn shade_light(
 ) -> Color {
     let scene = context.scene();
     let lights = scene.get_lights();
-    let res = lights.light_sample(ray, intersection, material, *context.rng());
+    let res = lights.sample_light(ray, intersection, material, *context.rng());
     let Some(sample) = res else {
         return Color::BLACK;
     };
 
-    let ray_next = sample.ray();
+    let ray_next = sample.ray_next();
     let res = scene.test_intersection(ray_next, DisRange::positive(), sample.shape_id());
     let (intersection_next, light_material) = if let Some(res) = res {
         let intersection_next = res.0;
@@ -61,11 +61,11 @@ fn shade_light(
     if pdf_light == Val(0.0) {
         return Color::BLACK;
     }
-    let pdf_scattering = material.coef_pdf(ray, intersection, ray_next);
+    let pdf_scattering = material.pdf_coefficient(ray, intersection, ray_next);
     let weight = pdf_light / (pdf_light + pdf_scattering);
 
     let coefficient = sample.coefficient();
-    let ray_next = sample.into_ray();
+    let ray_next = sample.into_ray_next();
     let radiance = light_material.shade(context, ray_next, intersection_next, 0);
     coefficient * radiance * weight
 }
@@ -80,18 +80,18 @@ fn shade_scattering(
     let renderer = context.renderer();
     let lights = context.scene().get_lights();
 
-    let sample = material.coef_sample(ray, intersection, *context.rng());
-    let ray_next = sample.ray();
+    let sample = material.sample_coefficient(ray, intersection, *context.rng());
+    let ray_next = sample.ray_next();
 
     let pdf_scattering = sample.pdf();
     if pdf_scattering == Val(0.0) {
         return Color::BLACK;
     }
-    let pdf_light = lights.light_pdf(intersection, ray_next);
+    let pdf_light = lights.pdf_light(intersection, ray_next);
     let weight = pdf_scattering / (pdf_light + pdf_scattering);
 
     let coefficient = sample.coefficient();
-    let ray_next = sample.into_ray();
+    let ray_next = sample.into_ray_next();
     let radiance = renderer.trace(context, ray_next, DisRange::positive(), depth + 1);
     coefficient * radiance * weight
 }

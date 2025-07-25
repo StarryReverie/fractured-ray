@@ -6,7 +6,7 @@ use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::{Rotation, Transform, Transformation};
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::sampling::{CoefSample, CoefSampling};
+use crate::domain::ray::sampling::{CoefficientSample, CoefficientSampling};
 use crate::domain::ray::{Ray, RayIntersection};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -164,13 +164,13 @@ impl Material for Glossy {
     }
 }
 
-impl CoefSampling for Glossy {
-    fn coef_sample(
+impl CoefficientSampling for Glossy {
+    fn sample_coefficient(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
         rng: &mut dyn RngCore,
-    ) -> CoefSample {
+    ) -> CoefficientSample {
         let dir = -ray.direction();
         let normal = intersection.normal();
 
@@ -186,10 +186,10 @@ impl CoefSampling for Glossy {
         let ndf = self.calc_ndf(normal, mn);
         let pdf = g1 * ndf * Val(0.25) / dir.dot(normal);
 
-        CoefSample::new(ray_next, coefficient, pdf)
+        CoefficientSample::new(ray_next, coefficient, pdf)
     }
 
-    fn coef_pdf(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+    fn pdf_coefficient(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         let (dir, dir_next) = (-ray.direction(), ray_next.direction());
         let Ok(mn) = (dir + dir_next).normalize() else {
             return Val(0.0);
