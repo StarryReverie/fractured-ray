@@ -23,8 +23,13 @@ impl Material for Diffuse {
         MaterialKind::Diffuse
     }
 
-    fn bsdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Vector {
-        if intersection.normal().dot(ray_next.direction()) > Val(0.0) {
+    fn bsdf(
+        &self,
+        _dir_out: UnitVector,
+        intersection: &RayIntersection,
+        dir_in: UnitVector,
+    ) -> Vector {
+        if intersection.normal().dot(dir_in) > Val(0.0) {
             Val::FRAC_1_PI * self.color.to_vector()
         } else {
             Vector::zero()

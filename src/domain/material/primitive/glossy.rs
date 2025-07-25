@@ -138,16 +138,20 @@ impl Material for Glossy {
         MaterialKind::Glossy
     }
 
-    fn bsdf(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Vector {
+    fn bsdf(
+        &self,
+        dir_out: UnitVector,
+        intersection: &RayIntersection,
+        dir_in: UnitVector,
+    ) -> Vector {
         let normal = intersection.normal();
-        if normal.dot(ray_next.direction()) > Val(0.0) {
-            let (dir, dir_next) = (-ray.direction(), ray_next.direction());
-            let mn = (dir + dir_next).normalize().unwrap();
+        if normal.dot(dir_in) > Val(0.0) {
+            let mn = (dir_out + dir_in).normalize().unwrap();
 
-            let reflectance = self.calc_reflectance(dir_next.dot(mn));
+            let reflectance = self.calc_reflectance(dir_in.dot(mn));
             let ndf = self.calc_ndf(normal, mn);
-            let g2 = self.calc_g2(dir, dir_next, normal);
-            let (cos, cos_next) = (dir.dot(normal), dir_next.dot(normal));
+            let g2 = self.calc_g2(dir_out, dir_in, normal);
+            let (cos, cos_next) = (dir_out.dot(normal), dir_in.dot(normal));
 
             (reflectance * ndf * g2) / (Val(4.0) * cos * cos_next).abs()
         } else {

@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::math::algebra::Vector;
+use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection};
@@ -24,7 +24,12 @@ impl Material for Emissive {
         MaterialKind::Emissive
     }
 
-    fn bsdf(&self, _ray: &Ray, _intersectionn: &RayIntersection, _ray_next: &Ray) -> Vector {
+    fn bsdf(
+        &self,
+        _dir_out: UnitVector,
+        _intersection: &RayIntersection,
+        _dir_in: UnitVector,
+    ) -> Vector {
         unimplemented!("rays should not bounce again if hitting an emissive material")
     }
 

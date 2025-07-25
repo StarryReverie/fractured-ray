@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::math::algebra::{Product, Vector};
+use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::{CoefSample, CoefSampling};
 use crate::domain::ray::{Ray, RayIntersection};
@@ -35,7 +35,12 @@ impl Material for Specular {
         MaterialKind::Specular
     }
 
-    fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Vector {
+    fn bsdf(
+        &self,
+        _dir_out: UnitVector,
+        _intersection: &RayIntersection,
+        _dir_in: UnitVector,
+    ) -> Vector {
         unimplemented!("dirac function in refractive BSDF can't be represented")
     }
 

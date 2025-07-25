@@ -58,7 +58,7 @@ impl LightSampling for SphereSampler {
         };
         let ray_next = Ray::new(intersection.position(), direction);
 
-        let bsdf = material.bsdf(ray, intersection, &ray_next);
+        let bsdf = material.bsdf(-ray.direction(), intersection, ray_next.direction());
         if bsdf.norm_squared() != Val(0.0) {
             let cos = direction.dot(intersection.normal());
             let solid_angle = Val(2.0) * Val::PI * (Val(1.0) - cos_max_half_cone_angle);

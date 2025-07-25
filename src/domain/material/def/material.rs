@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::domain::color::Color;
-use crate::domain::math::algebra::Vector;
+use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::CoefSampling;
 use crate::domain::ray::{Ray, RayIntersection};
@@ -10,7 +10,12 @@ use crate::domain::renderer::Context;
 pub trait Material: CoefSampling + Debug + Send + Sync + 'static {
     fn material_kind(&self) -> MaterialKind;
 
-    fn bsdf(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Vector;
+    fn bsdf(
+        &self,
+        dir_out: UnitVector,
+        intersection: &RayIntersection,
+        dir_in: UnitVector,
+    ) -> Vector;
 
     fn shade(
         &self,

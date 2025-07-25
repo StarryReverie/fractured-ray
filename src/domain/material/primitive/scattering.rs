@@ -34,7 +34,12 @@ impl Material for Scattering {
         MaterialKind::Scattering
     }
 
-    fn bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Vector {
+    fn bsdf(
+        &self,
+        _dir_out: UnitVector,
+        _intersection: &RayIntersection,
+        _dir_in: UnitVector,
+    ) -> Vector {
         todo!("BSSRDF sampling is not yet implemented")
     }
 
