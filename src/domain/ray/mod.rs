@@ -1,3 +1,4 @@
+pub mod photon;
 pub mod sampling;
 
 mod intersection;
