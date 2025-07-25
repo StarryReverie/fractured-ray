@@ -399,7 +399,7 @@ mod tests {
         ])
         .unwrap();
 
-        let triangles = dbg!(polygon.triangulate());
+        let triangles = polygon.triangulate();
         assert_eq!(triangles.len(), 2);
     }
 }
