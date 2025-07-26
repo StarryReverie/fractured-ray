@@ -2,27 +2,85 @@ use rand::prelude::*;
 
 use crate::domain::material::def::Material;
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
-use crate::domain::math::geometry::{Rotation, Transform};
+use crate::domain::math::geometry::{Point, Rotation, Transform};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{Shape, ShapeId};
 use crate::domain::shape::primitive::Sphere;
 
-use super::{LightSample, LightSampling};
+use super::{LightSample, LightSampling, PointSample, PointSampling};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct SphereSampler {
+pub struct SpherePointSampler {
+    id: ShapeId,
+    shape: Sphere,
+    area_inv: Val,
+}
+
+impl SpherePointSampler {
+    pub fn new(id: ShapeId, shape: Sphere) -> Self {
+        let area_inv = (Val(4.0) * Val::PI * shape.radius()).recip();
+        Self {
+            id,
+            shape,
+            area_inv,
+        }
+    }
+}
+
+impl PointSampling for SpherePointSampler {
+    fn id(&self) -> Option<ShapeId> {
+        Some(self.id)
+    }
+
+    fn shape(&self) -> Option<&dyn Shape> {
+        Some(&self.shape)
+    }
+
+    fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {
+        let dir = UnitVector::random(rng);
+        let point = dir * self.shape.radius() + self.shape.center();
+        Some(PointSample::new(
+            point,
+            dir,
+            self.pdf_point_checked_inside(point),
+            self.id,
+        ))
+    }
+
+    fn pdf_point(&self, point: Point) -> Val {
+        let dis_squared = (point - self.shape.center()).norm_squared();
+        if dis_squared == self.shape.radius().powi(2) {
+            self.area_inv
+        } else {
+            Val(0.0)
+        }
+    }
+
+    fn pdf_point_checked_inside(&self, _point: Point) -> Val {
+        self.area_inv
+    }
+
+    fn normal(&self, point: Point) -> UnitVector {
+        (point - self.shape.center())
+            .normalize()
+            .unwrap_or(UnitVector::x_direction())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SphereLightSampler {
     id: ShapeId,
     shape: Sphere,
 }
 
-impl SphereSampler {
+impl SphereLightSampler {
     pub fn new(id: ShapeId, shape: Sphere) -> Self {
         Self { id, shape }
     }
 }
 
-impl LightSampling for SphereSampler {
+impl LightSampling for SphereLightSampler {
     fn id(&self) -> Option<ShapeId> {
         Some(self.id)
     }
@@ -95,7 +153,7 @@ mod tests {
 
     #[test]
     fn sphere_sampler_light_pdf_succeeds() {
-        let sampler = SphereSampler::new(
+        let sampler = SphereLightSampler::new(
             ShapeId::new(ShapeKind::Sphere, 0),
             Sphere::new(Point::new(Val(0.0), Val(0.0), Val(0.0)), Val(2.0)).unwrap(),
         );

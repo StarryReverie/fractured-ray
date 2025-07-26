@@ -5,7 +5,7 @@ use spade::{DelaunayTriangulation, Point2, Triangulation};
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{Point, Rotation, Transform, Transformation};
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
-use crate::domain::ray::sampling::{LightSampling, PolygonLightSampler};
+use crate::domain::ray::sampling::{LightSamplerAdapter, LightSampling, PolygonPointSampler};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -222,7 +222,9 @@ impl Shape for Polygon {
         match &self.0 {
             PolygonInner::Triangle(triangle) => triangle.get_sampler(shape_id),
             PolygonInner::General { .. } => {
-                Some(Box::new(PolygonLightSampler::new(shape_id, self.clone())))
+                let inner = PolygonPointSampler::new(shape_id, self.clone());
+                let sampler = LightSamplerAdapter::new(inner);
+                Some(Box::new(sampler))
             }
         }
     }

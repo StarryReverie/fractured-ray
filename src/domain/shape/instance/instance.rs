@@ -4,7 +4,7 @@ use crate::domain::math::geometry::{
     AllTransformation, Rotation, Transform, Transformation, Translation,
 };
 use crate::domain::math::numeric::DisRange;
-use crate::domain::ray::sampling::{InstanceSampler, LightSampling};
+use crate::domain::ray::sampling::{InstanceLightSampler, LightSampling};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -80,7 +80,7 @@ impl Shape for Instance {
     }
 
     fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        Some(Box::new(InstanceSampler::new(shape_id, self.clone())))
+        Some(Box::new(InstanceLightSampler::new(shape_id, self.clone())))
     }
 }
 

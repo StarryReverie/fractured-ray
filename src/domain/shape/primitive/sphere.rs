@@ -5,7 +5,7 @@ use snafu::prelude::*;
 use crate::domain::math::algebra::{Product, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::{LightSampling, SphereSampler};
+use crate::domain::ray::sampling::{LightSampling, SphereLightSampler};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -88,7 +88,7 @@ impl Shape for Sphere {
     }
 
     fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        Some(Box::new(SphereSampler::new(shape_id, self.clone())))
+        Some(Box::new(SphereLightSampler::new(shape_id, self.clone())))
     }
 }
 

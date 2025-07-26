@@ -5,7 +5,7 @@ use snafu::prelude::*;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::{LightSampling, TriangleLightSampler};
+use crate::domain::ray::sampling::{LightSamplerAdapter, LightSampling, TrianglePointSampler};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -135,7 +135,9 @@ impl Shape for Triangle {
     }
 
     fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        Some(Box::new(TriangleLightSampler::new(shape_id, self.clone())))
+        let inner = TrianglePointSampler::new(shape_id, self.clone());
+        let sampler = LightSamplerAdapter::new(inner);
+        Some(Box::new(sampler))
     }
 }
 

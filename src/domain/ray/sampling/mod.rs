@@ -10,10 +10,10 @@ mod util;
 pub use def::{
     CoefficientSample, CoefficientSampling, LightSample, LightSampling, PointSample, PointSampling,
 };
-pub use empty::EmptySampler;
-pub use instance::InstanceSampler;
+pub use empty::EmptyLightSampler;
+pub use instance::InstanceLightSampler;
 pub use multi_light::MultiLightSampler;
-pub use polygon::{PolygonLightSampler, PolygonPointSampler};
-pub use sphere::SphereSampler;
-pub use triangle::{TriangleLightSampler, TrianglePointSampler};
+pub use polygon::PolygonPointSampler;
+pub use sphere::{SphereLightSampler, SpherePointSampler};
+pub use triangle::TrianglePointSampler;
 pub use util::LightSamplerAdapter;

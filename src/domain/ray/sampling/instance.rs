@@ -10,14 +10,14 @@ use crate::domain::shape::instance::Instance;
 use super::{LightSample, LightSampling};
 
 #[derive(Debug)]
-pub struct InstanceSampler {
+pub struct InstanceLightSampler {
     id: ShapeId,
     instance: Instance,
     sampler: Option<Box<dyn LightSampling>>,
     inv_transformation: AllTransformation,
 }
 
-impl InstanceSampler {
+impl InstanceLightSampler {
     pub fn new(id: ShapeId, instance: Instance) -> Self {
         let inv_transformation = instance.transformation().clone().inverse();
         let sampler = instance.prototype().get_sampler(id);
@@ -30,7 +30,7 @@ impl InstanceSampler {
     }
 }
 
-impl LightSampling for InstanceSampler {
+impl LightSampling for InstanceLightSampler {
     fn id(&self) -> Option<ShapeId> {
         Some(self.id)
     }

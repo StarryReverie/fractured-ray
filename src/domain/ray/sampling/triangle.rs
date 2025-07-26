@@ -1,14 +1,12 @@
 use rand::prelude::*;
 
-use crate::domain::material::def::Material;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{Shape, ShapeId};
 use crate::domain::shape::primitive::Triangle;
 
-use super::{LightSample, LightSamplerAdapter, LightSampling, PointSample, PointSampling};
+use super::{PointSample, PointSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TrianglePointSampler {
@@ -79,79 +77,5 @@ impl PointSampling for TrianglePointSampler {
 
     fn normal(&self, _point: Point) -> UnitVector {
         self.normal
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct TriangleLightSampler {
-    inner: LightSamplerAdapter<TrianglePointSampler>,
-}
-
-impl TriangleLightSampler {
-    pub fn new(id: ShapeId, shape: Triangle) -> Self {
-        let inner = TrianglePointSampler::new(id, shape);
-        let inner = LightSamplerAdapter::new(inner);
-        Self { inner }
-    }
-}
-
-impl LightSampling for TriangleLightSampler {
-    fn id(&self) -> Option<ShapeId> {
-        self.inner.id()
-    }
-
-    fn shape(&self) -> Option<&dyn Shape> {
-        self.inner.shape()
-    }
-
-    fn sample_light(
-        &self,
-        ray: &Ray,
-        intersection: &RayIntersection,
-        material: &dyn Material,
-        rng: &mut dyn RngCore,
-    ) -> Option<LightSample> {
-        self.inner.sample_light(ray, intersection, material, rng)
-    }
-
-    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
-        self.inner.pdf_light(intersection, ray_next)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::domain::ray::SurfaceSide;
-    use crate::domain::shape::def::ShapeKind;
-
-    use super::*;
-
-    #[test]
-    fn triangle_sampler_pdf_light_succeeds() {
-        let sampler = TriangleLightSampler::new(
-            ShapeId::new(ShapeKind::Triangle, 0),
-            Triangle::new(
-                Point::new(Val(-2.0), Val(0.0), Val(0.0)),
-                Point::new(Val(0.0), Val(0.0), Val(-1.0)),
-                Point::new(Val(0.0), Val(1.0), Val(0.0)),
-            )
-            .unwrap(),
-        );
-
-        let intersection = RayIntersection::new(
-            Val(1.0),
-            Point::new(Val(0.0), Val(0.0), Val(1.0)),
-            UnitVector::y_direction(),
-            SurfaceSide::Front,
-        );
-
-        let ray_next = Ray::new(intersection.position(), -UnitVector::z_direction());
-        assert_eq!(
-            sampler.pdf_light(&intersection, &ray_next),
-            Val(2.0).powi(2) / Val(1.5) / Val(0.6666666667),
-        );
-
-        let ray_next = Ray::new(intersection.position(), UnitVector::y_direction());
-        assert_eq!(sampler.pdf_light(&intersection, &ray_next), Val(0.0));
     }
 }

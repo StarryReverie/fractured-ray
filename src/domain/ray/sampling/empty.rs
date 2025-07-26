@@ -8,15 +8,15 @@ use crate::domain::shape::def::{Shape, ShapeId};
 use super::{LightSample, LightSampling};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct EmptySampler {}
+pub struct EmptyLightSampler {}
 
-impl EmptySampler {
+impl EmptyLightSampler {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl LightSampling for EmptySampler {
+impl LightSampling for EmptyLightSampler {
     fn id(&self) -> Option<ShapeId> {
         None
     }

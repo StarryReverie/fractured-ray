@@ -54,7 +54,7 @@ where
         let bsdf = material.bsdf(-ray.direction(), intersection, ray_next.direction());
         if bsdf.norm_squared() != Val(0.0) {
             let cos1 = direction.dot(intersection.normal());
-            let cos2 = sample.normal().dot(-direction);
+            let cos2 = sample.normal().dot(direction).abs();
             let dis_squared = (sample.point() - intersection.position()).norm_squared();
             let pdf = sample.pdf() * dis_squared / cos2;
             let coefficient = bsdf * cos1 / pdf;
@@ -81,5 +81,47 @@ where
         } else {
             Val(0.0)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::domain::math::algebra::UnitVector;
+    use crate::domain::math::geometry::Point;
+    use crate::domain::ray::SurfaceSide;
+    use crate::domain::ray::sampling::TrianglePointSampler;
+    use crate::domain::shape::def::ShapeKind;
+    use crate::domain::shape::primitive::Triangle;
+
+    use super::*;
+
+    #[test]
+    fn light_sampler_adapter_pdf_light_succeeds() {
+        let sampler = TrianglePointSampler::new(
+            ShapeId::new(ShapeKind::Triangle, 0),
+            Triangle::new(
+                Point::new(Val(-2.0), Val(0.0), Val(0.0)),
+                Point::new(Val(0.0), Val(0.0), Val(-1.0)),
+                Point::new(Val(0.0), Val(1.0), Val(0.0)),
+            )
+            .unwrap(),
+        );
+        let sampler = LightSamplerAdapter::new(sampler);
+
+        let intersection = RayIntersection::new(
+            Val(1.0),
+            Point::new(Val(0.0), Val(0.0), Val(1.0)),
+            UnitVector::y_direction(),
+            SurfaceSide::Front,
+        );
+
+        let ray_next = Ray::new(intersection.position(), -UnitVector::z_direction());
+        assert_eq!(
+            sampler.pdf_light(&intersection, &ray_next),
+            Val(2.0).powi(2) / Val(1.5) / Val(0.6666666667),
+        );
+
+        let ray_next = Ray::new(intersection.position(), UnitVector::y_direction());
+        assert_eq!(sampler.pdf_light(&intersection, &ray_next), Val(0.0));
     }
 }
