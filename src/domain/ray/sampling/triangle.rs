@@ -51,12 +51,15 @@ impl PointSampling for TrianglePointSampler {
         Some(PointSample::new(
             point,
             self.shape.normal(point),
-            self.pdf_point_checked_inside(point),
+            self.pdf_point(point, true),
             self.id,
         ))
     }
 
-    fn pdf_point(&self, point: Point) -> Val {
+    fn pdf_point(&self, point: Point, checked_inside: bool) -> Val {
+        if checked_inside {
+            return self.area_inv;
+        }
         let p0 = point - self.shape.vertex0();
         let p1 = point - self.shape.vertex1();
         let p2 = point - self.shape.vertex2();
@@ -69,9 +72,5 @@ impl PointSampling for TrianglePointSampler {
         } else {
             Val(0.0)
         }
-    }
-
-    fn pdf_point_checked_inside(&self, _point: Point) -> Val {
-        self.area_inv
     }
 }

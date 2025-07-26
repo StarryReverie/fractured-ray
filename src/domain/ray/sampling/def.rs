@@ -60,9 +60,7 @@ pub trait PointSampling: Debug + Send + Sync {
 
     fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample>;
 
-    fn pdf_point(&self, point: Point) -> Val;
-
-    fn pdf_point_checked_inside(&self, point: Point) -> Val;
+    fn pdf_point(&self, point: Point, checked_inside: bool) -> Val;
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -63,16 +63,15 @@ impl PointSampling for PolygonPointSampler {
             .map(|sample| sample.scale_pdf(self.weights[which]))
     }
 
-    fn pdf_point(&self, point: Point) -> Val {
+    fn pdf_point(&self, point: Point, checked_inside: bool) -> Val {
+        if checked_inside {
+            return self.area_inv;
+        }
         for triangle in &self.triangles {
-            if triangle.pdf_point(point) != Val(0.0) {
+            if triangle.pdf_point(point, false) != Val(0.0) {
                 return self.area_inv;
             }
         }
         Val(0.0)
-    }
-
-    fn pdf_point_checked_inside(&self, _point: Point) -> Val {
-        self.area_inv
     }
 }

@@ -77,7 +77,7 @@ where
             let point = intersection_next.position();
             let cos = shape.normal(point).dot(ray_next.direction()).abs();
             let dis_squared = (point - intersection.position()).norm_squared();
-            self.inner.pdf_point_checked_inside(point) * dis_squared / cos
+            self.inner.pdf_point(point, true) * dis_squared / cos
         } else {
             Val(0.0)
         }

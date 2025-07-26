@@ -43,22 +43,21 @@ impl PointSampling for SpherePointSampler {
         Some(PointSample::new(
             point,
             dir,
-            self.pdf_point_checked_inside(point),
+            self.pdf_point(point, true),
             self.id,
         ))
     }
 
-    fn pdf_point(&self, point: Point) -> Val {
+    fn pdf_point(&self, point: Point, checked_inside: bool) -> Val {
+        if checked_inside {
+            return self.area_inv;
+        }
         let dis_squared = (point - self.sphere.center()).norm_squared();
         if dis_squared == self.sphere.radius().powi(2) {
             self.area_inv
         } else {
             Val(0.0)
         }
-    }
-
-    fn pdf_point_checked_inside(&self, _point: Point) -> Val {
-        self.area_inv
     }
 }
 
