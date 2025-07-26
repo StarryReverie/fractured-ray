@@ -13,16 +13,16 @@ use super::{LightSample, LightSampling, PointSample, PointSampling};
 #[derive(Debug, Clone, PartialEq)]
 pub struct SpherePointSampler {
     id: ShapeId,
-    shape: Sphere,
+    sphere: Sphere,
     area_inv: Val,
 }
 
 impl SpherePointSampler {
-    pub fn new(id: ShapeId, shape: Sphere) -> Self {
-        let area_inv = (Val(4.0) * Val::PI * shape.radius()).recip();
+    pub fn new(id: ShapeId, sphere: Sphere) -> Self {
+        let area_inv = sphere.area().recip();
         Self {
             id,
-            shape,
+            sphere,
             area_inv,
         }
     }
@@ -34,12 +34,12 @@ impl PointSampling for SpherePointSampler {
     }
 
     fn shape(&self) -> Option<&dyn Shape> {
-        Some(&self.shape)
+        Some(&self.sphere)
     }
 
     fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {
         let dir = UnitVector::random(rng);
-        let point = dir * self.shape.radius() + self.shape.center();
+        let point = dir * self.sphere.radius() + self.sphere.center();
         Some(PointSample::new(
             point,
             dir,
@@ -49,8 +49,8 @@ impl PointSampling for SpherePointSampler {
     }
 
     fn pdf_point(&self, point: Point) -> Val {
-        let dis_squared = (point - self.shape.center()).norm_squared();
-        if dis_squared == self.shape.radius().powi(2) {
+        let dis_squared = (point - self.sphere.center()).norm_squared();
+        if dis_squared == self.sphere.radius().powi(2) {
             self.area_inv
         } else {
             Val(0.0)
@@ -60,23 +60,17 @@ impl PointSampling for SpherePointSampler {
     fn pdf_point_checked_inside(&self, _point: Point) -> Val {
         self.area_inv
     }
-
-    fn normal(&self, point: Point) -> UnitVector {
-        (point - self.shape.center())
-            .normalize()
-            .unwrap_or(UnitVector::x_direction())
-    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct SphereLightSampler {
     id: ShapeId,
-    shape: Sphere,
+    sphere: Sphere,
 }
 
 impl SphereLightSampler {
-    pub fn new(id: ShapeId, shape: Sphere) -> Self {
-        Self { id, shape }
+    pub fn new(id: ShapeId, sphere: Sphere) -> Self {
+        Self { id, sphere }
     }
 }
 
@@ -86,7 +80,7 @@ impl LightSampling for SphereLightSampler {
     }
 
     fn shape(&self) -> Option<&dyn Shape> {
-        Some(&self.shape)
+        Some(&self.sphere)
     }
 
     fn sample_light(
@@ -96,8 +90,8 @@ impl LightSampling for SphereLightSampler {
         material: &dyn Material,
         rng: &mut dyn RngCore,
     ) -> Option<LightSample> {
-        let radius2 = self.shape.radius().powi(2);
-        let to_center = self.shape.center() - intersection.position();
+        let radius2 = self.sphere.radius().powi(2);
+        let to_center = self.sphere.center() - intersection.position();
         let cos_max_half_cone_angle = (Val(1.0) - radius2 / to_center.norm_squared()).sqrt();
 
         let r1_2pi = Val(rng.random()) * Val(2.0) * Val::PI;
@@ -106,7 +100,7 @@ impl LightSampling for SphereLightSampler {
         let tmp = (Val(1.0) - z.powi(2)).sqrt();
         let x = r1_2pi.cos() * tmp;
         let y = r1_2pi.sin() * tmp;
-        let local_at_sphere = Vector::new(x, y, z) * self.shape.radius();
+        let local_at_sphere = Vector::new(x, y, z) * self.sphere.radius();
 
         let global_dir = -to_center.normalize().unwrap_or(UnitVector::z_direction());
         let tr = Rotation::new(UnitVector::z_direction(), global_dir, Val(0.0));
@@ -129,8 +123,8 @@ impl LightSampling for SphereLightSampler {
     }
 
     fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
-        let radius2 = self.shape.radius().powi(2);
-        let to_center = self.shape.center() - intersection.position();
+        let radius2 = self.sphere.radius().powi(2);
+        let to_center = self.sphere.center() - intersection.position();
         let cos_max_half_cone_angle = (Val(1.0) - radius2 / to_center.norm_squared()).sqrt();
 
         let cos_ray_center = ray_next.direction().dot(to_center.normalize().unwrap());
@@ -152,7 +146,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sphere_sampler_light_pdf_succeeds() {
+    fn sphere_sampler_pdf_light_succeeds() {
         let sampler = SphereLightSampler::new(
             ShapeId::new(ShapeKind::Sphere, 0),
             Sphere::new(Point::new(Val(0.0), Val(0.0), Val(0.0)), Val(2.0)).unwrap(),

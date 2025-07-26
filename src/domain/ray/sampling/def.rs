@@ -63,8 +63,6 @@ pub trait PointSampling: Debug + Send + Sync {
     fn pdf_point(&self, point: Point) -> Val;
 
     fn pdf_point_checked_inside(&self, point: Point) -> Val;
-
-    fn normal(&self, point: Point) -> UnitVector;
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -207,6 +207,29 @@ impl Shape for Polygon {
         }
     }
 
+    fn area(&self) -> Val {
+        match &self.0 {
+            PolygonInner::Triangle(triangle) => triangle.area(),
+            PolygonInner::General { vertices, normal } => {
+                let mut sum = Val(0.0);
+                for i in 1..(vertices.len() - 1) {
+                    let side1 = vertices[i] - vertices[0];
+                    let side2 = vertices[i + 1] - vertices[0];
+                    let cross = side1.cross(side2);
+                    sum += cross.norm() * cross.dot(*normal).signum();
+                }
+                sum * Val(0.5)
+            }
+        }
+    }
+
+    fn normal(&self, position: Point) -> UnitVector {
+        match &self.0 {
+            PolygonInner::Triangle(triangle) => triangle.normal(position),
+            PolygonInner::General { normal, .. } => *normal,
+        }
+    }
+
     fn bounding_box(&self) -> Option<BoundingBox> {
         match &self.0 {
             PolygonInner::Triangle(triangle) => triangle.bounding_box(),
@@ -374,6 +397,19 @@ mod tests {
             UnitVector::x_direction(),
         );
         assert!(polygon.hit(&ray, DisRange::positive()).is_none());
+    }
+
+    #[test]
+    fn polygon_area_succeeds() {
+        let polygon = Polygon::new([
+            Point::new(Val(1.0), Val(0.0), Val(0.0)),
+            Point::new(Val(-1.0), Val(0.0), Val(0.0)),
+            Point::new(Val(-1.0), Val(2.0), Val(0.0)),
+            Point::new(Val(0.0), Val(1.0), Val(0.0)),
+            Point::new(Val(1.0), Val(2.0), Val(0.0)),
+        ])
+        .unwrap();
+        assert_eq!(polygon.area(), Val(3.0));
     }
 
     #[test]

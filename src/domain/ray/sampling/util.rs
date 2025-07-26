@@ -75,7 +75,7 @@ where
         };
         if let Some(intersection_next) = shape.hit(ray_next, DisRange::positive()) {
             let point = intersection_next.position();
-            let cos = self.inner.normal(point).dot(ray_next.direction()).abs();
+            let cos = shape.normal(point).dot(ray_next.direction()).abs();
             let dis_squared = (point - intersection.position()).norm_squared();
             self.inner.pdf_point_checked_inside(point) * dis_squared / cos
         } else {

@@ -62,6 +62,14 @@ impl Shape for Plane {
         Self::calc_ray_intersection(ray, range, &self.point, &self.normal)
     }
 
+    fn area(&self) -> Val {
+        Val::INFINITY
+    }
+
+    fn normal(&self, _position: Point) -> UnitVector {
+        self.normal
+    }
+
     fn bounding_box(&self) -> Option<BoundingBox> {
         None
     }

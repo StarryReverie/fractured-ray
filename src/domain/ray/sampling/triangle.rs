@@ -18,7 +18,7 @@ pub struct TrianglePointSampler {
 
 impl TrianglePointSampler {
     pub fn new(id: ShapeId, shape: Triangle) -> Self {
-        let normal = shape.normal();
+        let normal = shape.normal(shape.vertex0());
         let area_inv = shape.area().recip();
         Self {
             id,
@@ -50,7 +50,7 @@ impl PointSampling for TrianglePointSampler {
         let point = Point::from(point);
         Some(PointSample::new(
             point,
-            self.normal(point),
+            self.shape.normal(point),
             self.pdf_point_checked_inside(point),
             self.id,
         ))
@@ -73,9 +73,5 @@ impl PointSampling for TrianglePointSampler {
 
     fn pdf_point_checked_inside(&self, _point: Point) -> Val {
         self.area_inv
-    }
-
-    fn normal(&self, _point: Point) -> UnitVector {
-        self.normal
     }
 }

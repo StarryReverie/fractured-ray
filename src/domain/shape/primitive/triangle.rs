@@ -60,19 +60,6 @@ impl Triangle {
         self.vertex2
     }
 
-    pub fn normal(&self) -> UnitVector {
-        (self.vertex1 - self.vertex0)
-            .cross(self.vertex2 - self.vertex0)
-            .normalize()
-            .expect("triangle's two sides should not parallel")
-    }
-
-    pub fn area(&self) -> Val {
-        let side1 = self.vertex1 - self.vertex0;
-        let side2 = self.vertex2 - self.vertex0;
-        Val(0.5) * side1.cross(side2).norm()
-    }
-
     pub fn calc_ray_intersection(
         ray: &Ray,
         range: DisRange,
@@ -127,6 +114,19 @@ impl Shape for Triangle {
 
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         Self::calc_ray_intersection(ray, range, &self.vertex0, &self.vertex1, &self.vertex2)
+    }
+
+    fn area(&self) -> Val {
+        let side1 = self.vertex1 - self.vertex0;
+        let side2 = self.vertex2 - self.vertex0;
+        Val(0.5) * side1.cross(side2).norm()
+    }
+
+    fn normal(&self, _position: Point) -> UnitVector {
+        (self.vertex1 - self.vertex0)
+            .cross(self.vertex2 - self.vertex0)
+            .normalize()
+            .expect("triangle's two sides should not parallel")
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {
@@ -238,6 +238,17 @@ mod tests {
 
         let intersection = triangle.hit(&ray, DisRange::positive());
         assert!(intersection.is_none());
+    }
+
+    #[test]
+    fn triangle_area_succeeds() {
+        let triangle = Triangle::new(
+            Point::new(Val(1.0), Val(0.0), Val(0.0)),
+            Point::new(Val(0.0), Val(2.0), Val(0.0)),
+            Point::new(Val(0.0), Val(0.0), Val(3.0)),
+        )
+        .unwrap();
+        assert_eq!(triangle.area(), Val(3.5));
     }
 
     #[test]

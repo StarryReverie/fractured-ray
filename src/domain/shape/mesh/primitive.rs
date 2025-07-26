@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use smallvec::SmallVec;
 
-use crate::domain::math::algebra::Product;
+use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{Point, Transform};
-use crate::domain::math::numeric::DisRange;
+use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::{LightSampling, Sampleable};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
@@ -47,6 +47,19 @@ impl Shape for MeshTriangle {
                 Some(res.transform(tr))
             }
         }
+    }
+
+    fn area(&self) -> Val {
+        let (v0, v1, v2) = self.get_vertices();
+        Val(0.5) * (*v1 - *v0).cross(*v2 - *v0).norm()
+    }
+
+    fn normal(&self, _position: Point) -> UnitVector {
+        let (v0, v1, v2) = self.get_vertices();
+        (*v1 - *v0)
+            .cross(*v2 - *v0)
+            .normalize()
+            .expect("triangle's two sides should not parallel")
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {
@@ -118,6 +131,33 @@ impl Shape for MeshPolygon {
                 Some(res.transform(tr))
             }
         }
+    }
+
+    fn area(&self) -> Val {
+        let vertices = self.get_vertices();
+        let normal = self.normal(*vertices[0]);
+
+        let mut sum = Val(0.0);
+        for i in 1..(vertices.len() - 1) {
+            let side1 = *vertices[i] - *vertices[0];
+            let side2 = *vertices[i + 1] - *vertices[0];
+            let cross = side1.cross(side2);
+            sum += cross.norm() * cross.dot(normal).signum();
+        }
+        sum * Val(0.5)
+    }
+
+    fn normal(&self, _position: Point) -> UnitVector {
+        let vertices = &self.data.vertices;
+        let polygon = &self.data.polygons[self.index];
+        assert!(polygon.len() > 3);
+        let v0 = vertices[polygon[0] as usize];
+        let v1 = vertices[polygon[1] as usize];
+        let v2 = vertices[polygon[2] as usize];
+        (v1 - v0)
+            .cross(v2 - v0)
+            .normalize()
+            .expect("triangle's two sides should not parallel")
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {

@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
+use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::{
-    AllTransformation, Rotation, Transform, Transformation, Translation,
+    AllTransformation, Point, Rotation, Transform, Transformation, Translation,
 };
-use crate::domain::math::numeric::DisRange;
+use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::{InstanceLightSampler, LightSampling, Sampleable};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
@@ -72,6 +73,16 @@ impl Shape for Instance {
         let ray = ray.transform(&inv_transformation);
         let intersection = self.prototype.hit(&ray, range)?;
         Some(intersection.transform(&self.transformation))
+    }
+
+    fn area(&self) -> Val {
+        self.prototype.area()
+    }
+
+    fn normal(&self, position: Point) -> UnitVector {
+        self.prototype
+            .normal(position)
+            .transform(&self.transformation)
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {

@@ -2,7 +2,7 @@ use std::ops::RangeBounds;
 
 use snafu::prelude::*;
 
-use crate::domain::math::algebra::{Product, Vector};
+use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::sampling::{LightSampling, Sampleable, SphereLightSampler};
@@ -80,6 +80,16 @@ impl Shape for Sphere {
         };
 
         Some(RayIntersection::new(distance, position, normal, side))
+    }
+
+    fn area(&self) -> Val {
+        Val(4.0) * Val::PI * self.radius.powi(2)
+    }
+
+    fn normal(&self, position: Point) -> UnitVector {
+        (position - self.center)
+            .normalize()
+            .unwrap_or(UnitVector::x_direction())
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {

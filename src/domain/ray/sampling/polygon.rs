@@ -5,7 +5,7 @@ use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{Val, WrappedVal};
 use crate::domain::shape::def::{Shape, ShapeId};
-use crate::domain::shape::primitive::{Polygon, Triangle};
+use crate::domain::shape::primitive::Polygon;
 
 use super::{PointSample, PointSampling, TrianglePointSampler};
 
@@ -24,10 +24,11 @@ impl PolygonPointSampler {
     pub fn new(id: ShapeId, polygon: Polygon) -> Self {
         let triangles = polygon.triangulate();
 
-        let mut weights = triangles.iter().map(Triangle::area).collect::<Vec<_>>();
-        let area_inv = weights.iter().cloned().sum::<Val>().recip();
-        weights.iter_mut().for_each(|w| *w *= area_inv);
-        let normal = triangles[0].normal();
+        let area_inv = polygon.area().recip();
+        let weights = (triangles.iter())
+            .map(|triangle| triangle.area() * area_inv)
+            .collect::<Vec<_>>();
+        let normal = polygon.normal(triangles[0].vertex0());
         let index_sampler = WeightedIndex::new(weights.iter().map(|v| v.0)).unwrap();
 
         let triangles = (triangles.into_iter())
@@ -73,9 +74,5 @@ impl PointSampling for PolygonPointSampler {
 
     fn pdf_point_checked_inside(&self, _point: Point) -> Val {
         self.area_inv
-    }
-
-    fn normal(&self, _point: Point) -> UnitVector {
-        self.normal
     }
 }
