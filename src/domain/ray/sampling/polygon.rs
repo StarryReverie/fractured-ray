@@ -2,26 +2,30 @@ use rand::prelude::*;
 use rand_distr::weighted::WeightedIndex;
 
 use crate::domain::material::def::Material;
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
+use crate::domain::math::algebra::UnitVector;
+use crate::domain::math::geometry::Point;
+use crate::domain::math::numeric::{Val, WrappedVal};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{Shape, ShapeId};
 use crate::domain::shape::primitive::{Polygon, Triangle};
 
-use super::{LightSample, LightSampling, TriangleSampler};
+use super::{
+    LightSample, LightSamplerAdapter, LightSampling, PointSample, PointSampling,
+    TrianglePointSampler,
+};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct PolygonSampler {
+pub struct PolygonPointSampler {
     id: ShapeId,
     polygon: Polygon,
-    triangles: Vec<TriangleSampler>,
+    triangles: Vec<TrianglePointSampler>,
     weights: Vec<Val>,
     normal: UnitVector,
     area_inv: Val,
     index_sampler: WeightedIndex<WrappedVal>,
 }
 
-impl PolygonSampler {
+impl PolygonPointSampler {
     pub fn new(id: ShapeId, polygon: Polygon) -> Self {
         let triangles = polygon.triangulate();
 
@@ -32,7 +36,7 @@ impl PolygonSampler {
         let index_sampler = WeightedIndex::new(weights.iter().map(|v| v.0)).unwrap();
 
         let triangles = (triangles.into_iter())
-            .map(|triangle| TriangleSampler::new(id, triangle))
+            .map(|triangle| TrianglePointSampler::new(id, triangle))
             .collect::<Vec<_>>();
 
         Self {
@@ -47,13 +51,60 @@ impl PolygonSampler {
     }
 }
 
-impl LightSampling for PolygonSampler {
+impl PointSampling for PolygonPointSampler {
     fn id(&self) -> Option<ShapeId> {
         Some(self.id)
     }
 
     fn shape(&self) -> Option<&dyn Shape> {
         Some(&self.polygon)
+    }
+
+    fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {
+        let which = self.index_sampler.sample(rng);
+        (self.triangles.get(which))
+            .and_then(|triangle| triangle.sample_point(rng))
+            .map(|sample| sample.scale_pdf(self.weights[which]))
+    }
+
+    fn pdf_point(&self, point: Point) -> Val {
+        for triangle in &self.triangles {
+            if triangle.pdf_point(point) != Val(0.0) {
+                return self.area_inv;
+            }
+        }
+        Val(0.0)
+    }
+
+    fn pdf_point_checked_inside(&self, _point: Point) -> Val {
+        self.area_inv
+    }
+
+    fn normal(&self, _point: Point) -> UnitVector {
+        self.normal
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PolygonLightSampler {
+    inner: LightSamplerAdapter<PolygonPointSampler>,
+}
+
+impl PolygonLightSampler {
+    pub fn new(id: ShapeId, polygon: Polygon) -> Self {
+        let inner = PolygonPointSampler::new(id, polygon);
+        let inner = LightSamplerAdapter::new(inner);
+        Self { inner }
+    }
+}
+
+impl LightSampling for PolygonLightSampler {
+    fn id(&self) -> Option<ShapeId> {
+        self.inner.id()
+    }
+
+    fn shape(&self) -> Option<&dyn Shape> {
+        self.inner.shape()
     }
 
     fn sample_light(
@@ -63,20 +114,10 @@ impl LightSampling for PolygonSampler {
         material: &dyn Material,
         rng: &mut dyn RngCore,
     ) -> Option<LightSample> {
-        let which = self.index_sampler.sample(rng);
-        (self.triangles.get(which))
-            .and_then(|triangle| triangle.sample_light(ray, intersection, material, rng))
-            .map(|sample| sample.scale_pdf(self.weights[which]))
+        self.inner.sample_light(ray, intersection, material, rng)
     }
 
     fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
-        if let Some(intersection_next) = self.polygon.hit(ray_next, DisRange::positive()) {
-            let cos = self.normal.dot(ray_next.direction()).abs();
-            let point = intersection_next.position();
-            let dis_squared = (point - intersection.position()).norm_squared();
-            self.area_inv * dis_squared / cos
-        } else {
-            Val(0.0)
-        }
+        self.inner.pdf_light(intersection, ray_next)
     }
 }

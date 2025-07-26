@@ -3,22 +3,22 @@ use rand::prelude::*;
 use crate::domain::material::def::Material;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
-use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{Shape, ShapeId};
 use crate::domain::shape::primitive::Triangle;
 
-use super::{LightSample, LightSampling};
+use super::{LightSample, LightSamplerAdapter, LightSampling, PointSample, PointSampling};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct TriangleSampler {
+pub struct TrianglePointSampler {
     id: ShapeId,
     shape: Triangle,
     normal: UnitVector,
     area_inv: Val,
 }
 
-impl TriangleSampler {
+impl TrianglePointSampler {
     pub fn new(id: ShapeId, shape: Triangle) -> Self {
         let normal = shape.normal();
         let area_inv = shape.area().recip();
@@ -31,7 +31,7 @@ impl TriangleSampler {
     }
 }
 
-impl LightSampling for TriangleSampler {
+impl PointSampling for TrianglePointSampler {
     fn id(&self) -> Option<ShapeId> {
         Some(self.id)
     }
@@ -40,13 +40,7 @@ impl LightSampling for TriangleSampler {
         Some(&self.shape)
     }
 
-    fn sample_light(
-        &self,
-        ray: &Ray,
-        intersection: &RayIntersection,
-        material: &dyn Material,
-        rng: &mut dyn RngCore,
-    ) -> Option<LightSample> {
+    fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {
         let (mut r1, mut r2) = (Val(rng.random()), Val(rng.random()));
         if r1 + r2 > Val(1.0) {
             r1 = Val(1.0) - r1;
@@ -56,33 +50,72 @@ impl LightSampling for TriangleSampler {
             + r1 * self.shape.vertex1().into_vector()
             + r2 * self.shape.vertex2().into_vector();
         let point = Point::from(point);
-        let Ok(direction) = (point - intersection.position()).normalize() else {
-            return None;
-        };
-        let ray_next = Ray::new(intersection.position(), direction);
-
-        let bsdf = material.bsdf(-ray.direction(), intersection, ray_next.direction());
-        if bsdf.norm_squared() != Val(0.0) {
-            let cos1 = direction.dot(intersection.normal());
-            let cos2 = self.normal.dot(ray_next.direction()).abs();
-            let dis_squared = (point - intersection.position()).norm_squared();
-            let pdf = self.area_inv * dis_squared / cos2;
-            let coefficient = bsdf * cos1 / pdf;
-            Some(LightSample::new(ray_next, coefficient, pdf, self.id))
-        } else {
-            None
-        }
+        Some(PointSample::new(
+            point,
+            self.normal(point),
+            self.pdf_point_checked_inside(point),
+            self.id,
+        ))
     }
 
-    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
-        if let Some(intersection_next) = self.shape.hit(ray_next, DisRange::positive()) {
-            let cos = self.normal.dot(ray_next.direction()).abs();
-            let point = intersection_next.position();
-            let dis_squared = (point - intersection.position()).norm_squared();
-            self.area_inv * dis_squared / cos
+    fn pdf_point(&self, point: Point) -> Val {
+        let p0 = point - self.shape.vertex0();
+        let p1 = point - self.shape.vertex1();
+        let p2 = point - self.shape.vertex2();
+        let a = p1.cross(p2).norm_squared() * self.area_inv;
+        let b = p2.cross(p0).norm_squared() * self.area_inv;
+        let c = p0.cross(p1).norm_squared() * self.area_inv;
+        let sum = a + b + c;
+        if a >= Val(0.0) && b >= Val(0.0) && c >= Val(0.0) && sum == Val(1.0) {
+            self.area_inv
         } else {
             Val(0.0)
         }
+    }
+
+    fn pdf_point_checked_inside(&self, _point: Point) -> Val {
+        self.area_inv
+    }
+
+    fn normal(&self, _point: Point) -> UnitVector {
+        self.normal
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TriangleLightSampler {
+    inner: LightSamplerAdapter<TrianglePointSampler>,
+}
+
+impl TriangleLightSampler {
+    pub fn new(id: ShapeId, shape: Triangle) -> Self {
+        let inner = TrianglePointSampler::new(id, shape);
+        let inner = LightSamplerAdapter::new(inner);
+        Self { inner }
+    }
+}
+
+impl LightSampling for TriangleLightSampler {
+    fn id(&self) -> Option<ShapeId> {
+        self.inner.id()
+    }
+
+    fn shape(&self) -> Option<&dyn Shape> {
+        self.inner.shape()
+    }
+
+    fn sample_light(
+        &self,
+        ray: &Ray,
+        intersection: &RayIntersection,
+        material: &dyn Material,
+        rng: &mut dyn RngCore,
+    ) -> Option<LightSample> {
+        self.inner.sample_light(ray, intersection, material, rng)
+    }
+
+    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+        self.inner.pdf_light(intersection, ray_next)
     }
 }
 
@@ -94,8 +127,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn triangle_sampler_light_pdf_succeeds() {
-        let sampler = TriangleSampler::new(
+    fn triangle_sampler_pdf_light_succeeds() {
+        let sampler = TriangleLightSampler::new(
             ShapeId::new(ShapeKind::Triangle, 0),
             Triangle::new(
                 Point::new(Val(-2.0), Val(0.0), Val(0.0)),
@@ -119,6 +152,6 @@ mod tests {
         );
 
         let ray_next = Ray::new(intersection.position(), UnitVector::y_direction());
-        assert_eq!(sampler.pdf_light(&intersection, &ray_next), Val(0.0),);
+        assert_eq!(sampler.pdf_light(&intersection, &ray_next), Val(0.0));
     }
 }
