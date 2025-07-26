@@ -3,7 +3,7 @@ use std::ops::RangeBounds;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::LightSampling;
+use crate::domain::ray::sampling::{LightSampling, Sampleable};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -54,7 +54,7 @@ impl Plane {
 }
 
 impl Shape for Plane {
-    fn shape_kind(&self) -> ShapeKind {
+    fn kind(&self) -> ShapeKind {
         ShapeKind::Plane
     }
 
@@ -65,8 +65,10 @@ impl Shape for Plane {
     fn bounding_box(&self) -> Option<BoundingBox> {
         None
     }
+}
 
-    fn get_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+impl Sampleable for Plane {
+    fn get_light_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         None
     }
 }

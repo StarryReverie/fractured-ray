@@ -9,6 +9,7 @@ mod util;
 
 pub use def::{
     CoefficientSample, CoefficientSampling, LightSample, LightSampling, PointSample, PointSampling,
+    Sampleable,
 };
 pub use empty::EmptyLightSampler;
 pub use instance::InstanceLightSampler;

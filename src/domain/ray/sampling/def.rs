@@ -182,3 +182,7 @@ impl Transform<AllTransformation> for LightSample {
         )
     }
 }
+
+pub trait Sampleable {
+    fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>>;
+}

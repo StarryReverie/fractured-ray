@@ -120,7 +120,7 @@ impl ShapePool {
 
 impl ShapeContainer for ShapePool {
     fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId {
-        let kind = shape.shape_kind();
+        let kind = shape.kind();
         let type_id = TypeId::of::<S>();
 
         if type_id == TypeId::of::<Instance>() {
@@ -248,7 +248,7 @@ mod tests {
         let material_id = pool.add_material(Diffuse::new(Color::WHITE));
         let id = EntityId::new(shape_id, material_id);
         assert_eq!(
-            pool.get_shape(id.shape_id()).unwrap().shape_kind(),
+            pool.get_shape(id.shape_id()).unwrap().kind(),
             ShapeKind::Sphere
         );
         assert_eq!(

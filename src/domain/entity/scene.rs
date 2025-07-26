@@ -85,7 +85,7 @@ impl BvhSceneBuilder {
         if entity_id.material_id().kind() == MaterialKind::Emissive {
             let shape_id = entity_id.shape_id();
             let shape = self.entities.get_shape(shape_id).unwrap();
-            if let Some(sampler) = shape.get_sampler(shape_id) {
+            if let Some(sampler) = shape.get_light_sampler(shape_id) {
                 self.lights.push(sampler);
             }
         }

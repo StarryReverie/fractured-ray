@@ -5,7 +5,9 @@ use spade::{DelaunayTriangulation, Point2, Triangulation};
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{Point, Rotation, Transform, Transformation};
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
-use crate::domain::ray::sampling::{LightSamplerAdapter, LightSampling, PolygonPointSampler};
+use crate::domain::ray::sampling::{
+    LightSamplerAdapter, LightSampling, PolygonPointSampler, Sampleable,
+};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -191,7 +193,7 @@ impl Polygon {
 }
 
 impl Shape for Polygon {
-    fn shape_kind(&self) -> ShapeKind {
+    fn kind(&self) -> ShapeKind {
         ShapeKind::Polygon
     }
 
@@ -217,10 +219,12 @@ impl Shape for Polygon {
             }
         }
     }
+}
 
-    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+impl Sampleable for Polygon {
+    fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         match &self.0 {
-            PolygonInner::Triangle(triangle) => triangle.get_sampler(shape_id),
+            PolygonInner::Triangle(triangle) => triangle.get_light_sampler(shape_id),
             PolygonInner::General { .. } => {
                 let inner = PolygonPointSampler::new(shape_id, self.clone());
                 let sampler = LightSamplerAdapter::new(inner);

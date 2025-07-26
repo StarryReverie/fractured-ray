@@ -1,19 +1,17 @@
 use std::fmt::Debug;
 
 use crate::domain::math::numeric::DisRange;
-use crate::domain::ray::sampling::LightSampling;
+use crate::domain::ray::sampling::Sampleable;
 use crate::domain::ray::{Ray, RayIntersection};
 
 use super::BoundingBox;
 
-pub trait Shape: Debug + Send + Sync + 'static {
-    fn shape_kind(&self) -> ShapeKind;
+pub trait Shape: Sampleable + Debug + Send + Sync + 'static {
+    fn kind(&self) -> ShapeKind;
 
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection>;
 
     fn bounding_box(&self) -> Option<BoundingBox>;
-
-    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>>;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

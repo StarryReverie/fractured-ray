@@ -5,7 +5,9 @@ use snafu::prelude::*;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::{LightSamplerAdapter, LightSampling, TrianglePointSampler};
+use crate::domain::ray::sampling::{
+    LightSamplerAdapter, LightSampling, Sampleable, TrianglePointSampler,
+};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -119,7 +121,7 @@ impl Triangle {
 }
 
 impl Shape for Triangle {
-    fn shape_kind(&self) -> ShapeKind {
+    fn kind(&self) -> ShapeKind {
         ShapeKind::Triangle
     }
 
@@ -133,8 +135,10 @@ impl Shape for Triangle {
         let max = v0.component_max(v1).component_max(v2);
         Some(BoundingBox::new(min, max))
     }
+}
 
-    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+impl Sampleable for Triangle {
+    fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         let inner = TrianglePointSampler::new(shape_id, self.clone());
         let sampler = LightSamplerAdapter::new(inner);
         Some(Box::new(sampler))

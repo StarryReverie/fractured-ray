@@ -5,7 +5,7 @@ use smallvec::SmallVec;
 use crate::domain::math::algebra::Product;
 use crate::domain::math::geometry::{Point, Transform};
 use crate::domain::math::numeric::DisRange;
-use crate::domain::ray::sampling::LightSampling;
+use crate::domain::ray::sampling::{LightSampling, Sampleable};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 use crate::domain::shape::primitive::{Polygon, Triangle};
@@ -30,7 +30,7 @@ impl MeshTriangle {
 }
 
 impl Shape for MeshTriangle {
-    fn shape_kind(&self) -> ShapeKind {
+    fn kind(&self) -> ShapeKind {
         ShapeKind::MeshTriangle
     }
 
@@ -59,15 +59,19 @@ impl Shape for MeshTriangle {
             Some(tr) => Some(BoundingBox::new(min, max).transform(tr)),
         }
     }
+}
 
-    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+impl Sampleable for MeshTriangle {
+    fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         let (v0, v1, v2) = self.get_vertices();
         if let Some(tr) = &self.data.transformation {
             Triangle::new(v0.transform(tr), v1.transform(tr), v2.transform(tr))
                 .unwrap()
-                .get_sampler(shape_id)
+                .get_light_sampler(shape_id)
         } else {
-            Triangle::new(*v0, *v1, *v2).unwrap().get_sampler(shape_id)
+            Triangle::new(*v0, *v1, *v2)
+                .unwrap()
+                .get_light_sampler(shape_id)
         }
     }
 }
@@ -90,7 +94,7 @@ impl MeshPolygon {
 }
 
 impl Shape for MeshPolygon {
-    fn shape_kind(&self) -> ShapeKind {
+    fn kind(&self) -> ShapeKind {
         ShapeKind::MeshPolygon
     }
 
@@ -128,14 +132,16 @@ impl Shape for MeshPolygon {
             Some(tr) => Some(BoundingBox::new(min, max).transform(tr)),
         }
     }
+}
 
-    fn get_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+impl Sampleable for MeshPolygon {
+    fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         if let Some(tr) = &self.data.transformation {
             let vertices = self.get_vertices().into_iter().map(|v| v.transform(tr));
-            Polygon::new(vertices).unwrap().get_sampler(shape_id)
+            Polygon::new(vertices).unwrap().get_light_sampler(shape_id)
         } else {
             let vertices = self.get_vertices().into_iter().cloned();
-            Polygon::new(vertices).unwrap().get_sampler(shape_id)
+            Polygon::new(vertices).unwrap().get_light_sampler(shape_id)
         }
     }
 }

@@ -20,7 +20,7 @@ pub struct InstanceLightSampler {
 impl InstanceLightSampler {
     pub fn new(id: ShapeId, instance: Instance) -> Self {
         let inv_transformation = instance.transformation().clone().inverse();
-        let sampler = instance.prototype().get_sampler(id);
+        let sampler = instance.prototype().get_light_sampler(id);
         Self {
             id,
             instance,
