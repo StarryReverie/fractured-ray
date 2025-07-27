@@ -5,8 +5,9 @@ use crate::domain::math::geometry::{
     AllTransformation, Point, Rotation, Transform, Transformation, Translation,
 };
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::{InstanceLightSampler, LightSampling, Sampleable};
 use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::sampling::Sampleable;
+use crate::domain::sampling::light::{InstanceLightSampler, LightSampling};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone)]

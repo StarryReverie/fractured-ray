@@ -5,8 +5,9 @@ use snafu::prelude::*;
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::{LightSampling, Sampleable, SphereLightSampler};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
+use crate::domain::sampling::Sampleable;
+use crate::domain::sampling::light::{LightSampling, SphereLightSampler};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]

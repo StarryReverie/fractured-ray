@@ -5,10 +5,10 @@ use spade::{DelaunayTriangulation, Point2, Triangulation};
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{Point, Rotation, Transform, Transformation};
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
-use crate::domain::ray::sampling::{
-    LightSamplerAdapter, LightSampling, PolygonPointSampler, Sampleable,
-};
 use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::sampling::Sampleable;
+use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
+use crate::domain::sampling::point::PolygonPointSampler;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 use super::{Plane, Triangle, TryNewTriangleError};

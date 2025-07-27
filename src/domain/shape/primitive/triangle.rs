@@ -5,10 +5,10 @@ use snafu::prelude::*;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::{
-    LightSamplerAdapter, LightSampling, Sampleable, TrianglePointSampler,
-};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
+use crate::domain::sampling::Sampleable;
+use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
+use crate::domain::sampling::point::TrianglePointSampler;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]

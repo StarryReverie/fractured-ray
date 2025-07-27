@@ -7,9 +7,9 @@ use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::{CoefficientSample, CoefficientSampling};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::Context;
+use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scattering {

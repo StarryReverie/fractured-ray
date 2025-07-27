@@ -1,7 +1,7 @@
 use crate::domain::material::def::{Material, MaterialContainer, MaterialKind};
 use crate::domain::math::numeric::DisRange;
-use crate::domain::ray::sampling::{AggregateLightSampler, EmptyLightSampler, LightSampling};
 use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::sampling::light::{AggregateLightSampler, EmptyLightSampler, LightSampling};
 use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer, ShapeId};
 
 use super::{Bvh, EntityContainer, EntityId, EntityPool};

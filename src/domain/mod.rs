@@ -6,4 +6,5 @@ pub mod material;
 pub mod math;
 pub mod ray;
 pub mod renderer;
+pub mod sampling;
 pub mod shape;

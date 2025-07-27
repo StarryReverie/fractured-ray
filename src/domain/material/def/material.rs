@@ -3,9 +3,9 @@ use std::fmt::Debug;
 use crate::domain::color::Color;
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::CoefficientSampling;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::Context;
+use crate::domain::sampling::coefficient::CoefficientSampling;
 
 pub trait Material: CoefficientSampling + Debug + Send + Sync + 'static {
     fn material_kind(&self) -> MaterialKind;

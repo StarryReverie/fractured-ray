@@ -4,9 +4,43 @@ use crate::domain::material::def::Material;
 use crate::domain::math::algebra::Product;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::sampling::point::PointSampling;
 use crate::domain::shape::def::{Shape, ShapeId};
 
-use super::{LightSample, LightSampling, PointSampling};
+use super::{LightSample, LightSampling};
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct EmptyLightSampler {}
+
+impl EmptyLightSampler {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl LightSampling for EmptyLightSampler {
+    fn id(&self) -> Option<ShapeId> {
+        None
+    }
+
+    fn shape(&self) -> Option<&dyn Shape> {
+        None
+    }
+
+    fn sample_light(
+        &self,
+        _ray: &Ray,
+        _intersection: &RayIntersection,
+        _material: &dyn Material,
+        _rng: &mut dyn RngCore,
+    ) -> Option<LightSample> {
+        None
+    }
+
+    fn pdf_light(&self, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+        Val(0.0)
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LightSamplerAdapter<PS>
@@ -89,7 +123,7 @@ mod tests {
     use crate::domain::math::algebra::UnitVector;
     use crate::domain::math::geometry::Point;
     use crate::domain::ray::SurfaceSide;
-    use crate::domain::ray::sampling::TrianglePointSampler;
+    use crate::domain::sampling::point::TrianglePointSampler;
     use crate::domain::shape::def::ShapeKind;
     use crate::domain::shape::primitive::Triangle;
 

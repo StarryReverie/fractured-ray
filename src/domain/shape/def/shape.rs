@@ -3,8 +3,8 @@ use std::fmt::Debug;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::sampling::Sampleable;
 use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::sampling::Sampleable;
 
 use super::BoundingBox;
 
