@@ -1,6 +1,6 @@
 use crate::domain::material::def::{Material, MaterialContainer, MaterialKind};
 use crate::domain::math::numeric::DisRange;
-use crate::domain::ray::sampling::{EmptyLightSampler, LightSampling, MultiLightSampler};
+use crate::domain::ray::sampling::{AggregateLightSampler, EmptyLightSampler, LightSampling};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer, ShapeId};
 
@@ -104,7 +104,7 @@ impl BvhSceneBuilder {
         }
 
         let lights: Box<dyn LightSampling> = if self.lights.len() > 1 {
-            Box::new(MultiLightSampler::new(self.lights.into_iter()))
+            Box::new(AggregateLightSampler::new(self.lights))
         } else {
             (self.lights.into_iter())
                 .next()

@@ -60,17 +60,45 @@ impl PointSampling for TrianglePointSampler {
         if checked_inside {
             return self.area_inv;
         }
-        let p0 = point - self.shape.vertex0();
-        let p1 = point - self.shape.vertex1();
-        let p2 = point - self.shape.vertex2();
-        let a = p1.cross(p2).norm_squared() * self.area_inv;
-        let b = p2.cross(p0).norm_squared() * self.area_inv;
-        let c = p0.cross(p1).norm_squared() * self.area_inv;
-        let sum = a + b + c;
-        if a >= Val(0.0) && b >= Val(0.0) && c >= Val(0.0) && sum == Val(1.0) {
-            self.area_inv
-        } else {
+        let v0 = self.shape.vertex0();
+        let v1 = self.shape.vertex1();
+        let v2 = self.shape.vertex2();
+        let normal = self.shape.normal(point);
+        let inside = (point - v0).is_perpendicular_to(normal)
+            && (v1 - v0).cross(point - v0).dot(normal) >= Val(0.0)
+            && (v2 - v0).cross(point - v0).dot(normal) <= Val(0.0)
+            && (v2 - v1).cross(point - v1).dot(normal) >= Val(0.0);
+        if inside { self.area_inv } else { Val(0.0) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::domain::shape::def::ShapeKind;
+
+    use super::*;
+
+    #[test]
+    fn triangle_point_sampler_pdf_point_succeeds() {
+        let triangle = Triangle::new(
+            Point::new(Val(0.0), Val(0.0), Val(0.0)),
+            Point::new(Val(-1.0), Val(0.0), Val(0.0)),
+            Point::new(Val(0.0), Val(1.0), Val(0.0)),
+        )
+        .unwrap();
+        let sampler = TrianglePointSampler::new(ShapeId::new(ShapeKind::Triangle, 0), triangle);
+
+        assert_eq!(
+            sampler.pdf_point(Point::new(Val(0.0), Val(0.0), Val(1.0)), false),
             Val(0.0)
-        }
+        );
+        assert_eq!(
+            sampler.pdf_point(Point::new(Val(0.0), Val(0.0), Val(0.0)), false),
+            Val(2.0)
+        );
+        assert_eq!(
+            sampler.pdf_point(Point::new(Val(-0.5), Val(0.5), Val(0.0)), false),
+            Val(2.0)
+        );
     }
 }

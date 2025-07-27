@@ -75,3 +75,31 @@ impl PointSampling for PolygonPointSampler {
         Val(0.0)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::domain::shape::def::ShapeKind;
+
+    use super::*;
+
+    #[test]
+    fn polygon_point_sampler_pdf_point_succeeds() {
+        let polygon = Polygon::new([
+            Point::new(Val(0.0), Val(0.0), Val(0.0)),
+            Point::new(Val(2.0), Val(0.0), Val(0.0)),
+            Point::new(Val(2.0), Val(2.0), Val(0.0)),
+            Point::new(Val(0.0), Val(2.0), Val(0.0)),
+        ])
+        .unwrap();
+        let sampler = PolygonPointSampler::new(ShapeId::new(ShapeKind::Polygon, 0), polygon);
+
+        assert_eq!(
+            sampler.pdf_point(Point::new(Val(0.0), Val(0.0), Val(1.0)), false),
+            Val(0.0),
+        );
+        assert_eq!(
+            sampler.pdf_point(Point::new(Val(0.0), Val(0.0), Val(0.0)), false),
+            Val(0.25),
+        );
+    }
+}

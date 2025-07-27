@@ -145,7 +145,24 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sphere_sampler_pdf_light_succeeds() {
+    fn sphere_point_sampler_pdf_point_succeeds() {
+        let sampler = SpherePointSampler::new(
+            ShapeId::new(ShapeKind::Sphere, 0),
+            Sphere::new(Point::new(Val(0.0), Val(0.0), Val(0.0)), Val(0.5)).unwrap(),
+        );
+
+        assert_eq!(
+            sampler.pdf_point(Point::new(Val(1.5), Val(0.0), Val(0.0)), false),
+            Val(0.0),
+        );
+        assert_eq!(
+            sampler.pdf_point(Point::new(Val(0.5), Val(0.0), Val(0.0)), false),
+            Val::FRAC_1_PI,
+        );
+    }
+
+    #[test]
+    fn sphere_light_sampler_pdf_light_succeeds() {
         let sampler = SphereLightSampler::new(
             ShapeId::new(ShapeKind::Sphere, 0),
             Sphere::new(Point::new(Val(0.0), Val(0.0), Val(0.0)), Val(2.0)).unwrap(),
