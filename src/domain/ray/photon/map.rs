@@ -76,7 +76,7 @@ impl PhotonMap {
         let photon = &self.nodes[index].photon;
         let dis_squared = (center - photon.position()).norm_squared();
         if dis_squared <= radius_squared {
-            res.push(&photon);
+            res.push(photon);
         }
 
         let axis = self.nodes[index].axis as usize;

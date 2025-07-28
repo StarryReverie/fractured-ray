@@ -40,7 +40,6 @@ impl PhotonSample {
                 Ray::new(self.photon.start(), self.photon.direction()),
                 self.photon.throughput() / multiplier,
             ),
-            ..self
         }
     }
 }
@@ -48,7 +47,7 @@ impl PhotonSample {
 impl Transform<AllTransformation> for PhotonSample {
     fn transform(&self, transformation: &AllTransformation) -> Self {
         Self::new(PhotonRay::new(
-            self.photon.ray().transform(&transformation),
+            self.photon.ray().transform(transformation),
             self.photon.throughput(),
         ))
     }
