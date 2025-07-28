@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::{
     AllTransformation, Point, Rotation, Transform, Transformation, Translation,
@@ -8,6 +9,7 @@ use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{InstanceLightSampler, LightSampling};
+use crate::domain::sampling::photon::{InstancePhotonSampler, PhotonSampling};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone)]
@@ -95,6 +97,18 @@ impl Shape for Instance {
 impl Sampleable for Instance {
     fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         Some(Box::new(InstanceLightSampler::new(shape_id, self.clone())))
+    }
+
+    fn get_photon_sampler(
+        &self,
+        shape_id: ShapeId,
+        emissive: Emissive,
+    ) -> Option<Box<dyn PhotonSampling>> {
+        Some(Box::new(InstancePhotonSampler::new(
+            shape_id,
+            self.clone(),
+            emissive,
+        )))
     }
 }
 

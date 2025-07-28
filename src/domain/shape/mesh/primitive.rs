@@ -2,12 +2,14 @@ use std::sync::Arc;
 
 use smallvec::SmallVec;
 
+use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{Point, Transform};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::LightSampling;
+use crate::domain::sampling::photon::PhotonSampling;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 use crate::domain::shape::primitive::{Polygon, Triangle};
 
@@ -27,6 +29,15 @@ impl MeshTriangle {
         let v1 = &vertices[triangles[self.index].1 as usize];
         let v2 = &vertices[triangles[self.index].2 as usize];
         (v0, v1, v2)
+    }
+
+    fn to_triangle(&self) -> Triangle {
+        let (v0, v1, v2) = self.get_vertices();
+        if let Some(tr) = &self.data.transformation {
+            Triangle::new(v0.transform(tr), v1.transform(tr), v2.transform(tr)).unwrap()
+        } else {
+            Triangle::new(*v0, *v1, *v2).unwrap()
+        }
     }
 }
 
@@ -77,16 +88,15 @@ impl Shape for MeshTriangle {
 
 impl Sampleable for MeshTriangle {
     fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        let (v0, v1, v2) = self.get_vertices();
-        if let Some(tr) = &self.data.transformation {
-            Triangle::new(v0.transform(tr), v1.transform(tr), v2.transform(tr))
-                .unwrap()
-                .get_light_sampler(shape_id)
-        } else {
-            Triangle::new(*v0, *v1, *v2)
-                .unwrap()
-                .get_light_sampler(shape_id)
-        }
+        self.to_triangle().get_light_sampler(shape_id)
+    }
+
+    fn get_photon_sampler(
+        &self,
+        shape_id: ShapeId,
+        emissive: Emissive,
+    ) -> Option<Box<dyn PhotonSampling>> {
+        self.to_triangle().get_photon_sampler(shape_id, emissive)
     }
 }
 
@@ -104,6 +114,16 @@ impl MeshPolygon {
             .iter()
             .map(|index| &vertices[*index as usize])
             .collect::<SmallVec<[_; 5]>>()
+    }
+
+    fn to_polygon(&self) -> Polygon {
+        if let Some(tr) = &self.data.transformation {
+            let vertices = self.get_vertices().into_iter().map(|v| v.transform(tr));
+            Polygon::new(vertices).unwrap()
+        } else {
+            let vertices = self.get_vertices().into_iter().cloned();
+            Polygon::new(vertices).unwrap()
+        }
     }
 }
 
@@ -177,13 +197,15 @@ impl Shape for MeshPolygon {
 
 impl Sampleable for MeshPolygon {
     fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        if let Some(tr) = &self.data.transformation {
-            let vertices = self.get_vertices().into_iter().map(|v| v.transform(tr));
-            Polygon::new(vertices).unwrap().get_light_sampler(shape_id)
-        } else {
-            let vertices = self.get_vertices().into_iter().cloned();
-            Polygon::new(vertices).unwrap().get_light_sampler(shape_id)
-        }
+        self.to_polygon().get_light_sampler(shape_id)
+    }
+
+    fn get_photon_sampler(
+        &self,
+        shape_id: ShapeId,
+        emissive: Emissive,
+    ) -> Option<Box<dyn PhotonSampling>> {
+        self.to_polygon().get_photon_sampler(shape_id, emissive)
     }
 }
 

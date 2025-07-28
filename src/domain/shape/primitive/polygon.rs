@@ -2,12 +2,14 @@ use smallvec::SmallVec;
 use snafu::prelude::*;
 use spade::{DelaunayTriangulation, Point2, Triangulation};
 
+use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{Point, Rotation, Transform, Transformation};
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
+use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
 use crate::domain::sampling::point::PolygonPointSampler;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -251,6 +253,21 @@ impl Sampleable for Polygon {
             PolygonInner::General { .. } => {
                 let inner = PolygonPointSampler::new(shape_id, self.clone());
                 let sampler = LightSamplerAdapter::new(inner);
+                Some(Box::new(sampler))
+            }
+        }
+    }
+
+    fn get_photon_sampler(
+        &self,
+        shape_id: ShapeId,
+        emissive: Emissive,
+    ) -> Option<Box<dyn PhotonSampling>> {
+        match &self.0 {
+            PolygonInner::Triangle(triangle) => triangle.get_photon_sampler(shape_id, emissive),
+            PolygonInner::General { .. } => {
+                let inner = PolygonPointSampler::new(shape_id, self.clone());
+                let sampler = PhotonSamplerAdapter::new(inner, emissive);
                 Some(Box::new(sampler))
             }
         }

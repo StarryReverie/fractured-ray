@@ -1,11 +1,13 @@
 use std::ops::RangeBounds;
 
+use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::LightSampling;
+use crate::domain::sampling::photon::PhotonSampling;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -78,6 +80,14 @@ impl Shape for Plane {
 
 impl Sampleable for Plane {
     fn get_light_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        None
+    }
+
+    fn get_photon_sampler(
+        &self,
+        _shape_id: ShapeId,
+        _emissive: Emissive,
+    ) -> Option<Box<dyn PhotonSampling>> {
         None
     }
 }

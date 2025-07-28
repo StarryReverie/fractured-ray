@@ -2,12 +2,15 @@ use std::ops::RangeBounds;
 
 use snafu::prelude::*;
 
+use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSampling, SphereLightSampler};
+use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
+use crate::domain::sampling::point::SpherePointSampler;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -102,6 +105,16 @@ impl Shape for Sphere {
 impl Sampleable for Sphere {
     fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         Some(Box::new(SphereLightSampler::new(shape_id, self.clone())))
+    }
+
+    fn get_photon_sampler(
+        &self,
+        shape_id: ShapeId,
+        emissive: Emissive,
+    ) -> Option<Box<dyn PhotonSampling>> {
+        let inner = SpherePointSampler::new(shape_id, self.clone());
+        let sampler = PhotonSamplerAdapter::new(inner, emissive);
+        Some(Box::new(sampler))
     }
 }
 

@@ -2,12 +2,14 @@ use std::ops::RangeBounds;
 
 use snafu::prelude::*;
 
+use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
+use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
 use crate::domain::sampling::point::TrianglePointSampler;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
@@ -141,6 +143,16 @@ impl Sampleable for Triangle {
     fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         let inner = TrianglePointSampler::new(shape_id, self.clone());
         let sampler = LightSamplerAdapter::new(inner);
+        Some(Box::new(sampler))
+    }
+
+    fn get_photon_sampler(
+        &self,
+        shape_id: ShapeId,
+        emissive: Emissive,
+    ) -> Option<Box<dyn PhotonSampling>> {
+        let inner = TrianglePointSampler::new(shape_id, self.clone());
+        let sampler = PhotonSamplerAdapter::new(inner, emissive);
         Some(Box::new(sampler))
     }
 }
