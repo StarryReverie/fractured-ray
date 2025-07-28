@@ -49,12 +49,7 @@ impl CoefficientSampling for Diffuse {
         rng: &mut dyn RngCore,
     ) -> CoefficientSample {
         let normal = intersection.normal();
-        let direction = loop {
-            let unit = UnitVector::random(rng);
-            if let Ok(direction) = (normal + unit).normalize() {
-                break direction;
-            }
-        };
+        let direction = UnitVector::random_cosine_hemisphere(normal, rng);
 
         let ray_next = Ray::new(intersection.position(), direction);
         let pdf = self.pdf_coefficient(ray, intersection, &ray_next);

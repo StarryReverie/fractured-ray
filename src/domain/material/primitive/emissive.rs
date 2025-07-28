@@ -17,6 +17,10 @@ impl Emissive {
     pub fn new(radiance: Color) -> Self {
         Self { radiance }
     }
+
+    pub fn radiance(&self) -> Color {
+        self.radiance
+    }
 }
 
 impl Material for Emissive {

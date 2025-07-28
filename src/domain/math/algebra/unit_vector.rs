@@ -18,6 +18,15 @@ impl UnitVector {
         Self(Vector::new(Val(x), Val(y), Val(z)))
     }
 
+    pub fn random_cosine_hemisphere(normal: Self, rng: &mut dyn RngCore) -> Self {
+        loop {
+            let unit = Self::random(rng);
+            if let Ok(direction) = (normal + unit).normalize() {
+                return direction;
+            }
+        }
+    }
+
     pub fn x_direction() -> Self {
         Self(Vector::new(Val(1.0), Val(0.0), Val(0.0)))
     }

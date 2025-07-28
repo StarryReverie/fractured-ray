@@ -13,7 +13,7 @@ impl PhotonRay {
         Self { ray, throughput }
     }
 
-    pub fn as_ray(&self) -> &Ray {
+    pub fn ray(&self) -> &Ray {
         &self.ray
     }
 
