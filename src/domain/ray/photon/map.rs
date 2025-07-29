@@ -17,7 +17,7 @@ impl PhotonMap {
     }
 
     fn build_impl(photons: &mut [Photon], nodes: &mut [KdTreeNode], index: usize) {
-        if index >= nodes.len() {
+        if index >= nodes.len() || photons.is_empty() {
             return;
         }
         let axis = Self::select_split_axis(photons);
@@ -91,6 +91,10 @@ impl PhotonMap {
         if axis_dis.powi(2) <= radius_squared {
             self.search_impl(far, center, radius_squared, res);
         }
+    }
+
+    pub fn len(&self) -> usize {
+        self.nodes.len()
     }
 }
 

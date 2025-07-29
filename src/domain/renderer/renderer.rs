@@ -7,13 +7,13 @@ use snafu::prelude::*;
 
 use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Color;
-use crate::domain::entity::BvhScene;
+use crate::domain::entity::{BvhScene, Scene};
 use crate::domain::image::Image;
-use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
+use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::photon::PhotonRay;
+use crate::domain::ray::photon::{PhotonMap, PhotonRay};
 
-use super::{PmContext, PmState, RtContext};
+use super::{PmContext, PmPolicy, PmState, RtContext};
 
 #[cfg_attr(test, mockall::automock)]
 pub trait Renderer: Send + Sync + 'static {
@@ -59,17 +59,18 @@ impl CoreRenderer {
         })
     }
 
-    fn render_pixel(&self, (row, column): (usize, usize)) -> Color {
+    fn render_pixel(
+        &self,
+        (row, column): (usize, usize),
+        global_pm: &PhotonMap,
+        caustic_pm: &PhotonMap,
+    ) -> Color {
         let mut rng = rand::rng();
 
-        let offset = Offset::new(
-            Val::from(rng.random::<WrappedVal>()),
-            Val::from(rng.random::<WrappedVal>()),
-        )
-        .expect("offset range should be bounded to [0, 1)");
+        let offset = Offset::new(Val(rng.random()), Val(rng.random()))
+            .expect("offset range should be bounded to [0, 1)");
 
-        let point = self
-            .camera
+        let point = (self.camera)
             .calc_point_in_pixel(row, column, offset)
             .expect("row and column should not be out of bound");
 
@@ -77,8 +78,7 @@ impl CoreRenderer {
             .normalize()
             .expect("focal length should be positive");
 
-        let mut rng = rand::rng();
-        let mut context = RtContext::new(self, &self.scene, &mut rng);
+        let mut context = RtContext::new(self, &self.scene, &mut rng, global_pm, caustic_pm);
         self.trace(
             &mut context,
             Ray::new(point, direction),
@@ -100,25 +100,47 @@ impl CoreRenderer {
         bar.enable_steady_tick(Duration::from_millis(50));
         bar
     }
+
+    fn build_photon_map(&self, policy: PmPolicy, total: usize) -> PhotonMap {
+        let photons = (0..total)
+            .into_par_iter()
+            .map(|_| {
+                let mut photons = Vec::new();
+                let mut rng = rand::rng();
+                if let Some(photon) = self.scene.get_emitters().sample_photon(&mut rng) {
+                    let mut context = PmContext::new(self, &self.scene, &mut rng, &mut photons);
+                    let state = PmState::new(false, policy);
+                    self.emit(
+                        &mut context,
+                        state,
+                        photon.into_photon(),
+                        DisRange::positive(),
+                    );
+                }
+                photons
+            })
+            .flatten()
+            .collect();
+        PhotonMap::build(photons)
+    }
 }
 
 impl Renderer for CoreRenderer {
     fn render(&self) -> Image {
         let mut image = Image::new(self.camera.resolution().clone());
 
-        let height = image.resolution().height();
-        let width = image.resolution().width();
+        let global_pm = self.build_photon_map(PmPolicy::Global, self.config.global_photons);
+        let caustic_pm = self.build_photon_map(PmPolicy::Caustic, self.config.caustic_photons);
 
-        let meshgrid = (0..height)
-            .flat_map(|r| (0..width).map(move |c| (r, c)))
+        let meshgrid = (0..image.resolution().height())
+            .flat_map(|r| (0..image.resolution().width()).map(move |c| (r, c)))
             .collect::<Vec<_>>();
 
         let pb = self.init_progress_bar();
         for _ in (0..self.config.ssaa_samples).progress_with(pb) {
-            let res = meshgrid
-                .par_iter()
+            let res = (meshgrid.par_iter())
                 .cloned()
-                .map(|pos| (pos, self.render_pixel(pos)))
+                .map(|pos| (pos, self.render_pixel(pos, &global_pm, &caustic_pm)))
                 .collect_vec_list();
 
             for ((row, column), color) in res.into_iter().flatten() {
@@ -171,6 +193,8 @@ pub struct Configuration {
     pub ssaa_samples: usize,
     pub tracing_depth: usize,
     pub background_color: Color,
+    pub global_photons: usize,
+    pub caustic_photons: usize,
 }
 
 impl Default for Configuration {
@@ -179,6 +203,8 @@ impl Default for Configuration {
             ssaa_samples: 4,
             tracing_depth: 8,
             background_color: Color::BLACK,
+            global_photons: 10000,
+            caustic_photons: 10000,
         }
     }
 }

@@ -1,7 +1,7 @@
 use rand::prelude::*;
 
 use crate::domain::entity::Scene;
-use crate::domain::ray::photon::Photon;
+use crate::domain::ray::photon::{Photon, PhotonMap};
 
 use super::Renderer;
 
@@ -9,14 +9,24 @@ pub struct RtContext<'a> {
     renderer: &'a dyn Renderer,
     scene: &'a dyn Scene,
     rng: &'a mut dyn RngCore,
+    global_pm: &'a PhotonMap,
+    caustic_pm: &'a PhotonMap,
 }
 
 impl<'a> RtContext<'a> {
-    pub fn new(renderer: &'a dyn Renderer, scene: &'a dyn Scene, rng: &'a mut dyn RngCore) -> Self {
+    pub fn new(
+        renderer: &'a dyn Renderer,
+        scene: &'a dyn Scene,
+        rng: &'a mut dyn RngCore,
+        global_pm: &'a PhotonMap,
+        caustic_pm: &'a PhotonMap,
+    ) -> Self {
         Self {
             renderer,
             scene,
             rng,
+            global_pm,
+            caustic_pm,
         }
     }
 

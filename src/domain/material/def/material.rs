@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::fmt::Debug;
 
 use crate::domain::color::Color;
@@ -8,7 +9,7 @@ use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{PmContext, PmState, RtContext};
 use crate::domain::sampling::coefficient::CoefficientSampling;
 
-pub trait Material: CoefficientSampling + Debug + Send + Sync + 'static {
+pub trait Material: CoefficientSampling + Any + Debug + Send + Sync + 'static {
     fn kind(&self) -> MaterialKind;
 
     fn bsdf(

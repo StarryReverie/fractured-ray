@@ -1,7 +1,11 @@
+use std::any::Any;
+
 use crate::domain::material::def::{Material, MaterialContainer, MaterialKind};
+use crate::domain::material::primitive::Emissive;
 use crate::domain::math::numeric::DisRange;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::sampling::light::{AggregateLightSampler, EmptyLightSampler, LightSampling};
+use crate::domain::sampling::photon::{AggregatePhotonSampler, EmptyPhotonSampler, PhotonSampling};
 use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer, ShapeId};
 
 use super::{Bvh, EntityContainer, EntityId, EntityPool};
@@ -10,6 +14,8 @@ pub trait Scene: Send + Sync + 'static {
     fn get_entities(&self) -> &dyn EntityContainer;
 
     fn get_lights(&self) -> &dyn LightSampling;
+
+    fn get_emitters(&self) -> &dyn PhotonSampling;
 
     fn find_intersection(&self, ray: &Ray, range: DisRange) -> Option<(RayIntersection, EntityId)>;
 
@@ -36,6 +42,7 @@ pub struct BvhSceneBuilder {
     entities: Box<EntityPool>,
     ids: Vec<EntityId>,
     lights: Vec<Box<dyn LightSampling>>,
+    emitters: Vec<Box<dyn PhotonSampling>>,
 }
 
 impl BvhSceneBuilder {
@@ -44,6 +51,7 @@ impl BvhSceneBuilder {
             entities: Box::new(EntityPool::new()),
             ids: Vec::new(),
             lights: Vec::new(),
+            emitters: Vec::new(),
         }
     }
 
@@ -79,6 +87,7 @@ impl BvhSceneBuilder {
 
     fn post_add_entity(&mut self, entity_id: EntityId) {
         self.register_light(entity_id);
+        self.register_emitter(entity_id);
     }
 
     fn register_light(&mut self, entity_id: EntityId) {
@@ -87,6 +96,21 @@ impl BvhSceneBuilder {
             let shape = self.entities.get_shape(shape_id).unwrap();
             if let Some(sampler) = shape.get_light_sampler(shape_id) {
                 self.lights.push(sampler);
+            }
+        }
+    }
+
+    fn register_emitter(&mut self, entity_id: EntityId) {
+        if entity_id.material_id().kind() == MaterialKind::Emissive {
+            let shape_id = entity_id.shape_id();
+            let shape = self.entities.get_shape(shape_id).unwrap();
+
+            let material_id = entity_id.material_id();
+            let material = self.entities.get_material(material_id).unwrap();
+            let emissive = (material as &dyn Any).downcast_ref::<Emissive>().unwrap();
+
+            if let Some(sampler) = shape.get_photon_sampler(shape_id, emissive.clone()) {
+                self.emitters.push(sampler);
             }
         }
     }
@@ -111,11 +135,20 @@ impl BvhSceneBuilder {
                 .unwrap_or(Box::new(EmptyLightSampler::new()))
         };
 
+        let emitters: Box<dyn PhotonSampling> = if self.emitters.len() > 1 {
+            Box::new(AggregatePhotonSampler::new(self.emitters))
+        } else {
+            (self.emitters.into_iter())
+                .next()
+                .unwrap_or(Box::new(EmptyPhotonSampler::new()))
+        };
+
         BvhScene {
             entities: self.entities,
             bvh: Bvh::new(bboxes),
             unboundeds,
             lights,
+            emitters,
         }
     }
 }
@@ -126,6 +159,7 @@ pub struct BvhScene {
     bvh: Bvh<EntityId>,
     unboundeds: Vec<EntityId>,
     lights: Box<dyn LightSampling>,
+    emitters: Box<dyn PhotonSampling>,
 }
 
 impl BvhScene {
@@ -157,6 +191,10 @@ impl Scene for BvhScene {
 
     fn get_lights(&self) -> &dyn LightSampling {
         &*self.lights
+    }
+
+    fn get_emitters(&self) -> &dyn PhotonSampling {
+        &*self.emitters
     }
 
     fn find_intersection(&self, ray: &Ray, range: DisRange) -> Option<(RayIntersection, EntityId)> {
