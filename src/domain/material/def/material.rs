@@ -4,11 +4,11 @@ use crate::domain::color::Color;
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::Context;
+use crate::domain::renderer::RtContext;
 use crate::domain::sampling::coefficient::CoefficientSampling;
 
 pub trait Material: CoefficientSampling + Debug + Send + Sync + 'static {
-    fn material_kind(&self) -> MaterialKind;
+    fn kind(&self) -> MaterialKind;
 
     fn bsdf(
         &self,
@@ -19,7 +19,7 @@ pub trait Material: CoefficientSampling + Debug + Send + Sync + 'static {
 
     fn shade(
         &self,
-        context: &mut Context<'_>,
+        context: &mut RtContext<'_>,
         ray: Ray,
         intersection: RayIntersection,
         depth: usize,
@@ -35,7 +35,7 @@ pub trait Material: CoefficientSampling + Debug + Send + Sync + 'static {
 
 fn shade_light(
     material: &dyn Material,
-    context: &mut Context<'_>,
+    context: &mut RtContext<'_>,
     ray: &Ray,
     intersection: &RayIntersection,
 ) -> Color {
@@ -72,7 +72,7 @@ fn shade_light(
 
 fn shade_scattering(
     material: &dyn Material,
-    context: &mut Context<'_>,
+    context: &mut RtContext<'_>,
     ray: &Ray,
     intersection: &RayIntersection,
     depth: usize,

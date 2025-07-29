@@ -134,7 +134,7 @@ impl Glossy {
 }
 
 impl Material for Glossy {
-    fn material_kind(&self) -> MaterialKind {
+    fn kind(&self) -> MaterialKind {
         MaterialKind::Glossy
     }
 

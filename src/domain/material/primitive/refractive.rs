@@ -6,7 +6,7 @@ use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-use crate::domain::renderer::Context;
+use crate::domain::renderer::RtContext;
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -94,7 +94,7 @@ impl Refractive {
 }
 
 impl Material for Refractive {
-    fn material_kind(&self) -> MaterialKind {
+    fn kind(&self) -> MaterialKind {
         MaterialKind::Refractive
     }
 
@@ -109,7 +109,7 @@ impl Material for Refractive {
 
     fn shade(
         &self,
-        context: &mut Context<'_>,
+        context: &mut RtContext<'_>,
         ray: Ray,
         intersection: RayIntersection,
         depth: usize,

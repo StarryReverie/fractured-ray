@@ -193,7 +193,7 @@ impl MaterialPool {
 
 impl MaterialContainer for MaterialPool {
     fn add_material<M: Material>(&mut self, material: M) -> MaterialId {
-        let kind = material.material_kind();
+        let kind = material.kind();
         let type_id = TypeId::of::<M>();
 
         if type_id == TypeId::of::<Diffuse>() {
@@ -252,7 +252,7 @@ mod tests {
             ShapeKind::Sphere
         );
         assert_eq!(
-            pool.get_material(id.material_id()).unwrap().material_kind(),
+            pool.get_material(id.material_id()).unwrap().kind(),
             MaterialKind::Diffuse,
         );
     }

@@ -5,7 +5,7 @@ use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::Context;
+use crate::domain::renderer::RtContext;
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -24,7 +24,7 @@ impl Emissive {
 }
 
 impl Material for Emissive {
-    fn material_kind(&self) -> MaterialKind {
+    fn kind(&self) -> MaterialKind {
         MaterialKind::Emissive
     }
 
@@ -39,7 +39,7 @@ impl Material for Emissive {
 
     fn shade(
         &self,
-        _context: &mut Context<'_>,
+        _context: &mut RtContext<'_>,
         _ray: Ray,
         _intersection: RayIntersection,
         _depth: usize,

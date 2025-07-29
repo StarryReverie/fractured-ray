@@ -19,7 +19,7 @@ impl Diffuse {
 }
 
 impl Material for Diffuse {
-    fn material_kind(&self) -> MaterialKind {
+    fn kind(&self) -> MaterialKind {
         MaterialKind::Diffuse
     }
 

@@ -8,7 +8,7 @@ use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-use crate::domain::renderer::Context;
+use crate::domain::renderer::RtContext;
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -30,7 +30,7 @@ impl Scattering {
 }
 
 impl Material for Scattering {
-    fn material_kind(&self) -> MaterialKind {
+    fn kind(&self) -> MaterialKind {
         MaterialKind::Scattering
     }
 
@@ -45,7 +45,7 @@ impl Material for Scattering {
 
     fn shade(
         &self,
-        context: &mut Context<'_>,
+        context: &mut RtContext<'_>,
         ray: Ray,
         intersection: RayIntersection,
         depth: usize,
@@ -70,7 +70,7 @@ impl Material for Scattering {
         } else if let Some((intersection, id)) = closet {
             let entities = context.scene().get_entities();
             let material = entities.get_material(id.material_id()).unwrap();
-            let kind = material.material_kind();
+            let kind = material.kind();
             let side = intersection.side();
 
             if kind == MaterialKind::Scattering && side == SurfaceSide::Back {

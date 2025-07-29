@@ -4,13 +4,13 @@ use crate::domain::entity::Scene;
 
 use super::Renderer;
 
-pub struct Context<'a> {
+pub struct RtContext<'a> {
     renderer: &'a dyn Renderer,
     scene: &'a dyn Scene,
     rng: &'a mut dyn RngCore,
 }
 
-impl<'a> Context<'a> {
+impl<'a> RtContext<'a> {
     pub fn new(renderer: &'a dyn Renderer, scene: &'a dyn Scene, rng: &'a mut dyn RngCore) -> Self {
         Self {
             renderer,

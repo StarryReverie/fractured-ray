@@ -12,7 +12,7 @@ use crate::domain::image::Image;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::Ray;
 
-use super::Context;
+use super::RtContext;
 
 #[cfg_attr(test, mockall::automock)]
 pub trait Renderer: Send + Sync + 'static {
@@ -20,7 +20,7 @@ pub trait Renderer: Send + Sync + 'static {
 
     fn trace<'a>(
         &'a self,
-        context: &mut Context<'a>,
+        context: &mut RtContext<'a>,
         ray: Ray,
         range: DisRange,
         depth: usize,
@@ -69,7 +69,7 @@ impl CoreRenderer {
             .expect("focal length should be positive");
 
         let mut rng = rand::rng();
-        let mut context = Context::new(self, &self.scene, &mut rng);
+        let mut context = RtContext::new(self, &self.scene, &mut rng);
         self.trace(
             &mut context,
             Ray::new(point, direction),
@@ -122,7 +122,7 @@ impl Renderer for CoreRenderer {
 
     fn trace<'a>(
         &'a self,
-        context: &mut Context<'a>,
+        context: &mut RtContext<'a>,
         ray: Ray,
         range: DisRange,
         depth: usize,
