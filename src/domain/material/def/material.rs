@@ -3,8 +3,9 @@ use std::fmt::Debug;
 use crate::domain::color::Color;
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::RtContext;
+use crate::domain::renderer::{PmContext, PmState, RtContext};
 use crate::domain::sampling::coefficient::CoefficientSampling;
 
 pub trait Material: CoefficientSampling + Debug + Send + Sync + 'static {
@@ -29,6 +30,14 @@ pub trait Material: CoefficientSampling + Debug + Send + Sync + 'static {
         let radiance_scattering = shade_scattering(this, context, &ray, &intersection, depth);
         radiance_light + radiance_scattering
     }
+
+    fn receive(
+        &self,
+        context: &mut PmContext<'_>,
+        state: PmState,
+        photon: PhotonRay,
+        intersection: RayIntersection,
+    );
 
     fn as_dyn(&self) -> &dyn Material;
 }

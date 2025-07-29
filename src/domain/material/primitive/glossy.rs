@@ -2,11 +2,13 @@ use rand::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::color::Color;
-use crate::domain::material::def::{Material, MaterialKind};
+use crate::domain::material::def::{Material, MaterialExt, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::{Rotation, Transform, Transformation};
 use crate::domain::math::numeric::Val;
+use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::renderer::{PmContext, PmPolicy, PmState};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -156,6 +158,21 @@ impl Material for Glossy {
             (reflectance * ndf * g2) / (Val(4.0) * cos * cos_next).abs()
         } else {
             Vector::broadcast(Val(0.0))
+        }
+    }
+
+    fn receive(
+        &self,
+        context: &mut PmContext<'_>,
+        state: PmState,
+        photon: PhotonRay,
+        intersection: RayIntersection,
+    ) {
+        match state.policy() {
+            PmPolicy::Global => {
+                self.maybe_bounce_next_photon(context, state, photon, intersection);
+            }
+            PmPolicy::Caustic => {}
         }
     }
 

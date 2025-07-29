@@ -88,6 +88,14 @@ impl Neg for Vector {
     }
 }
 
+impl Mul<Vector> for Vector {
+    type Output = Self;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        Self::new(self.x() * rhs.x(), self.y() * rhs.y(), self.z() * rhs.z())
+    }
+}
+
 impl Mul<Val> for Vector {
     type Output = Self;
 

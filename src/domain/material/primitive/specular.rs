@@ -1,11 +1,12 @@
 use rand::prelude::*;
 
 use crate::domain::color::Color;
-use crate::domain::material::def::{Material, MaterialKind};
+use crate::domain::material::def::{Material, MaterialExt, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::RtContext;
+use crate::domain::renderer::{PmContext, PmState, RtContext};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -58,6 +59,17 @@ impl Material for Specular {
         let renderer = context.renderer();
         let radiance = renderer.trace(context, ray_next, DisRange::positive(), depth + 1);
         coefficient * radiance
+    }
+
+    fn receive(
+        &self,
+        context: &mut PmContext<'_>,
+        state: PmState,
+        photon: PhotonRay,
+        intersection: RayIntersection,
+    ) {
+        let state_next = state.with_has_specular(true);
+        self.maybe_bounce_next_photon(context, state_next, photon, intersection);
     }
 
     fn as_dyn(&self) -> &dyn Material {

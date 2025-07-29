@@ -1,10 +1,12 @@
 use rand::prelude::*;
 
 use crate::domain::color::Color;
-use crate::domain::material::def::{Material, MaterialKind};
+use crate::domain::material::def::{Material, MaterialExt, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
+use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::renderer::{PmContext, PmPolicy, PmState};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -33,6 +35,26 @@ impl Material for Diffuse {
             Val::FRAC_1_PI * self.color.to_vector()
         } else {
             Vector::zero()
+        }
+    }
+
+    fn receive(
+        &self,
+        context: &mut PmContext<'_>,
+        state: PmState,
+        photon: PhotonRay,
+        intersection: RayIntersection,
+    ) {
+        match state.policy() {
+            PmPolicy::Global => {
+                self.store_photon(context, &photon, &intersection);
+                self.maybe_bounce_next_photon(context, state, photon, intersection);
+            }
+            PmPolicy::Caustic => {
+                if state.has_specular() {
+                    self.store_photon(context, &photon, &intersection);
+                }
+            }
         }
     }
 

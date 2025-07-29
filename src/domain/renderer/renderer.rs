@@ -7,12 +7,13 @@ use snafu::prelude::*;
 
 use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Color;
-use crate::domain::entity::{BvhScene, Scene};
+use crate::domain::entity::BvhScene;
 use crate::domain::image::Image;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::ray::Ray;
+use crate::domain::ray::photon::PhotonRay;
 
-use super::RtContext;
+use super::{PmContext, PmState, RtContext};
 
 #[cfg_attr(test, mockall::automock)]
 pub trait Renderer: Send + Sync + 'static {
@@ -25,6 +26,14 @@ pub trait Renderer: Send + Sync + 'static {
         range: DisRange,
         depth: usize,
     ) -> Color;
+
+    fn emit<'a>(
+        &'a self,
+        context: &mut PmContext<'a>,
+        state: PmState,
+        photon: PhotonRay,
+        range: DisRange,
+    );
 }
 
 #[derive(Debug)]
@@ -131,13 +140,28 @@ impl Renderer for CoreRenderer {
             return Color::BLACK;
         }
 
-        let res = self.scene.find_intersection(&ray, range);
+        let res = context.scene().find_intersection(&ray, range);
         if let Some((intersection, id)) = res {
             let entities = context.scene().get_entities();
             let material = entities.get_material(id.material_id()).unwrap();
             material.shade(context, ray, intersection, depth)
         } else {
             self.config.background_color
+        }
+    }
+
+    fn emit<'a>(
+        &'a self,
+        context: &mut PmContext<'a>,
+        state: PmState,
+        photon: PhotonRay,
+        range: DisRange,
+    ) {
+        let res = context.scene().find_intersection(photon.ray(), range);
+        if let Some((intersection, id)) = res {
+            let entities = context.scene().get_entities();
+            let material = entities.get_material(id.material_id()).unwrap();
+            material.receive(context, state, photon, intersection);
         }
     }
 }

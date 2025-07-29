@@ -4,8 +4,9 @@ use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::Val;
+use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::RtContext;
+use crate::domain::renderer::{PmContext, PmState, RtContext};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -45,6 +46,15 @@ impl Material for Emissive {
         _depth: usize,
     ) -> Color {
         self.radiance
+    }
+
+    fn receive(
+        &self,
+        _context: &mut PmContext<'_>,
+        _state: PmState,
+        _photon: PhotonRay,
+        _intersection: RayIntersection,
+    ) {
     }
 
     fn as_dyn(&self) -> &dyn Material {
