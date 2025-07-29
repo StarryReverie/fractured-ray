@@ -9,7 +9,7 @@ use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-use crate::domain::renderer::{PmContext, PmState, RtContext};
+use crate::domain::renderer::{PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -47,9 +47,9 @@ impl Material for Scattering {
     fn shade(
         &self,
         context: &mut RtContext<'_>,
+        state: RtState,
         ray: Ray,
         intersection: RayIntersection,
-        depth: usize,
     ) -> Color {
         let ray = Ray::new(intersection.position(), ray.direction());
         let closet = context
@@ -66,7 +66,7 @@ impl Material for Scattering {
             let color =
                 context
                     .renderer()
-                    .trace(context, scattering_ray, DisRange::positive(), depth + 1);
+                    .trace(context, state, scattering_ray, DisRange::positive());
             color * self.color
         } else if let Some((intersection, id)) = closet {
             let entities = context.scene().get_entities();
@@ -79,11 +79,11 @@ impl Material for Scattering {
                 let passthrough_ray = Ray::new(boundary, ray.direction());
                 context
                     .renderer()
-                    .trace(context, passthrough_ray, DisRange::positive(), depth)
+                    .trace(context, state, passthrough_ray, DisRange::positive())
             } else {
                 context
                     .renderer()
-                    .trace(context, ray, DisRange::positive(), depth)
+                    .trace(context, state, ray, DisRange::positive())
             }
         } else {
             unreachable!("closet should not be None otherwise 1st branch is executed")

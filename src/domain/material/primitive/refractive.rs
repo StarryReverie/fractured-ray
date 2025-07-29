@@ -7,7 +7,7 @@ use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-use crate::domain::renderer::{PmContext, PmState, RtContext};
+use crate::domain::renderer::{PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -111,11 +111,11 @@ impl Material for Refractive {
     fn shade(
         &self,
         context: &mut RtContext<'_>,
+        state: RtState,
         ray: Ray,
         intersection: RayIntersection,
-        depth: usize,
     ) -> Color {
-        self.shade_scattering(context, &ray, &intersection, false, depth)
+        self.shade_scattering(context, state, &ray, &intersection, false)
     }
 
     fn receive(

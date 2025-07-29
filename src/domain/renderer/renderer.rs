@@ -13,7 +13,7 @@ use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::{PhotonMap, PhotonRay};
 
-use super::{PmContext, PmState, RtContext, StoragePolicy};
+use super::{PmContext, PmState, RtContext, RtState, StoragePolicy};
 
 #[cfg_attr(test, mockall::automock)]
 pub trait Renderer: Send + Sync + 'static {
@@ -22,9 +22,9 @@ pub trait Renderer: Send + Sync + 'static {
     fn trace<'a>(
         &'a self,
         context: &mut RtContext<'a>,
+        state: RtState,
         ray: Ray,
         range: DisRange,
-        depth: usize,
     ) -> Color;
 
     fn emit<'a>(
@@ -50,7 +50,15 @@ impl CoreRenderer {
         config: Configuration,
     ) -> Result<Self, ConfigurationError> {
         ensure!(config.ssaa_samples > 0, InvalidSsaaSamplesSnafu);
-        ensure!(config.tracing_depth > 0, InvalidTracingDepthSnafu);
+        ensure!(config.max_depth > 0, InvalidMaxDepthSnafu);
+        ensure!(
+            config.max_invisible_depth > 0,
+            NonPositiveMaxInvisibleDepthSnafu,
+        );
+        ensure!(
+            config.max_invisible_depth <= config.max_depth,
+            ExceededMaxInvisibleDepthSnafu,
+        );
 
         Ok(Self {
             camera,
@@ -79,11 +87,12 @@ impl CoreRenderer {
             .expect("focal length should be positive");
 
         let mut context = RtContext::new(self, &self.scene, &mut rng, pm_global, pm_caustic);
+        let state = RtState::new();
         self.trace(
             &mut context,
+            state,
             Ray::new(point, direction),
             DisRange::positive(),
-            1,
         )
     }
 
@@ -156,11 +165,12 @@ impl Renderer for CoreRenderer {
     fn trace<'a>(
         &'a self,
         context: &mut RtContext<'a>,
+        state: RtState,
         ray: Ray,
         range: DisRange,
-        depth: usize,
     ) -> Color {
-        if depth > self.config.tracing_depth {
+        let state = state.increment_depth();
+        if state.depth() > self.config.max_depth {
             return Color::BLACK;
         }
 
@@ -168,7 +178,7 @@ impl Renderer for CoreRenderer {
         if let Some((intersection, id)) = res {
             let entities = context.scene().get_entities();
             let material = entities.get_material(id.material_id()).unwrap();
-            material.shade(context, ray, intersection, depth)
+            material.shade(context, state, ray, intersection)
         } else {
             self.config.background_color
         }
@@ -193,7 +203,8 @@ impl Renderer for CoreRenderer {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Configuration {
     pub ssaa_samples: usize,
-    pub tracing_depth: usize,
+    pub max_depth: usize,
+    pub max_invisible_depth: usize,
     pub background_color: Color,
     pub global_photon_number: usize,
     pub caustic_photon_number: usize,
@@ -203,7 +214,8 @@ impl Default for Configuration {
     fn default() -> Self {
         Self {
             ssaa_samples: 4,
-            tracing_depth: 8,
+            max_depth: 8,
+            max_invisible_depth: 2,
             background_color: Color::BLACK,
             global_photon_number: 10000,
             caustic_photon_number: 10000,
@@ -216,6 +228,10 @@ impl Default for Configuration {
 pub enum ConfigurationError {
     #[snafu(display("SSAA samples for each pixel is not positive"))]
     InvalidSsaaSamples,
-    #[snafu(display("tracing depth is not positive"))]
-    InvalidTracingDepth,
+    #[snafu(display("max depth is not positive"))]
+    InvalidMaxDepth,
+    #[snafu(display("max invisible depth is not positive"))]
+    NonPositiveMaxInvisibleDepth,
+    #[snafu(display("max invisible depth is larger than max depth"))]
+    ExceededMaxInvisibleDepth,
 }

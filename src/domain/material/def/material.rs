@@ -5,7 +5,7 @@ use crate::domain::color::Color;
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{PmContext, PmState, RtContext};
+use crate::domain::renderer::{PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::CoefficientSampling;
 
 pub trait Material: CoefficientSampling + Any + Debug + Send + Sync + 'static {
@@ -21,9 +21,9 @@ pub trait Material: CoefficientSampling + Any + Debug + Send + Sync + 'static {
     fn shade(
         &self,
         context: &mut RtContext<'_>,
+        state: RtState,
         ray: Ray,
         intersection: RayIntersection,
-        depth: usize,
     ) -> Color;
 
     fn receive(

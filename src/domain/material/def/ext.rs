@@ -4,7 +4,7 @@ use crate::domain::color::Color;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::photon::{Photon, PhotonRay};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{PmContext, PmState, RtContext};
+use crate::domain::renderer::{PmContext, PmState, RtContext, RtState};
 
 use super::Material;
 
@@ -48,16 +48,16 @@ pub trait MaterialExt: Material {
 
         let coefficient = sample.coefficient();
         let ray_next = sample.into_ray_next();
-        let radiance = light_material.shade(context, ray_next, intersection_next, 0);
+        let radiance = light_material.shade(context, RtState::new(), ray_next, intersection_next);
         coefficient * radiance * weight
     }
 
     fn shade_scattering(
         &self,
         context: &mut RtContext<'_>,
+        state_next: RtState,
         ray: &Ray,
         intersection: &RayIntersection,
-        depth: usize,
         mis: bool,
     ) -> Color {
         let renderer = context.renderer();
@@ -80,7 +80,7 @@ pub trait MaterialExt: Material {
 
         let coefficient = sample.coefficient();
         let ray_next = sample.into_ray_next();
-        let radiance = renderer.trace(context, ray_next, DisRange::positive(), depth + 1);
+        let radiance = renderer.trace(context, state_next, ray_next, DisRange::positive());
         coefficient * radiance * weight
     }
 
