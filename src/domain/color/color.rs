@@ -108,6 +108,12 @@ impl Mul<Color> for Vector {
     }
 }
 
+impl From<Vector> for Color {
+    fn from(value: Vector) -> Self {
+        Self::new(value.x(), value.y(), value.z())
+    }
+}
+
 impl From<Color> for Vector {
     fn from(value: Color) -> Self {
         Self::new(value.red, value.green, value.blue)

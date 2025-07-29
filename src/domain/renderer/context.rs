@@ -3,7 +3,7 @@ use rand::prelude::*;
 use crate::domain::entity::Scene;
 use crate::domain::ray::photon::{Photon, PhotonMap};
 
-use super::Renderer;
+use super::{Configuration, Renderer};
 
 pub struct RtContext<'a> {
     renderer: &'a dyn Renderer,
@@ -11,6 +11,7 @@ pub struct RtContext<'a> {
     rng: &'a mut dyn RngCore,
     pm_global: &'a PhotonMap,
     pm_caustic: &'a PhotonMap,
+    config: &'a Configuration,
 }
 
 impl<'a> RtContext<'a> {
@@ -20,6 +21,7 @@ impl<'a> RtContext<'a> {
         rng: &'a mut dyn RngCore,
         pm_global: &'a PhotonMap,
         pm_caustic: &'a PhotonMap,
+        config: &'a Configuration,
     ) -> Self {
         Self {
             renderer,
@@ -27,6 +29,7 @@ impl<'a> RtContext<'a> {
             rng,
             pm_global,
             pm_caustic,
+            config,
         }
     }
 
@@ -48,6 +51,10 @@ impl<'a> RtContext<'a> {
 
     pub fn pm_caustic(&self) -> &'a PhotonMap {
         self.pm_caustic
+    }
+
+    pub fn config(&self) -> &'a Configuration {
+        self.config
     }
 }
 

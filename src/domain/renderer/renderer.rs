@@ -59,6 +59,10 @@ impl CoreRenderer {
             config.max_invisible_depth <= config.max_depth,
             ExceededMaxInvisibleDepthSnafu,
         );
+        ensure!(
+            config.radiance_estimation_radius > Val(0.0),
+            InvalidRadianceEstimationRadiusSnafu,
+        );
 
         Ok(Self {
             camera,
@@ -86,7 +90,14 @@ impl CoreRenderer {
             .normalize()
             .expect("focal length should be positive");
 
-        let mut context = RtContext::new(self, &self.scene, &mut rng, pm_global, pm_caustic);
+        let mut context = RtContext::new(
+            self,
+            &self.scene,
+            &mut rng,
+            pm_global,
+            pm_caustic,
+            &self.config,
+        );
         let state = RtState::new();
         self.trace(
             &mut context,
@@ -208,17 +219,19 @@ pub struct Configuration {
     pub background_color: Color,
     pub global_photon_number: usize,
     pub caustic_photon_number: usize,
+    pub radiance_estimation_radius: Val,
 }
 
 impl Default for Configuration {
     fn default() -> Self {
         Self {
             ssaa_samples: 4,
-            max_depth: 8,
-            max_invisible_depth: 2,
+            max_depth: 12,
+            max_invisible_depth: 4,
             background_color: Color::BLACK,
-            global_photon_number: 10000,
-            caustic_photon_number: 10000,
+            global_photon_number: 400000,
+            caustic_photon_number: 400000,
+            radiance_estimation_radius: Val(10.0),
         }
     }
 }
@@ -234,4 +247,6 @@ pub enum ConfigurationError {
     NonPositiveMaxInvisibleDepth,
     #[snafu(display("max invisible depth is larger than max depth"))]
     ExceededMaxInvisibleDepth,
+    #[snafu(display("radiance estimation radius is not positive"))]
+    InvalidRadianceEstimationRadius,
 }

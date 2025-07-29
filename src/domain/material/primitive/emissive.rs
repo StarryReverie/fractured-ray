@@ -45,7 +45,7 @@ impl Material for Emissive {
         _ray: Ray,
         _intersection: RayIntersection,
     ) -> Color {
-        if state.filter_emissive() {
+        if state.skip_emissive() {
             Color::BLACK
         } else {
             self.radiance

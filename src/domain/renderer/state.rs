@@ -3,7 +3,7 @@ pub struct RtState {
     visible: bool,
     depth: u8,
     invisible_depth: u8,
-    filter_emissive: bool,
+    skip_emissive: bool,
 }
 
 impl RtState {
@@ -12,7 +12,7 @@ impl RtState {
             visible: true,
             depth: 0,
             invisible_depth: 0,
-            filter_emissive: false,
+            skip_emissive: false,
         }
     }
 
@@ -38,9 +38,9 @@ impl RtState {
         }
     }
 
-    pub fn with_filter_emissive(self, filter_emissive: bool) -> Self {
+    pub fn with_skip_emissive(self, skip_emissive: bool) -> Self {
         Self {
-            filter_emissive,
+            skip_emissive,
             ..self
         }
     }
@@ -57,8 +57,8 @@ impl RtState {
         self.invisible_depth as usize
     }
 
-    pub fn filter_emissive(&self) -> bool {
-        self.filter_emissive
+    pub fn skip_emissive(&self) -> bool {
+        self.skip_emissive
     }
 }
 

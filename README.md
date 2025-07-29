@@ -32,7 +32,7 @@ Diamond
   - [x] BSDF & cosine-weighted sampling
   - [x] Light sampling
   - [x] Multiple importance sampling
-  - [ ] Photon mapping
+  - [x] Photon mapping
   - [ ] Physics-based color model
 - [ ] Shapes
   - [x] Common shape primitives

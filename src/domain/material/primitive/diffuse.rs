@@ -45,9 +45,42 @@ impl Material for Diffuse {
         ray: Ray,
         intersection: RayIntersection,
     ) -> Color {
-        let radiance_light = self.shade_light(context, &ray, &intersection, true);
-        let radiance_scattering = self.shade_scattering(context, state, &ray, &intersection, true);
-        radiance_light + radiance_scattering
+        if state.visible() {
+            let radiance_light = self.shade_light(context, &ray, &intersection, false);
+            let radiance_caustic = self.estimate_radiance(
+                &ray,
+                &intersection,
+                context.pm_caustic(),
+                context.config().radiance_estimation_radius,
+                context.config().caustic_photon_number,
+            );
+            let radiance_indirect = self.shade_scattering(
+                context,
+                state.mark_invisible().with_skip_emissive(true),
+                &ray,
+                &intersection,
+                false,
+            );
+            radiance_light + radiance_caustic + radiance_indirect
+        } else if state.invisible_depth() != context.config().max_invisible_depth {
+            let radiance_light = self.shade_light(context, &ray, &intersection, true);
+            let radiance_scattering = self.shade_scattering(
+                context,
+                state.mark_invisible().with_skip_emissive(true),
+                &ray,
+                &intersection,
+                true,
+            );
+            radiance_light + radiance_scattering
+        } else {
+            self.estimate_radiance(
+                &ray,
+                &intersection,
+                context.pm_global(),
+                context.config().radiance_estimation_radius,
+                context.config().global_photon_number,
+            )
+        }
     }
 
     fn receive(

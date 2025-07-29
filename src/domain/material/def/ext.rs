@@ -1,8 +1,9 @@
 use rand::prelude::*;
 
 use crate::domain::color::Color;
+use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::photon::{Photon, PhotonRay};
+use crate::domain::ray::photon::{Photon, PhotonMap, PhotonRay};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{PmContext, PmState, RtContext, RtState};
 
@@ -121,6 +122,24 @@ pub trait MaterialExt: Material {
         let throughput_next = sample.coefficient() * throughput;
         let photon_next = PhotonRay::new(sample.into_ray_next(), throughput_next);
         renderer.emit(context, state_next, photon_next, DisRange::positive());
+    }
+
+    fn estimate_radiance(
+        &self,
+        ray: &Ray,
+        intersection: &RayIntersection,
+        photon_map: &PhotonMap,
+        radius: Val,
+        total_photons: usize,
+    ) -> Color {
+        let mut flux = Vector::zero();
+        let photons = photon_map.search(intersection.position(), radius);
+        for photon in photons {
+            let bsdf = self.bsdf(-ray.direction(), intersection, photon.direction());
+            flux = flux + bsdf * photon.throughput();
+        }
+        let area = Val::PI * radius.powi(2);
+        Color::from(flux / (area * Val::from(total_photons)))
     }
 }
 
