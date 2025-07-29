@@ -13,7 +13,7 @@ use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::{PhotonMap, PhotonRay};
 
-use super::{PmContext, PmPolicy, PmState, RtContext};
+use super::{PmContext, PmState, RtContext, StoragePolicy};
 
 #[cfg_attr(test, mockall::automock)]
 pub trait Renderer: Send + Sync + 'static {
@@ -62,8 +62,8 @@ impl CoreRenderer {
     fn render_pixel(
         &self,
         (row, column): (usize, usize),
-        global_pm: &PhotonMap,
-        caustic_pm: &PhotonMap,
+        pm_global: &PhotonMap,
+        pm_caustic: &PhotonMap,
     ) -> Color {
         let mut rng = rand::rng();
 
@@ -78,7 +78,7 @@ impl CoreRenderer {
             .normalize()
             .expect("focal length should be positive");
 
-        let mut context = RtContext::new(self, &self.scene, &mut rng, global_pm, caustic_pm);
+        let mut context = RtContext::new(self, &self.scene, &mut rng, pm_global, pm_caustic);
         self.trace(
             &mut context,
             Ray::new(point, direction),
@@ -101,7 +101,7 @@ impl CoreRenderer {
         bar
     }
 
-    fn build_photon_map(&self, policy: PmPolicy, total: usize) -> PhotonMap {
+    fn build_photon_map(&self, policy: StoragePolicy, total: usize) -> PhotonMap {
         let photons = (0..total)
             .into_par_iter()
             .map(|_| {
@@ -129,8 +129,10 @@ impl Renderer for CoreRenderer {
     fn render(&self) -> Image {
         let mut image = Image::new(self.camera.resolution().clone());
 
-        let global_pm = self.build_photon_map(PmPolicy::Global, self.config.global_photons);
-        let caustic_pm = self.build_photon_map(PmPolicy::Caustic, self.config.caustic_photons);
+        let pm_global =
+            self.build_photon_map(StoragePolicy::Global, self.config.global_photon_number);
+        let pm_caustic =
+            self.build_photon_map(StoragePolicy::Caustic, self.config.caustic_photon_number);
 
         let meshgrid = (0..image.resolution().height())
             .flat_map(|r| (0..image.resolution().width()).map(move |c| (r, c)))
@@ -140,7 +142,7 @@ impl Renderer for CoreRenderer {
         for _ in (0..self.config.ssaa_samples).progress_with(pb) {
             let res = (meshgrid.par_iter())
                 .cloned()
-                .map(|pos| (pos, self.render_pixel(pos, &global_pm, &caustic_pm)))
+                .map(|pos| (pos, self.render_pixel(pos, &pm_global, &pm_caustic)))
                 .collect_vec_list();
 
             for ((row, column), color) in res.into_iter().flatten() {
@@ -193,8 +195,8 @@ pub struct Configuration {
     pub ssaa_samples: usize,
     pub tracing_depth: usize,
     pub background_color: Color,
-    pub global_photons: usize,
-    pub caustic_photons: usize,
+    pub global_photon_number: usize,
+    pub caustic_photon_number: usize,
 }
 
 impl Default for Configuration {
@@ -203,8 +205,8 @@ impl Default for Configuration {
             ssaa_samples: 4,
             tracing_depth: 8,
             background_color: Color::BLACK,
-            global_photons: 10000,
-            caustic_photons: 10000,
+            global_photon_number: 10000,
+            caustic_photon_number: 10000,
         }
     }
 }

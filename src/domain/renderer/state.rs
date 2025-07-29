@@ -1,11 +1,11 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PmState {
     has_specular: bool,
-    policy: PmPolicy,
+    policy: StoragePolicy,
 }
 
 impl PmState {
-    pub fn new(has_specular: bool, policy: PmPolicy) -> Self {
+    pub fn new(has_specular: bool, policy: StoragePolicy) -> Self {
         Self {
             has_specular,
             policy,
@@ -23,13 +23,13 @@ impl PmState {
         self.has_specular
     }
 
-    pub fn policy(&self) -> PmPolicy {
+    pub fn policy(&self) -> StoragePolicy {
         self.policy
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PmPolicy {
+pub enum StoragePolicy {
     Global,
     Caustic,
 }

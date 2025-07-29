@@ -9,8 +9,8 @@ pub struct RtContext<'a> {
     renderer: &'a dyn Renderer,
     scene: &'a dyn Scene,
     rng: &'a mut dyn RngCore,
-    global_pm: &'a PhotonMap,
-    caustic_pm: &'a PhotonMap,
+    pm_global: &'a PhotonMap,
+    pm_caustic: &'a PhotonMap,
 }
 
 impl<'a> RtContext<'a> {
@@ -18,15 +18,15 @@ impl<'a> RtContext<'a> {
         renderer: &'a dyn Renderer,
         scene: &'a dyn Scene,
         rng: &'a mut dyn RngCore,
-        global_pm: &'a PhotonMap,
-        caustic_pm: &'a PhotonMap,
+        pm_global: &'a PhotonMap,
+        pm_caustic: &'a PhotonMap,
     ) -> Self {
         Self {
             renderer,
             scene,
             rng,
-            global_pm,
-            caustic_pm,
+            pm_global,
+            pm_caustic,
         }
     }
 
@@ -40,6 +40,14 @@ impl<'a> RtContext<'a> {
 
     pub fn rng(&mut self) -> &mut &'a mut dyn RngCore {
         &mut self.rng
+    }
+
+    pub fn pm_global(&self) -> &'a PhotonMap {
+        self.pm_global
+    }
+
+    pub fn pm_caustic(&self) -> &'a PhotonMap {
+        self.pm_caustic
     }
 }
 

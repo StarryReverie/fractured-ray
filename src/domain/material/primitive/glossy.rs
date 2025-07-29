@@ -8,7 +8,7 @@ use crate::domain::math::geometry::{Rotation, Transform, Transformation};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{PmContext, PmPolicy, PmState};
+use crate::domain::renderer::{PmContext, PmState, RtContext, StoragePolicy};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -161,6 +161,18 @@ impl Material for Glossy {
         }
     }
 
+    fn shade(
+        &self,
+        context: &mut RtContext<'_>,
+        ray: Ray,
+        intersection: RayIntersection,
+        depth: usize,
+    ) -> Color {
+        let radiance_light = self.shade_light(context, &ray, &intersection, true);
+        let radiance_scattering = self.shade_scattering(context, &ray, &intersection, depth, true);
+        radiance_light + radiance_scattering
+    }
+
     fn receive(
         &self,
         context: &mut PmContext<'_>,
@@ -169,10 +181,10 @@ impl Material for Glossy {
         intersection: RayIntersection,
     ) {
         match state.policy() {
-            PmPolicy::Global => {
+            StoragePolicy::Global => {
                 self.maybe_bounce_next_photon(context, state, photon, intersection);
             }
-            PmPolicy::Caustic => {}
+            StoragePolicy::Caustic => {}
         }
     }
 
