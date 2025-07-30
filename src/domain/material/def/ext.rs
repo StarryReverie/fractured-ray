@@ -1,3 +1,5 @@
+use std::ops::Bound;
+
 use rand::prelude::*;
 
 use crate::domain::color::Color;
@@ -25,7 +27,11 @@ pub trait MaterialExt: Material {
         };
 
         let ray_next = sample.ray_next();
-        let res = scene.test_intersection(ray_next, DisRange::positive(), sample.shape_id());
+        let range = (
+            Bound::Excluded(Val(0.0)),
+            Bound::Included(sample.distance()),
+        );
+        let res = scene.test_intersection(ray_next, range.into(), sample.shape_id());
         let (intersection_next, light_material) = if let Some(res) = res {
             let intersection_next = res.0;
             let material_id = res.1.material_id();

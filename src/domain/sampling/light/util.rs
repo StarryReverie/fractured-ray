@@ -92,10 +92,12 @@ where
             let dis_squared = (sample.point() - intersection.position()).norm_squared();
             let pdf = sample.pdf() * dis_squared / cos2;
             let coefficient = bsdf * cos1 / pdf;
+            let distance = (sample.point() - intersection.position()).norm();
             Some(LightSample::new(
                 ray_next,
                 coefficient,
                 pdf,
+                distance,
                 sample.shape_id(),
             ))
         } else {

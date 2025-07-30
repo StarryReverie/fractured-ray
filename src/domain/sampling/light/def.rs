@@ -30,15 +30,23 @@ pub struct LightSample {
     ray_next: Ray,
     coefficient: Vector,
     pdf: Val,
+    distance: Val,
     shape_id: ShapeId,
 }
 
 impl LightSample {
-    pub fn new(ray_next: Ray, coefficient: Vector, pdf: Val, shape_id: ShapeId) -> Self {
+    pub fn new(
+        ray_next: Ray,
+        coefficient: Vector,
+        pdf: Val,
+        distance: Val,
+        shape_id: ShapeId,
+    ) -> Self {
         Self {
             ray_next,
             coefficient,
             pdf,
+            distance,
             shape_id,
         }
     }
@@ -57,6 +65,10 @@ impl LightSample {
 
     pub fn pdf(&self) -> Val {
         self.pdf
+    }
+
+    pub fn distance(&self) -> Val {
+        self.distance
     }
 
     pub fn shape_id(&self) -> ShapeId {
@@ -78,6 +90,7 @@ impl Transform<AllTransformation> for LightSample {
             self.ray_next.transform(transformation),
             self.coefficient,
             self.pdf,
+            self.distance,
             self.shape_id,
         )
     }

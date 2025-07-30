@@ -64,7 +64,14 @@ impl LightSampling for SphereLightSampler {
             let solid_angle = Val(2.0) * Val::PI * (Val(1.0) - cos_max_half_cone_angle);
             let pdf = solid_angle.recip();
             let coefficient = bsdf * cos / pdf;
-            Some(LightSample::new(ray_next, coefficient, pdf, self.id))
+            let distance = (self.sphere.center() + at_sphere - intersection.position()).norm();
+            Some(LightSample::new(
+                ray_next,
+                coefficient,
+                pdf,
+                distance,
+                self.id,
+            ))
         } else {
             None
         }
