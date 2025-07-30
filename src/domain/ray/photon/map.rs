@@ -7,26 +7,37 @@ use super::Photon;
 #[derive(Debug, Clone, PartialEq)]
 pub struct PhotonMap {
     nodes: Vec<KdTreeNode>,
+    root: Option<usize>,
 }
 
 impl PhotonMap {
     pub fn build(mut photons: Vec<Photon>) -> Self {
         let mut nodes = vec![KdTreeNode::default(); photons.len()];
-        Self::build_impl(&mut photons, &mut nodes, 0);
-        Self { nodes }
+        let root = Self::build_impl(&mut photons, &mut nodes, 0);
+        Self { nodes, root }
     }
 
-    fn build_impl(photons: &mut [Photon], nodes: &mut [KdTreeNode], index: usize) {
-        if index >= nodes.len() || photons.is_empty() {
-            return;
+    fn build_impl(
+        photons: &mut [Photon],
+        nodes: &mut [KdTreeNode],
+        offset: usize,
+    ) -> Option<usize> {
+        if photons.is_empty() {
+            return None;
         }
+
+        let mid = photons.len() / 2;
         let axis = Self::select_split_axis(photons);
-        let (left_size, _right_size) = Self::calc_subtree_size(photons.len());
-        let (left, current, right) =
-            photons.select_nth_unstable_by_key(left_size, |photon| photon.position().axis(axis));
-        nodes[index] = KdTreeNode::new(current.clone(), axis as u8);
-        Self::build_impl(left, nodes, index * 2 + 1);
-        Self::build_impl(right, nodes, index * 2 + 2);
+        photons.select_nth_unstable_by_key(mid, |photon| photon.position().axis(axis));
+        let (pl, pm, pr) = Self::split_at_mid(photons, mid);
+        let (nl, nm, nr) = Self::split_at_mid(nodes, mid);
+
+        let (left, right) = rayon::join(
+            || Self::build_impl(pl, nl, offset),
+            || Self::build_impl(pr, nr, offset + mid + 1),
+        );
+        *nm = KdTreeNode::new(pm.clone(), axis as u8, left, right);
+        Some(offset + mid)
     }
 
     fn select_split_axis(photons: &[Photon]) -> usize {
@@ -49,48 +60,52 @@ impl PhotonMap {
         }
     }
 
-    fn calc_subtree_size(size: usize) -> (usize, usize) {
-        let exp2 = (size + 2).next_power_of_two() / 2;
-        let right = exp2 / 2 - 1;
-        let left = size - 1 - right;
-        (left, right)
+    fn split_at_mid<T>(slice: &mut [T], mid: usize) -> (&mut [T], &mut T, &mut [T]) {
+        assert!(mid < slice.len());
+        let (left, rest) = slice.split_at_mut(mid);
+        let (center, right) = rest.split_first_mut().unwrap();
+        (left, center, right)
     }
 
     pub fn search(&self, center: Point, radius: Val) -> Vec<&Photon> {
-        let mut res = Vec::new();
-        self.search_impl(0, center, radius.powi(2), &mut res);
-        res
-    }
-
-    fn search_impl<'a>(
-        &'a self,
-        index: usize,
-        center: Point,
-        radius_squared: Val,
-        res: &mut Vec<&'a Photon>,
-    ) {
-        if index >= self.nodes.len() {
-            return;
-        }
-
-        let photon = &self.nodes[index].photon;
-        let dis_squared = (center - photon.position()).norm_squared();
-        if dis_squared <= radius_squared {
-            res.push(photon);
-        }
-
-        let axis = self.nodes[index].axis as usize;
-        let axis_dis = center.axis(axis) - photon.position().axis(axis);
-        let (near, far) = if axis_dis < Val(0.0) {
-            (2 * index + 1, 2 * index + 2)
-        } else {
-            (2 * index + 2, 2 * index + 1)
+        let Some(root) = self.root else {
+            return Vec::new();
         };
 
-        self.search_impl(near, center, radius_squared, res);
-        if axis_dis.powi(2) <= radius_squared {
-            self.search_impl(far, center, radius_squared, res);
+        let radius2 = radius.powi(2);
+        let mut res = Vec::new();
+        let mut planned = Vec::with_capacity(64);
+        planned.push(root);
+
+        while let Some(index) = planned.pop() {
+            assert!(index < self.nodes.len());
+
+            let photon = &self.nodes[index].photon;
+            if (center - photon.position()).norm_squared() <= radius2 {
+                res.push(photon);
+            }
+
+            let axis = self.nodes[index].axis as usize;
+            let axis_dis = center.axis(axis) - photon.position().axis(axis);
+            let (near, far) = match (axis_dis < Val(0.0), axis_dis.powi(2) <= radius2) {
+                (true, true) => (self.nodes[index].left(), self.nodes[index].right()),
+                (true, false) => (self.nodes[index].left(), None),
+                (false, true) => (self.nodes[index].right(), self.nodes[index].left()),
+                (false, false) => (self.nodes[index].right(), None),
+            };
+
+            match (near, far) {
+                (Some(near), None) => planned.push(near),
+                (None, Some(far)) => planned.push(far),
+                (Some(near), Some(far)) => {
+                    planned.push(far);
+                    planned.push(near);
+                }
+                (None, None) => {}
+            }
         }
+
+        res
     }
 
     pub fn len(&self) -> usize {
@@ -102,11 +117,36 @@ impl PhotonMap {
 struct KdTreeNode {
     photon: Photon,
     axis: u8,
+    left: u32,
+    right: u32,
 }
 
 impl KdTreeNode {
-    fn new(photon: Photon, axis: u8) -> Self {
-        Self { photon, axis }
+    const NONE: u32 = u32::MAX;
+
+    fn new(photon: Photon, axis: u8, left: Option<usize>, right: Option<usize>) -> Self {
+        Self {
+            photon,
+            axis,
+            left: left.map(|v| v as u32).unwrap_or(Self::NONE),
+            right: right.map(|v| v as u32).unwrap_or(Self::NONE),
+        }
+    }
+
+    fn left(&self) -> Option<usize> {
+        if self.left != Self::NONE {
+            Some(self.left as usize)
+        } else {
+            None
+        }
+    }
+
+    fn right(&self) -> Option<usize> {
+        if self.right != Self::NONE {
+            Some(self.right as usize)
+        } else {
+            None
+        }
     }
 }
 
@@ -119,6 +159,8 @@ impl Default for KdTreeNode {
                 Vector::default(),
             ),
             0,
+            None,
+            None,
         )
     }
 }

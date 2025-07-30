@@ -62,7 +62,7 @@ impl Material for Diffuse {
                 false,
             );
             radiance_light + radiance_caustic + radiance_indirect
-        } else if state.invisible_depth() != context.config().max_invisible_depth {
+        } else if state.invisible_depth() < context.config().max_invisible_depth {
             let radiance_light = self.shade_light(context, &ray, &intersection, true);
             let radiance_scattering = self.shade_scattering(
                 context,
