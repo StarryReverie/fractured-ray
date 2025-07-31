@@ -9,6 +9,7 @@ use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Color;
 use crate::domain::entity::{BvhScene, Scene};
 use crate::domain::image::Image;
+use crate::domain::material::def::FluxEstimation;
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
@@ -151,7 +152,7 @@ impl Renderer for CoreRenderer {
                 .flat_map(|(r, pi)| pi.map(move |(c, p)| ((r, c), p)));
             let res = meshgrid
                 .map(|(pos, pixel)| {
-                    let num = 100;
+                    let num = self.config.initial_num_nearest;
                     let pg = PhotonInfo::new(&pmg, pixel.get_policy_global(num), num_global);
                     let pc = PhotonInfo::new(&pmc, pixel.get_policy_caustic(num), num_caustic);
                     (pos, self.render_pixel(pos, pixel, pg, pc))
@@ -209,9 +210,10 @@ pub struct Configuration {
     pub iterations: usize,
     pub max_depth: usize,
     pub max_invisible_depth: usize,
-    pub background_color: Color,
     pub photons_global: usize,
     pub photons_caustic: usize,
+    pub initial_num_nearest: usize,
+    pub background_color: Color,
 }
 
 impl Default for Configuration {
@@ -220,9 +222,10 @@ impl Default for Configuration {
             iterations: 4,
             max_depth: 12,
             max_invisible_depth: 4,
-            background_color: Color::BLACK,
-            photons_global: 50000,
+            photons_global: 200000,
             photons_caustic: 1000000,
+            initial_num_nearest: 500,
+            background_color: Color::BLACK,
         }
     }
 }
@@ -238,6 +241,8 @@ pub enum ConfigurationError {
     NonPositiveMaxInvisibleDepth,
     #[snafu(display("max invisible depth is larger than max depth"))]
     ExceededMaxInvisibleDepth,
+    #[snafu(display("initial number of nearest is not positive"))]
+    InvalidInitialNumNearest,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -257,30 +262,26 @@ impl Pixel {
     fn radiance(
         &mut self,
         cont: &Contribution,
-        num_emitted_global: usize,
-        num_emitted_caustic: usize,
+        emitted_global: usize,
+        emitted_caustic: usize,
     ) -> Color {
-        if let Some(global) = &mut self.global {
-            global.accumulate(cont.flux_global(), cont.num_global().into());
-        } else {
-            self.global = Some(Observation::new(
-                cont.flux_global(),
-                cont.num_global().into(),
-                Val(10.0),
-            ));
+        if let Some(flux) = cont.global() {
+            if let Some(global) = &mut self.global {
+                global.accumulate(flux);
+            } else if !flux.is_empty() {
+                self.global = Some(Observation::new(flux));
+            }
         }
-        if let Some(caustic) = &mut self.caustic {
-            caustic.accumulate(cont.flux_caustic(), cont.num_caustic().into());
-        } else {
-            self.caustic = Some(Observation::new(
-                cont.flux_caustic(),
-                cont.num_caustic().into(),
-                Val(10.0),
-            ));
+        if let Some(flux) = cont.caustic() {
+            if let Some(caustic) = &mut self.caustic {
+                caustic.accumulate(flux);
+            } else if !flux.is_empty() {
+                self.caustic = Some(Observation::new(flux));
+            }
         }
         cont.light()
-            + self.global.as_ref().unwrap().radiance(num_emitted_global)
-            + self.caustic.as_ref().unwrap().radiance(num_emitted_caustic)
+            + (self.global.as_ref()).map_or(Color::BLACK, |o| o.radiance(emitted_global))
+            + (self.caustic.as_ref()).map_or(Color::BLACK, |o| o.radiance(emitted_caustic))
     }
 
     fn get_policy_global(&self, default_num: usize) -> SearchPolicy {
@@ -310,14 +311,18 @@ struct Observation {
 impl Observation {
     const NUM_ATTENUATION: Val = Val(0.75);
 
-    fn new(flux: Vector, num: usize, radius: Val) -> Self {
-        Self { flux, num, radius }
+    fn new(flux: &FluxEstimation) -> Self {
+        Self {
+            flux: flux.flux(),
+            num: flux.num().into(),
+            radius: flux.radius(),
+        }
     }
 
-    fn accumulate(&mut self, flux: Vector, num: usize) {
-        let total = self.num + usize::from(Val::from(num) * Self::NUM_ATTENUATION);
-        let fraction = Val::from(total) / Val::from(self.num + num);
-        self.flux = (self.flux + flux) * fraction;
+    fn accumulate(&mut self, flux: &FluxEstimation) {
+        let total = self.num + usize::from(flux.num() * Self::NUM_ATTENUATION);
+        let fraction = Val::from(total) / (Val::from(self.num) + flux.num());
+        self.flux = (self.flux + flux.flux()) * fraction;
         self.num = total;
         self.radius = self.radius * fraction.sqrt();
     }

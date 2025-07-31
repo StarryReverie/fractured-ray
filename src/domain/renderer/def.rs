@@ -2,6 +2,7 @@ use std::ops::Mul;
 
 use crate::domain::color::Color;
 use crate::domain::image::Image;
+use crate::domain::material::def::FluxEstimation;
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
@@ -48,38 +49,38 @@ impl Contribution {
         }
     }
 
-    pub fn add_caustic(&mut self, flux: Vector, num: Val) {
+    pub fn set_global(&mut self, global: FluxEstimation) {
+        if global.is_empty() {
+            return;
+        }
         match self {
             Contribution::Light(light) => {
                 *self = Self::All(Box::new(ContributionInner {
                     light: *light,
-                    flux_caustic: flux,
-                    flux_global: Vector::zero(),
-                    num_caustic: num,
-                    num_global: Val(0.0),
+                    global,
+                    caustic: FluxEstimation::empty(),
                 }))
             }
             Contribution::All(s) => {
-                s.flux_caustic = s.flux_caustic + flux;
-                s.num_caustic += num;
+                s.global = global;
             }
         }
     }
 
-    pub fn add_global(&mut self, flux: Vector, num: Val) {
+    pub fn set_caustic(&mut self, caustic: FluxEstimation) {
+        if caustic.is_empty() {
+            return;
+        }
         match self {
             Contribution::Light(light) => {
                 *self = Self::All(Box::new(ContributionInner {
                     light: *light,
-                    flux_caustic: Vector::zero(),
-                    flux_global: flux,
-                    num_caustic: Val(0.0),
-                    num_global: num,
+                    caustic,
+                    global: FluxEstimation::empty(),
                 }))
             }
             Contribution::All(s) => {
-                s.flux_global = s.flux_global + flux;
-                s.num_global += num;
+                s.caustic = caustic;
             }
         }
     }
@@ -91,31 +92,17 @@ impl Contribution {
         }
     }
 
-    pub fn flux_caustic(&self) -> Vector {
+    pub fn global(&self) -> Option<&FluxEstimation> {
         match self {
-            Contribution::Light(_) => Vector::zero(),
-            Contribution::All(s) => s.flux_caustic,
+            Contribution::Light(_) => None,
+            Contribution::All(s) => Some(&s.global),
         }
     }
 
-    pub fn flux_global(&self) -> Vector {
+    pub fn caustic(&self) -> Option<&FluxEstimation> {
         match self {
-            Contribution::Light(_) => Vector::zero(),
-            Contribution::All(s) => s.flux_global,
-        }
-    }
-
-    pub fn num_caustic(&self) -> Val {
-        match self {
-            Contribution::Light(_) => Val(0.0),
-            Contribution::All(s) => s.num_caustic,
-        }
-    }
-
-    pub fn num_global(&self) -> Val {
-        match self {
-            Contribution::Light(_) => Val(0.0),
-            Contribution::All(s) => s.num_global,
+            Contribution::Light(_) => None,
+            Contribution::All(s) => Some(&s.caustic),
         }
     }
 }
@@ -133,7 +120,9 @@ impl Mul<Val> for Contribution {
         match self {
             Contribution::Light(light) => (light * rhs).into(),
             Contribution::All(mut s) => {
-                *s = *s * rhs;
+                s.light = s.light * rhs;
+                s.global = s.global * rhs;
+                s.caustic = s.caustic * rhs;
                 Contribution::All(s)
             }
         }
@@ -156,7 +145,9 @@ impl Mul<Vector> for Contribution {
         match self {
             Contribution::Light(light) => (light * rhs).into(),
             Contribution::All(mut s) => {
-                *s = *s * rhs;
+                s.light = s.light * rhs;
+                s.global = s.global * rhs;
+                s.caustic = s.caustic * rhs;
                 Contribution::All(s)
             }
         }
@@ -175,52 +166,6 @@ impl Mul<Contribution> for Vector {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContributionInner {
     light: Color,
-    flux_caustic: Vector,
-    flux_global: Vector,
-    num_caustic: Val,
-    num_global: Val,
-}
-
-impl Mul<Val> for ContributionInner {
-    type Output = Self;
-
-    fn mul(self, rhs: Val) -> Self::Output {
-        Self {
-            light: self.light * rhs,
-            flux_caustic: self.flux_caustic * rhs,
-            flux_global: self.flux_global * rhs,
-            ..self
-        }
-    }
-}
-
-impl Mul<ContributionInner> for Val {
-    type Output = ContributionInner;
-
-    #[inline]
-    fn mul(self, rhs: ContributionInner) -> Self::Output {
-        rhs * self
-    }
-}
-
-impl Mul<Vector> for ContributionInner {
-    type Output = Self;
-
-    fn mul(self, rhs: Vector) -> Self::Output {
-        Self {
-            light: self.light * rhs,
-            flux_caustic: self.flux_caustic * rhs,
-            flux_global: self.flux_global * rhs,
-            ..self
-        }
-    }
-}
-
-impl Mul<ContributionInner> for Vector {
-    type Output = ContributionInner;
-
-    #[inline]
-    fn mul(self, rhs: ContributionInner) -> Self::Output {
-        rhs * self
-    }
+    global: FluxEstimation,
+    caustic: FluxEstimation,
 }

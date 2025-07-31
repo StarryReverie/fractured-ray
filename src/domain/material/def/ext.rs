@@ -1,4 +1,4 @@
-use std::ops::Bound;
+use std::ops::{Bound, Mul};
 
 use rand::prelude::*;
 
@@ -134,17 +134,99 @@ pub trait MaterialExt: Material {
         ray: &Ray,
         intersection: &RayIntersection,
         photon_info: &PhotonInfo,
-    ) -> (Vector, Val) {
+    ) -> FluxEstimation {
         let mut flux = Vector::zero();
+        let mut radius2 = Val(0.0);
+
         let (pm, policy) = (photon_info.photons(), photon_info.policy());
         let photons = pm.search(intersection.position(), policy);
-        let len = photons.len();
-        for photon in photons {
+        for photon in &photons {
             let bsdf = self.bsdf(-ray.direction(), intersection, photon.direction());
             flux = flux + bsdf * photon.throughput();
+            radius2 = radius2.max((intersection.position() - photon.position()).norm_squared());
         }
-        (flux, len.into())
+
+        FluxEstimation::new(flux, photons.len().into(), radius2.sqrt())
     }
 }
 
 impl<M> MaterialExt for M where M: Material {}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FluxEstimation {
+    flux: Vector,
+    num: Val,
+    radius: Val,
+}
+
+impl FluxEstimation {
+    pub fn new(flux: Vector, num: Val, radius: Val) -> Self {
+        Self { flux, num, radius }
+    }
+
+    pub fn empty() -> Self {
+        Self::new(Vector::zero(), Val(0.0), Val::INFINITY)
+    }
+
+    pub fn flux(&self) -> Vector {
+        self.flux
+    }
+
+    pub fn num(&self) -> Val {
+        self.num
+    }
+
+    pub fn radius(&self) -> Val {
+        self.radius
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.num == Val(0.0)
+    }
+}
+
+impl Mul<Val> for FluxEstimation {
+    type Output = Self;
+
+    fn mul(self, rhs: Val) -> Self::Output {
+        Self {
+            flux: self.flux * rhs,
+            ..self
+        }
+    }
+}
+
+impl Mul<FluxEstimation> for Val {
+    type Output = FluxEstimation;
+
+    #[inline]
+    fn mul(self, rhs: FluxEstimation) -> Self::Output {
+        rhs * self
+    }
+}
+
+impl Mul<Vector> for FluxEstimation {
+    type Output = Self;
+
+    fn mul(self, rhs: Vector) -> Self::Output {
+        Self {
+            flux: self.flux * rhs,
+            ..self
+        }
+    }
+}
+
+impl Mul<FluxEstimation> for Vector {
+    type Output = FluxEstimation;
+
+    #[inline]
+    fn mul(self, rhs: FluxEstimation) -> Self::Output {
+        rhs * self
+    }
+}
+
+impl Default for FluxEstimation {
+    fn default() -> Self {
+        Self::empty()
+    }
+}

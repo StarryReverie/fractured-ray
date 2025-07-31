@@ -49,8 +49,7 @@ impl Material for Diffuse {
     ) -> Contribution {
         if state.visible() {
             let light = self.shade_light(context, &ray, &intersection, false);
-            let (flux_caustic, num_caustic) =
-                self.estimate_flux(&ray, &intersection, context.photon_casutic());
+            let caustic = self.estimate_flux(&ray, &intersection, context.photon_casutic());
             let mut res = self.shade_scattering(
                 context,
                 state.mark_invisible().with_skip_emissive(true),
@@ -59,7 +58,7 @@ impl Material for Diffuse {
                 false,
             );
             res.add_light(light.light());
-            res.add_caustic(flux_caustic, num_caustic);
+            res.set_caustic(caustic);
             res
         } else if state.invisible_depth() < context.config().max_invisible_depth {
             let light = self.shade_light(context, &ray, &intersection, true);
@@ -73,10 +72,9 @@ impl Material for Diffuse {
             res.add_light(light.light());
             res
         } else {
-            let (flux_global, num_global) =
-                self.estimate_flux(&ray, &intersection, context.photon_global());
+            let global = self.estimate_flux(&ray, &intersection, context.photon_global());
             let mut res = Contribution::new();
-            res.add_global(flux_global, num_global);
+            res.set_global(global);
             res
         }
     }
