@@ -1,6 +1,7 @@
 use rand::prelude::*;
 
 use crate::domain::entity::Scene;
+use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::{Photon, PhotonMap};
 
 use super::{Configuration, Renderer};
@@ -9,9 +10,9 @@ pub struct RtContext<'a> {
     renderer: &'a dyn Renderer,
     scene: &'a dyn Scene,
     rng: &'a mut dyn RngCore,
-    pm_global: &'a PhotonMap,
-    pm_caustic: &'a PhotonMap,
     config: &'a Configuration,
+    photon_global: PhotonInfo<'a>,
+    photon_casutic: PhotonInfo<'a>,
 }
 
 impl<'a> RtContext<'a> {
@@ -19,17 +20,17 @@ impl<'a> RtContext<'a> {
         renderer: &'a dyn Renderer,
         scene: &'a dyn Scene,
         rng: &'a mut dyn RngCore,
-        pm_global: &'a PhotonMap,
-        pm_caustic: &'a PhotonMap,
         config: &'a Configuration,
+        photon_global: PhotonInfo<'a>,
+        photon_casutic: PhotonInfo<'a>,
     ) -> Self {
         Self {
             renderer,
             scene,
             rng,
-            pm_global,
-            pm_caustic,
             config,
+            photon_global,
+            photon_casutic,
         }
     }
 
@@ -45,16 +46,44 @@ impl<'a> RtContext<'a> {
         &mut self.rng
     }
 
-    pub fn pm_global(&self) -> &'a PhotonMap {
-        self.pm_global
-    }
-
-    pub fn pm_caustic(&self) -> &'a PhotonMap {
-        self.pm_caustic
-    }
-
     pub fn config(&self) -> &'a Configuration {
         self.config
+    }
+
+    pub fn photon_global(&self) -> &PhotonInfo<'a> {
+        &self.photon_global
+    }
+
+    pub fn photon_casutic(&self) -> &PhotonInfo<'a> {
+        &self.photon_casutic
+    }
+}
+
+pub struct PhotonInfo<'a> {
+    photons: &'a PhotonMap,
+    radius: Option<Val>,
+    emitted: usize,
+}
+
+impl<'a> PhotonInfo<'a> {
+    pub fn new(photons: &'a PhotonMap, radius: Option<Val>, emitted: usize) -> Self {
+        Self {
+            photons,
+            radius,
+            emitted,
+        }
+    }
+
+    pub fn photons(&self) -> &'a PhotonMap {
+        self.photons
+    }
+
+    pub fn radius(&self) -> Option<Val> {
+        self.radius
+    }
+
+    pub fn emitted(&self) -> usize {
+        self.emitted
     }
 }
 

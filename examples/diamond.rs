@@ -66,7 +66,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene.build(),
         Configuration {
-            ssaa_samples: 1024,
+            iterations: 1024,
             background_color: Color::WHITE * Val(0.01),
             ..Configuration::default()
         },

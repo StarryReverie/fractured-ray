@@ -158,7 +158,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene,
         Configuration {
-            ssaa_samples: 128,
+            iterations: 256,
             ..Configuration::default()
         },
     )?;

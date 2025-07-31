@@ -4,9 +4,9 @@ use rand::prelude::*;
 
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::photon::{Photon, PhotonMap, PhotonRay};
+use crate::domain::ray::photon::{Photon, PhotonRay};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
+use crate::domain::renderer::{Contribution, PhotonInfo, PmContext, PmState, RtContext, RtState};
 
 use super::Material;
 
@@ -133,11 +133,13 @@ pub trait MaterialExt: Material {
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
-        photon_map: &PhotonMap,
-        radius: Val,
+        photon_info: &PhotonInfo,
     ) -> (Vector, Val) {
         let mut flux = Vector::zero();
-        let photons = photon_map.search(intersection.position(), radius);
+        let photons = (photon_info.photons()).search(
+            intersection.position(),
+            photon_info.radius().unwrap_or(Val(10.0)),
+        );
         let len = photons.len();
         for photon in photons {
             let bsdf = self.bsdf(-ray.direction(), intersection, photon.direction());

@@ -123,7 +123,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene,
         Configuration {
-            ssaa_samples: 16,
+            iterations: 16,
             ..Configuration::default()
         },
     )?;
