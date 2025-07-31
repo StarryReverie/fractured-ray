@@ -1,3 +1,5 @@
+use std::collections::BinaryHeap;
+
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
@@ -67,7 +69,14 @@ impl PhotonMap {
         (left, center, right)
     }
 
-    pub fn search(&self, center: Point, radius: Val) -> Vec<&Photon> {
+    pub fn search(&self, center: Point, policy: SearchPolicy) -> Vec<&Photon> {
+        match policy {
+            SearchPolicy::Radius(radius) => self.search_radius(center, radius),
+            SearchPolicy::Nearest(num) => self.search_nearest(center, num),
+        }
+    }
+
+    fn search_radius(&self, center: Point, radius: Val) -> Vec<&Photon> {
         let Some(root) = self.root else {
             return Vec::new();
         };
@@ -106,6 +115,52 @@ impl PhotonMap {
         }
 
         res
+    }
+
+    fn search_nearest(&self, center: Point, num: usize) -> Vec<&Photon> {
+        let Some(root) = self.root else {
+            return Vec::new();
+        };
+
+        let mut res: BinaryHeap<(Val, &Photon)> = BinaryHeap::new();
+        let mut planned = Vec::with_capacity(64);
+        planned.push(root);
+
+        while let Some(index) = planned.pop() {
+            assert!(index < self.nodes.len());
+
+            let photon = &self.nodes[index].photon;
+            let dis2 = (center - photon.position()).norm_squared();
+            if res.len() < num {
+                res.push((dis2, photon));
+            } else if let Some(mut top) = res.peek_mut() {
+                if dis2 < top.0 {
+                    *top = (dis2, photon);
+                }
+            }
+
+            let axis = self.nodes[index].axis as usize;
+            let axis_dis = center.axis(axis) - photon.position().axis(axis);
+            let radius2 = res.peek().map_or(Val::INFINITY, |(dis2, _)| *dis2);
+            let (near, far) = match (axis_dis < Val(0.0), axis_dis.powi(2) <= radius2) {
+                (true, true) => (self.nodes[index].left(), self.nodes[index].right()),
+                (true, false) => (self.nodes[index].left(), None),
+                (false, true) => (self.nodes[index].right(), self.nodes[index].left()),
+                (false, false) => (self.nodes[index].right(), None),
+            };
+
+            match (near, far) {
+                (Some(near), None) => planned.push(near),
+                (None, Some(far)) => planned.push(far),
+                (Some(near), Some(far)) => {
+                    planned.push(far);
+                    planned.push(near);
+                }
+                (None, None) => {}
+            }
+        }
+
+        res.into_iter().map(|(_, p)| p).collect()
     }
 
     pub fn len(&self) -> usize {
@@ -182,7 +237,8 @@ mod tests {
         ];
 
         let photon_map = PhotonMap::build(photons);
-        let res = dbg!(photon_map.search(Point::new(Val(2.0), Val(-1.0), Val(0.0)), Val(3.0)));
+        let res =
+            dbg!(photon_map.search_radius(Point::new(Val(2.0), Val(-1.0), Val(0.0)), Val(3.0)));
         assert!(
             res.iter()
                 .find(|p| p.position() == Point::new(Val(0.0), Val(0.0), Val(0.0)))
@@ -202,4 +258,10 @@ mod tests {
             Vector::default(),
         )
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SearchPolicy {
+    Radius(Val),
+    Nearest(usize),
 }

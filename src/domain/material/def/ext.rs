@@ -136,10 +136,8 @@ pub trait MaterialExt: Material {
         photon_info: &PhotonInfo,
     ) -> (Vector, Val) {
         let mut flux = Vector::zero();
-        let photons = (photon_info.photons()).search(
-            intersection.position(),
-            photon_info.radius().unwrap_or(Val(10.0)),
-        );
+        let (pm, policy) = (photon_info.photons(), photon_info.policy());
+        let photons = pm.search(intersection.position(), policy);
         let len = photons.len();
         for photon in photons {
             let bsdf = self.bsdf(-ray.direction(), intersection, photon.direction());

@@ -1,10 +1,11 @@
 use std::ops::Mul;
 
+use crate::domain::color::Color;
 use crate::domain::image::Image;
+use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::PhotonRay;
-use crate::domain::{color::Color, math::algebra::Vector};
 
 use super::{PmContext, PmState, RtContext, RtState};
 

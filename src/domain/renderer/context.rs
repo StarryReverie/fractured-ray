@@ -1,8 +1,7 @@
 use rand::prelude::*;
 
 use crate::domain::entity::Scene;
-use crate::domain::math::numeric::Val;
-use crate::domain::ray::photon::{Photon, PhotonMap};
+use crate::domain::ray::photon::{Photon, PhotonMap, SearchPolicy};
 
 use super::{Configuration, Renderer};
 
@@ -61,15 +60,15 @@ impl<'a> RtContext<'a> {
 
 pub struct PhotonInfo<'a> {
     photons: &'a PhotonMap,
-    radius: Option<Val>,
+    policy: SearchPolicy,
     emitted: usize,
 }
 
 impl<'a> PhotonInfo<'a> {
-    pub fn new(photons: &'a PhotonMap, radius: Option<Val>, emitted: usize) -> Self {
+    pub fn new(photons: &'a PhotonMap, policy: SearchPolicy, emitted: usize) -> Self {
         Self {
             photons,
-            radius,
+            policy,
             emitted,
         }
     }
@@ -78,8 +77,8 @@ impl<'a> PhotonInfo<'a> {
         self.photons
     }
 
-    pub fn radius(&self) -> Option<Val> {
-        self.radius
+    pub fn policy(&self) -> SearchPolicy {
+        self.policy
     }
 
     pub fn emitted(&self) -> usize {

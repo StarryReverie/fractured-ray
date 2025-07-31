@@ -30,7 +30,7 @@ impl PhotonRay {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Photon {
     position: Point,
     direction: UnitVector,

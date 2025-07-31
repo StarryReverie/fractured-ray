@@ -12,7 +12,7 @@ use crate::domain::image::Image;
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::photon::{PhotonMap, PhotonRay};
+use crate::domain::ray::photon::{PhotonMap, PhotonRay, SearchPolicy};
 
 use super::{
     Contribution, PhotonInfo, PmContext, PmState, Renderer, RtContext, RtState, StoragePolicy,
@@ -151,8 +151,9 @@ impl Renderer for CoreRenderer {
                 .flat_map(|(r, pi)| pi.map(move |(c, p)| ((r, c), p)));
             let res = meshgrid
                 .map(|(pos, pixel)| {
-                    let pg = PhotonInfo::new(&pmg, pixel.radius_global(), num_global);
-                    let pc = PhotonInfo::new(&pmc, pixel.radius_caustic(), num_caustic);
+                    let num = 100;
+                    let pg = PhotonInfo::new(&pmg, pixel.get_policy_global(num), num_global);
+                    let pc = PhotonInfo::new(&pmc, pixel.get_policy_caustic(num), num_caustic);
                     (pos, self.render_pixel(pos, pixel, pg, pc))
                 })
                 .collect_vec_list();
@@ -282,12 +283,20 @@ impl Pixel {
             + self.caustic.as_ref().unwrap().radiance(num_emitted_caustic)
     }
 
-    fn radius_global(&self) -> Option<Val> {
-        self.global.as_ref().map(|o| o.radius)
+    fn get_policy_global(&self, default_num: usize) -> SearchPolicy {
+        if let Some(observation) = &self.global {
+            SearchPolicy::Radius(observation.radius)
+        } else {
+            SearchPolicy::Nearest(default_num)
+        }
     }
 
-    fn radius_caustic(&self) -> Option<Val> {
-        self.caustic.as_ref().map(|o| o.radius)
+    fn get_policy_caustic(&self, default_num: usize) -> SearchPolicy {
+        if let Some(observation) = &self.caustic {
+            SearchPolicy::Radius(observation.radius)
+        } else {
+            SearchPolicy::Nearest(default_num)
+        }
     }
 }
 

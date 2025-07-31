@@ -9,7 +9,7 @@ use crate::domain::math::numeric::Val;
 
 use super::{Product, Vector};
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UnitVector(Vector);
 
 impl UnitVector {
