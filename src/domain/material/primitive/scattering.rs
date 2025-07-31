@@ -9,7 +9,7 @@ use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-use crate::domain::renderer::{PmContext, PmState, RtContext, RtState};
+use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -50,7 +50,7 @@ impl Material for Scattering {
         state: RtState,
         ray: Ray,
         intersection: RayIntersection,
-    ) -> Color {
+    ) -> Contribution {
         let ray = Ray::new(intersection.position(), ray.direction());
         let closet = context
             .scene()
@@ -67,7 +67,7 @@ impl Material for Scattering {
                 context
                     .renderer()
                     .trace(context, state, scattering_ray, DisRange::positive());
-            color * self.color
+            color * self.color.to_vector()
         } else if let Some((intersection, id)) = closet {
             let entities = context.scene().get_entities();
             let material = entities.get_material(id.material_id()).unwrap();

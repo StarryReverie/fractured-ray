@@ -6,7 +6,9 @@ use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{PmContext, PmState, RtContext, RtState, StoragePolicy};
+use crate::domain::renderer::{
+    Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
+};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -44,42 +46,46 @@ impl Material for Diffuse {
         state: RtState,
         ray: Ray,
         intersection: RayIntersection,
-    ) -> Color {
+    ) -> Contribution {
         if state.visible() {
-            let radiance_light = self.shade_light(context, &ray, &intersection, false);
-            let radiance_caustic = self.estimate_radiance(
+            let light = self.shade_light(context, &ray, &intersection, false);
+            let (flux_caustic, num_caustic) = self.estimate_flux(
                 &ray,
                 &intersection,
                 context.pm_caustic(),
                 context.config().radiance_estimation_radius,
-                context.config().caustic_photon_number,
             );
-            let radiance_indirect = self.shade_scattering(
+            let mut res = self.shade_scattering(
                 context,
                 state.mark_invisible().with_skip_emissive(true),
                 &ray,
                 &intersection,
                 false,
             );
-            radiance_light + radiance_caustic + radiance_indirect
+            res.add_light(light.light());
+            res.add_caustic(flux_caustic, num_caustic);
+            res
         } else if state.invisible_depth() < context.config().max_invisible_depth {
-            let radiance_light = self.shade_light(context, &ray, &intersection, true);
-            let radiance_scattering = self.shade_scattering(
+            let light = self.shade_light(context, &ray, &intersection, true);
+            let mut res = self.shade_scattering(
                 context,
                 state.mark_invisible().with_skip_emissive(true),
                 &ray,
                 &intersection,
                 true,
             );
-            radiance_light + radiance_scattering
+            res.add_light(light.light());
+            res
         } else {
-            self.estimate_radiance(
+            let (flux_global, num_global) = self.estimate_flux(
                 &ray,
                 &intersection,
                 context.pm_global(),
                 context.config().radiance_estimation_radius,
-                context.config().global_photon_number,
-            )
+            );
+            let mut res = Contribution::new();
+            res.add_global(flux_global, num_global);
+            res
         }
     }
 

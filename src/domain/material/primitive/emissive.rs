@@ -6,7 +6,7 @@ use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{PmContext, PmState, RtContext, RtState};
+use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -44,11 +44,11 @@ impl Material for Emissive {
         state: RtState,
         _ray: Ray,
         _intersection: RayIntersection,
-    ) -> Color {
+    ) -> Contribution {
         if state.skip_emissive() {
-            Color::BLACK
+            Contribution::new()
         } else {
-            self.radiance
+            self.radiance.into()
         }
     }
 

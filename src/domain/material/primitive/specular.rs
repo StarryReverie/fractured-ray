@@ -6,7 +6,7 @@ use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{PmContext, PmState, RtContext, RtState};
+use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -51,7 +51,7 @@ impl Material for Specular {
         state: RtState,
         ray: Ray,
         intersection: RayIntersection,
-    ) -> Color {
+    ) -> Contribution {
         self.shade_scattering(context, state, &ray, &intersection, false)
     }
 

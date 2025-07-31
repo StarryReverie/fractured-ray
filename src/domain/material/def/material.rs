@@ -1,11 +1,10 @@
 use std::any::Any;
 use std::fmt::Debug;
 
-use crate::domain::color::Color;
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{PmContext, PmState, RtContext, RtState};
+use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::CoefficientSampling;
 
 pub trait Material: CoefficientSampling + Any + Debug + Send + Sync + 'static {
@@ -24,7 +23,7 @@ pub trait Material: CoefficientSampling + Any + Debug + Send + Sync + 'static {
         state: RtState,
         ray: Ray,
         intersection: RayIntersection,
-    ) -> Color;
+    ) -> Contribution;
 
     fn receive(
         &self,

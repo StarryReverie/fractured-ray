@@ -13,28 +13,7 @@ use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::{PhotonMap, PhotonRay};
 
-use super::{PmContext, PmState, RtContext, RtState, StoragePolicy};
-
-#[cfg_attr(test, mockall::automock)]
-pub trait Renderer: Send + Sync + 'static {
-    fn render(&self) -> Image;
-
-    fn trace<'a>(
-        &'a self,
-        context: &mut RtContext<'a>,
-        state: RtState,
-        ray: Ray,
-        range: DisRange,
-    ) -> Color;
-
-    fn emit<'a>(
-        &'a self,
-        context: &mut PmContext<'a>,
-        state: PmState,
-        photon: PhotonRay,
-        range: DisRange,
-    );
-}
+use super::{Contribution, PmContext, PmState, Renderer, RtContext, RtState, StoragePolicy};
 
 #[derive(Debug)]
 pub struct CoreRenderer {
@@ -99,12 +78,17 @@ impl CoreRenderer {
             &self.config,
         );
         let state = RtState::new();
-        self.trace(
+        let res = self.trace(
             &mut context,
             state,
             Ray::new(point, direction),
             DisRange::positive(),
-        )
+        );
+        let area = Val::PI * self.config.radiance_estimation_radius.powi(2);
+        (res.light().to_vector()
+            + res.flux_caustic() / (Val::from(self.config.caustic_photon_number) * area)
+            + res.flux_global() / (Val::from(self.config.global_photon_number) * area))
+            .into()
     }
 
     fn init_progress_bar(&self) -> ProgressBar {
@@ -179,10 +163,10 @@ impl Renderer for CoreRenderer {
         state: RtState,
         ray: Ray,
         range: DisRange,
-    ) -> Color {
+    ) -> Contribution {
         let state = state.increment_depth();
         if state.depth() > self.config.max_depth {
-            return Color::BLACK;
+            return Contribution::new();
         }
 
         let res = context.scene().find_intersection(&ray, range);
@@ -191,7 +175,7 @@ impl Renderer for CoreRenderer {
             let material = entities.get_material(id.material_id()).unwrap();
             material.shade(context, state, ray, intersection)
         } else {
-            self.config.background_color
+            Contribution::from(self.config.background_color)
         }
     }
 

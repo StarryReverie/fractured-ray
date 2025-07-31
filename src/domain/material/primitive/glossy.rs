@@ -8,7 +8,9 @@ use crate::domain::math::geometry::{Rotation, Transform, Transformation};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{PmContext, PmState, RtContext, RtState, StoragePolicy};
+use crate::domain::renderer::{
+    Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
+};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -167,10 +169,11 @@ impl Material for Glossy {
         state: RtState,
         ray: Ray,
         intersection: RayIntersection,
-    ) -> Color {
-        let radiance_light = self.shade_light(context, &ray, &intersection, true);
-        let radiance_scattering = self.shade_scattering(context, state, &ray, &intersection, true);
-        radiance_light + radiance_scattering
+    ) -> Contribution {
+        let light = self.shade_light(context, &ray, &intersection, true);
+        let mut res = self.shade_scattering(context, state, &ray, &intersection, true);
+        res.add_light(light.light());
+        res
     }
 
     fn receive(

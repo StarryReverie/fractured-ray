@@ -1,7 +1,9 @@
 mod context;
-mod renderer;
+mod core;
+mod def;
 mod state;
 
 pub use context::{PmContext, RtContext};
-pub use renderer::{Configuration, ConfigurationError, CoreRenderer, Renderer};
+pub use core::{Configuration, ConfigurationError, CoreRenderer};
+pub use def::{Contribution, Renderer};
 pub use state::{PmState, RtState, StoragePolicy};

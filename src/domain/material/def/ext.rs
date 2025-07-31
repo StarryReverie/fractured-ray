@@ -2,12 +2,11 @@ use std::ops::Bound;
 
 use rand::prelude::*;
 
-use crate::domain::color::Color;
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::photon::{Photon, PhotonMap, PhotonRay};
 use crate::domain::ray::{Ray, RayIntersection};
-use crate::domain::renderer::{PmContext, PmState, RtContext, RtState};
+use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 
 use super::Material;
 
@@ -18,12 +17,12 @@ pub trait MaterialExt: Material {
         ray: &Ray,
         intersection: &RayIntersection,
         mis: bool,
-    ) -> Color {
+    ) -> Contribution {
         let scene = context.scene();
         let lights = scene.get_lights();
         let res = lights.sample_light(ray, intersection, self.as_dyn(), *context.rng());
         let Some(sample) = res else {
-            return Color::BLACK;
+            return Contribution::new();
         };
 
         let ray_next = sample.ray_next();
@@ -38,12 +37,12 @@ pub trait MaterialExt: Material {
             let light_material = scene.get_entities().get_material(material_id).unwrap();
             (intersection_next, light_material)
         } else {
-            return Color::BLACK;
+            return Contribution::new();
         };
 
         let pdf_light = sample.pdf();
         if pdf_light == Val(0.0) {
-            return Color::BLACK;
+            return Contribution::new();
         }
 
         let weight = if mis {
@@ -66,7 +65,7 @@ pub trait MaterialExt: Material {
         ray: &Ray,
         intersection: &RayIntersection,
         mis: bool,
-    ) -> Color {
+    ) -> Contribution {
         let renderer = context.renderer();
 
         let sample = self.sample_coefficient(ray, intersection, *context.rng());
@@ -74,7 +73,7 @@ pub trait MaterialExt: Material {
 
         let pdf_scattering = sample.pdf();
         if pdf_scattering == Val(0.0) {
-            return Color::BLACK;
+            return Contribution::new();
         }
 
         let weight = if mis {
@@ -130,22 +129,21 @@ pub trait MaterialExt: Material {
         renderer.emit(context, state_next, photon_next, DisRange::positive());
     }
 
-    fn estimate_radiance(
+    fn estimate_flux(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
         photon_map: &PhotonMap,
         radius: Val,
-        total_photons: usize,
-    ) -> Color {
+    ) -> (Vector, Val) {
         let mut flux = Vector::zero();
         let photons = photon_map.search(intersection.position(), radius);
+        let len = photons.len();
         for photon in photons {
             let bsdf = self.bsdf(-ray.direction(), intersection, photon.direction());
             flux = flux + bsdf * photon.throughput();
         }
-        let area = Val::PI * radius.powi(2);
-        Color::from(flux / (area * Val::from(total_photons)))
+        (flux, len.into())
     }
 }
 
