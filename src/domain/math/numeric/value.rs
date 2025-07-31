@@ -290,8 +290,9 @@ impl Ord for Val {
 
 impl Hash for Val {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        let bytes = self.0.to_bits();
-        state.write_u64(bytes);
+        let value = (*self / Val(Self::PRECISION)).trunc();
+        let bits = value.0.to_bits();
+        state.write_u64(bits);
         TypeId::of::<Val>().hash(state);
     }
 }

@@ -167,6 +167,8 @@ impl Default for KdTreeNode {
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::math::numeric::WrappedVal;
+
     use super::*;
 
     #[test]
@@ -193,7 +195,7 @@ mod tests {
         );
     }
 
-    fn create_photon(x: f64, y: f64, z: f64) -> Photon {
+    fn create_photon(x: WrappedVal, y: WrappedVal, z: WrappedVal) -> Photon {
         Photon::new(
             Point::new(Val(x), Val(y), Val(z)),
             UnitVector::x_direction(),
