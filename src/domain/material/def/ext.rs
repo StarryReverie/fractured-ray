@@ -4,7 +4,7 @@ use rand::prelude::*;
 
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::photon::{Photon, PhotonRay};
+use crate::domain::ray::photon::{Photon, PhotonRay, SearchPolicy};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{Contribution, PhotonInfo, PmContext, PmState, RtContext, RtState};
 
@@ -135,18 +135,26 @@ pub trait MaterialExt: Material {
         intersection: &RayIntersection,
         photon_info: &PhotonInfo,
     ) -> FluxEstimation {
-        let mut flux = Vector::zero();
-        let mut radius2 = Val(0.0);
-
         let (pm, policy) = (photon_info.photons(), photon_info.policy());
-        let photons = pm.search(intersection.position(), policy);
+        let center = intersection.position();
+        let photons = pm.search(center, policy);
+
+        let mut flux = Vector::zero();
         for photon in &photons {
             let bsdf = self.bsdf(-ray.direction(), intersection, photon.direction());
             flux = flux + bsdf * photon.throughput();
-            radius2 = radius2.max((intersection.position() - photon.position()).norm_squared());
         }
 
-        FluxEstimation::new(flux, photons.len().into(), radius2.sqrt())
+        let radius = if let SearchPolicy::Radius(radius) = policy {
+            radius
+        } else {
+            (photons.iter())
+                .map(|photon| (center - photon.position()).norm_squared())
+                .max()
+                .map_or(Val::INFINITY, |r2| r2.sqrt())
+        };
+
+        FluxEstimation::new(flux, photons.len().into(), radius)
     }
 }
 
@@ -166,6 +174,28 @@ impl FluxEstimation {
 
     pub fn empty() -> Self {
         Self::new(Vector::zero(), Val(0.0), Val::INFINITY)
+    }
+
+    pub fn average<'a, I>(estimations: I) -> Self
+    where
+        I: Iterator<Item = &'a Self>,
+    {
+        let estimations = estimations.filter(|e| !e.is_empty()).collect::<Vec<_>>();
+        if estimations.is_empty() {
+            return Self::empty();
+        }
+
+        let radius2_sum = estimations.iter().map(|e| e.radius.powi(2)).sum::<Val>();
+        let radius2_avg = radius2_sum / Val::from(estimations.len());
+
+        let (mut flux_sum, mut num_sum) = (Vector::zero(), Val(0.0));
+        for estimation in &estimations {
+            let proportion = estimation.radius.powi(2) / radius2_avg;
+            flux_sum = flux_sum + estimation.flux / proportion;
+            num_sum += estimation.num / proportion;
+        }
+        let len = Val::from(estimations.len());
+        Self::new(flux_sum / len, num_sum / len, radius2_avg.sqrt())
     }
 
     pub fn flux(&self) -> Vector {

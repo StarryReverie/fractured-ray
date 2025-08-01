@@ -1,3 +1,4 @@
+use std::iter::Sum;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use crate::domain::math::geometry::{Rotation, Transform, Translation};
@@ -133,6 +134,12 @@ impl Product for Vector {
             self.z() * rhs.x() - rhs.z() * self.x(),
             self.x() * rhs.y() - rhs.x() * self.y(),
         )
+    }
+}
+
+impl Sum for Vector {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Self::zero(), |sum, v| sum + v)
     }
 }
 

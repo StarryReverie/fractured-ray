@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use indicatif::{ProgressBar, ProgressFinish, ProgressIterator, ProgressStyle};
+use indicatif::{ProgressBar, ProgressFinish, ProgressStyle};
 use rand::prelude::*;
 use rayon::prelude::*;
 use snafu::prelude::*;
@@ -33,6 +33,7 @@ impl CoreRenderer {
         config: Configuration,
     ) -> Result<Self, ConfigurationError> {
         ensure!(config.iterations > 0, InvalidIterationsSnafu);
+        ensure!(config.spp_per_iteration > 0, InvalidSppPerIterationSnafu);
         ensure!(config.max_depth > 0, InvalidMaxDepthSnafu);
         ensure!(
             config.max_invisible_depth > 0,
@@ -52,24 +53,12 @@ impl CoreRenderer {
 
     fn render_pixel(
         &self,
-        (row, column): (usize, usize),
+        pos: (usize, usize),
         pixel: &mut Pixel,
         photon_global: PhotonInfo<'_>,
         photon_caustic: PhotonInfo<'_>,
     ) -> Color {
         let mut rng = rand::rng();
-
-        let offset = Offset::new(Val(rng.random()), Val(rng.random()))
-            .expect("offset range should be bounded to [0, 1)");
-
-        let point = (self.camera)
-            .calc_point_in_pixel(row, column, offset)
-            .expect("row and column should not be out of bound");
-
-        let direction = (point - self.camera.position())
-            .normalize()
-            .expect("focal length should be positive");
-
         let mut context = RtContext::new(
             self,
             &self.scene,
@@ -78,27 +67,47 @@ impl CoreRenderer {
             photon_global,
             photon_caustic,
         );
-        let state = RtState::new();
-        let res = self.trace(
-            &mut context,
-            state,
-            Ray::new(point, direction),
-            DisRange::positive(),
-        );
+
+        let contributions = (0..self.config.spp_per_iteration)
+            .map(|_| self.start_tracing(&mut context, pos))
+            .collect();
         pixel.radiance(
-            &res,
+            Contribution::average(contributions),
             context.photon_global().emitted(),
             context.photon_casutic().emitted(),
         )
     }
 
-    fn init_progress_bar(&self) -> ProgressBar {
+    fn start_tracing<'a>(
+        &'a self,
+        context: &mut RtContext<'a>,
+        (row, column): (usize, usize),
+    ) -> Contribution {
+        let ray = self.generate_ray(row, column);
+        self.trace(context, RtState::new(), ray, DisRange::positive())
+    }
+
+    fn generate_ray(&self, row: usize, column: usize) -> Ray {
+        let mut rng = rand::rng();
+        let offset = Offset::new(Val(rng.random()), Val(rng.random()))
+            .expect("offset range should be bounded to [0, 1)");
+        let point = (self.camera)
+            .calc_point_in_pixel(row, column, offset)
+            .expect("row and column should not be out of bound");
+        let direction = (point - self.camera.position())
+            .normalize()
+            .expect("focal length should be positive");
+        Ray::new(point, direction)
+    }
+
+    fn init_progress_bar(&self, num_pixel: usize) -> ProgressBar {
         const TEMPLATE: &str = "{msg:>12.green.bold} [{spinner:.yellow.bold}] [{bar:50.cyan.bold/blue.bold}] ({percent}%) [Elapsed: {elapsed_precise} ETA: {eta_precise}]";
         let style = ProgressStyle::with_template(TEMPLATE)
             .unwrap()
             .tick_chars(r#"|/-\|/-\+"#)
             .progress_chars("=>-");
-        let bar = ProgressBar::new(self.config.iterations as u64)
+        let cnt = self.config.iterations * num_pixel;
+        let bar = ProgressBar::new(cnt as u64)
             .with_style(style)
             .with_message("Rendering")
             .with_finish(ProgressFinish::WithMessage("Finished".into()));
@@ -140,8 +149,8 @@ impl Renderer for CoreRenderer {
         let mut num_global = 0;
         let mut num_caustic = 0;
 
-        let pb = self.init_progress_bar();
-        for _ in (0..self.config.iterations).progress_with(pb) {
+        let pb = self.init_progress_bar(height * width);
+        for _ in 0..self.config.iterations {
             let pmg = self.build_photon_map(StoragePolicy::Global, self.config.photons_global);
             let pmc = self.build_photon_map(StoragePolicy::Caustic, self.config.photons_caustic);
             num_global += self.config.photons_global;
@@ -152,6 +161,7 @@ impl Renderer for CoreRenderer {
                 .flat_map(|(r, pi)| pi.map(move |(c, p)| ((r, c), p)));
             let res = meshgrid
                 .map(|(pos, pixel)| {
+                    pb.inc(1);
                     let num = self.config.initial_num_nearest;
                     let pg = PhotonInfo::new(&pmg, pixel.get_policy_global(num), num_global);
                     let pc = PhotonInfo::new(&pmc, pixel.get_policy_caustic(num), num_caustic);
@@ -208,6 +218,7 @@ impl Renderer for CoreRenderer {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Configuration {
     pub iterations: usize,
+    pub spp_per_iteration: usize,
     pub max_depth: usize,
     pub max_invisible_depth: usize,
     pub photons_global: usize,
@@ -220,11 +231,12 @@ impl Default for Configuration {
     fn default() -> Self {
         Self {
             iterations: 4,
+            spp_per_iteration: 4,
             max_depth: 12,
-            max_invisible_depth: 4,
+            max_invisible_depth: 1,
             photons_global: 200000,
             photons_caustic: 1000000,
-            initial_num_nearest: 500,
+            initial_num_nearest: 100,
             background_color: Color::BLACK,
         }
     }
@@ -235,6 +247,8 @@ impl Default for Configuration {
 pub enum ConfigurationError {
     #[snafu(display("number of iterations is not positive"))]
     InvalidIterations,
+    #[snafu(display("sample per pixel per iteration is not positive"))]
+    InvalidSppPerIteration,
     #[snafu(display("max depth is not positive"))]
     InvalidMaxDepth,
     #[snafu(display("max invisible depth is not positive"))]
@@ -261,7 +275,7 @@ impl Pixel {
 
     fn radiance(
         &mut self,
-        cont: &Contribution,
+        cont: Contribution,
         emitted_global: usize,
         emitted_caustic: usize,
     ) -> Color {

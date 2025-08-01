@@ -42,6 +42,32 @@ impl Contribution {
         Color::BLACK.into()
     }
 
+    pub fn average(estimations: Vec<Contribution>) -> Contribution {
+        if estimations.is_empty() {
+            return Contribution::new();
+        }
+
+        let light_sum = (estimations.iter())
+            .map(|e| e.light().to_vector())
+            .sum::<Vector>();
+        let light_avg = Color::from(light_sum / Val::from(estimations.len()));
+
+        let iter_global = estimations.iter().flat_map(|e| e.global());
+        let global_avg = FluxEstimation::average(iter_global);
+
+        let iter_caustic = estimations.iter().flat_map(|e| e.caustic());
+        let caustic_avg = FluxEstimation::average(iter_caustic);
+
+        if global_avg.is_empty() && caustic_avg.is_empty() {
+            light_avg.into()
+        } else {
+            let mut res = Contribution::from(light_avg);
+            res.set_global(global_avg);
+            res.set_caustic(caustic_avg);
+            res
+        }
+    }
+
     pub fn add_light(&mut self, light: Color) {
         match self {
             Contribution::Light(color) => *color = *color + light,
