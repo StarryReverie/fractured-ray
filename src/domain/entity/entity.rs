@@ -174,10 +174,7 @@ struct MaterialPool {
 }
 
 impl MaterialPool {
-    fn downcast_and_push<M: Material>(
-        material: impl Material + Any,
-        collection: &mut Vec<M>,
-    ) -> u32 {
+    fn downcast_and_push<M: Material>(material: impl Material, collection: &mut Vec<M>) -> u32 {
         assert_eq!(TypeId::of::<M>(), material.type_id());
         // SAFETY: Already checked that M == impl Material + Any.
         let material = unsafe { std::mem::transmute_copy(&ManuallyDrop::new(material)) };

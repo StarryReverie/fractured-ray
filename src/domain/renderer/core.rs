@@ -338,7 +338,7 @@ impl Observation {
         let fraction = Val::from(total) / (Val::from(self.num) + flux.num());
         self.flux = (self.flux + flux.flux()) * fraction;
         self.num = total;
-        self.radius = self.radius * fraction.sqrt();
+        self.radius *= fraction.sqrt();
     }
 
     fn radiance(&self, num_emitted: usize) -> Color {
