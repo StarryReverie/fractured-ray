@@ -145,7 +145,7 @@ impl Renderer for CoreRenderer {
         let height = image.resolution().height();
         let width = image.resolution().width();
 
-        let mut pixels = vec![vec![Pixel::new(); height]; width];
+        let mut pixels = vec![vec![Pixel::new(); width]; height];
         let mut num_global = 0;
         let mut num_caustic = 0;
 
