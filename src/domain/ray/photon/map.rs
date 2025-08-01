@@ -224,6 +224,12 @@ impl Default for KdTreeNode {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SearchPolicy {
+    Radius(Val),
+    Nearest(usize),
+}
+
 #[cfg(test)]
 mod tests {
     use crate::domain::math::numeric::WrappedVal;
@@ -231,7 +237,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn photon_map_search_succeeds() {
+    fn photon_map_search_radius_succeeds() {
         let photons = vec![
             create_photon(4.0, 0.0, 0.0),
             create_photon(3.0, 3.0, 1.0),
@@ -241,8 +247,37 @@ mod tests {
         ];
 
         let photon_map = PhotonMap::build(photons);
-        let res =
-            dbg!(photon_map.search_radius(Point::new(Val(2.0), Val(-1.0), Val(0.0)), Val(3.0)));
+        let res = photon_map.search(
+            Point::new(Val(2.0), Val(-1.0), Val(0.0)),
+            SearchPolicy::Radius(Val(3.0)),
+        );
+        assert!(
+            res.iter()
+                .find(|p| p.position() == Point::new(Val(0.0), Val(0.0), Val(0.0)))
+                .is_some()
+        );
+        assert!(
+            res.iter()
+                .find(|p| p.position() == Point::new(Val(4.0), Val(0.0), Val(0.0)))
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn photon_map_search_nearest_succeeds() {
+        let photons = vec![
+            create_photon(4.0, 0.0, 0.0),
+            create_photon(3.0, 3.0, 1.0),
+            create_photon(0.0, 0.0, 0.0),
+            create_photon(-2.0, -3.0, -1.0),
+            create_photon(3.0, -3.0, 2.0),
+        ];
+
+        let photon_map = PhotonMap::build(photons);
+        let res = photon_map.search(
+            Point::new(Val(2.0), Val(-1.0), Val(0.0)),
+            SearchPolicy::Nearest(2),
+        );
         assert!(
             res.iter()
                 .find(|p| p.position() == Point::new(Val(0.0), Val(0.0), Val(0.0)))
@@ -262,10 +297,4 @@ mod tests {
             Vector::default(),
         )
     }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum SearchPolicy {
-    Radius(Val),
-    Nearest(usize),
 }

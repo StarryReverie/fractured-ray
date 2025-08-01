@@ -27,26 +27,25 @@ Diamond
 ## TODOs
 
 - [x] Algorithms
-  - [x] Recursive rendering
-  - [x] Fast ray-object intersection solving
-  - [x] BSDF & cosine-weighted sampling
-  - [x] Light sampling
-  - [x] Multiple importance sampling
-  - [x] Photon mapping
-  - [ ] Physics-based color model
+  - [x] Path Tracing
+  - [x] Distribution Ray Tracing
+  - [x] Ray-Object Intersection Acceleration Structure
+  - [x] BSDF & Cosine-Weighted Sampling
+  - [x] Light Sampling
+  - [x] Multiple Importance Sampling
+  - [x] Stochastic Progressive Photon Mapping
 - [ ] Shapes
-  - [x] Common shape primitives
+  - [x] Common Shape Primitives
     - [x] Planes
     - [x] Polygons
     - [x] Spheres
     - [x] Triangles
   - [x] Meshes
-  - [x] Instance & transformation
+  - [x] Instance & Transformation
   - [ ] Volumes
-  - [ ] Texture coordinate
-  - [ ] Normal interpolation
+  - [ ] Shading Normal
 - [ ] Materials
-  - [ ] Common material primitives
+  - [ ] Common Material Primitives
     - [x] Diffuse
     - [x] Emissive
     - [x] Glossy
@@ -55,14 +54,15 @@ Diamond
     - [x] Scattering
     - [x] Specular
 - [ ] Textures
-  - [ ] Migration for solid colors
-  - [ ] Checker board
-  - [ ] Simplex noise
+  - [ ] Colors
+  - [ ] Checker Board
+  - [ ] Simplex Noise
+  - [ ] Image
 - [ ] Infrastructure
-  - [x] Progress bar
-  - [ ] CLI options
+  - [x] Progress Bar
+  - [ ] CLI Options
   - [ ] Description DSL
-  - [ ] External model import
+  - [ ] External Model Import
 
 # License
 
