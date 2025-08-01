@@ -1,5 +1,5 @@
 use std::iter::Sum;
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use crate::domain::math::geometry::{Rotation, Transform, Translation};
 use crate::domain::math::numeric::Val;
@@ -10,46 +10,57 @@ use super::{Product, Quaternion, TryIntoUnitVectorError, UnitVector};
 pub struct Vector(Val, Val, Val);
 
 impl Vector {
+    #[inline]
     pub const fn new(x: Val, y: Val, z: Val) -> Self {
         Self(x, y, z)
     }
 
+    #[inline]
     pub const fn broadcast(x: Val) -> Self {
         Self(x, x, x)
     }
 
+    #[inline]
     pub const fn zero() -> Self {
         Self(Val(0.0), Val(0.0), Val(0.0))
     }
 
+    #[inline]
     pub fn x(&self) -> Val {
         self.0
     }
 
+    #[inline]
     pub fn y(&self) -> Val {
         self.1
     }
 
+    #[inline]
     pub fn z(&self) -> Val {
         self.2
     }
 
+    #[inline]
     pub fn norm(&self) -> Val {
         self.norm_squared().sqrt()
     }
 
+    #[inline]
     pub fn norm_squared(&self) -> Val {
         self.dot(*self)
     }
 
+    #[inline]
     pub fn normalize(self) -> Result<UnitVector, TryIntoUnitVectorError> {
         self.try_into()
     }
 
+    #[inline]
     pub fn lerp(a: Self, b: Self, t: Val) -> Self {
         a * (Val(1.0) - t) + b * t
     }
 
+    #[inline]
     pub fn is_perpendicular_to<V>(&self, rhs: V) -> bool
     where
         Self: Product<V, Output = Self>,
@@ -57,6 +68,7 @@ impl Vector {
         self.dot(rhs) == Val(0.0)
     }
 
+    #[inline]
     pub fn is_parallel_to<V>(&self, rhs: V) -> bool
     where
         Self: Product<V, Output = Self>,
@@ -68,22 +80,38 @@ impl Vector {
 impl Add for Vector {
     type Output = Self;
 
+    #[inline]
     fn add(self, rhs: Self) -> Self::Output {
         Self::new(self.x() + rhs.x(), self.y() + rhs.y(), self.z() + rhs.z())
+    }
+}
+
+impl AddAssign for Vector {
+    #[inline]
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
     }
 }
 
 impl Sub for Vector {
     type Output = Self;
 
+    #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         Self::new(self.x() - rhs.x(), self.y() - rhs.y(), self.z() - rhs.z())
+    }
+}
+
+impl SubAssign for Vector {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
     }
 }
 
 impl Neg for Vector {
     type Output = Self;
 
+    #[inline]
     fn neg(self) -> Self::Output {
         Self::new(-self.x(), -self.y(), -self.z())
     }
@@ -92,22 +120,38 @@ impl Neg for Vector {
 impl Mul<Vector> for Vector {
     type Output = Self;
 
+    #[inline]
     fn mul(self, rhs: Vector) -> Self::Output {
         Self::new(self.x() * rhs.x(), self.y() * rhs.y(), self.z() * rhs.z())
+    }
+}
+
+impl MulAssign<Vector> for Vector {
+    #[inline]
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = *self * rhs;
     }
 }
 
 impl Mul<Val> for Vector {
     type Output = Self;
 
+    #[inline]
     fn mul(self, rhs: Val) -> Self::Output {
         Self::new(self.x() * rhs, self.y() * rhs, self.z() * rhs)
+    }
+}
+
+impl MulAssign<Val> for Vector {
+    fn mul_assign(&mut self, rhs: Val) {
+        *self = *self * rhs;
     }
 }
 
 impl Mul<Vector> for Val {
     type Output = Vector;
 
+    #[inline]
     fn mul(self, rhs: Vector) -> Self::Output {
         Vector::new(self * rhs.x(), self * rhs.y(), self * rhs.z())
     }
@@ -116,8 +160,16 @@ impl Mul<Vector> for Val {
 impl Div<Val> for Vector {
     type Output = Self;
 
+    #[inline]
     fn div(self, rhs: Val) -> Self::Output {
         Self::new(self.x() / rhs, self.y() / rhs, self.z() / rhs)
+    }
+}
+
+impl DivAssign<Val> for Vector {
+    #[inline]
+    fn div_assign(&mut self, rhs: Val) {
+        *self = *self / rhs;
     }
 }
 

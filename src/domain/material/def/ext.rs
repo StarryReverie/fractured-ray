@@ -118,7 +118,7 @@ pub trait MaterialExt: Material {
             .max(throughput.z())
             .clamp(Val(0.0), Val(1.0));
         if Val(context.rng().random()) < continue_prob {
-            throughput = throughput / continue_prob;
+            throughput /= continue_prob;
         } else {
             return;
         }
@@ -142,7 +142,7 @@ pub trait MaterialExt: Material {
         let mut flux = Vector::zero();
         for photon in &photons {
             let bsdf = self.bsdf(-ray.direction(), intersection, photon.direction());
-            flux = flux + bsdf * photon.throughput();
+            flux += bsdf * photon.throughput();
         }
 
         let radius = if let SearchPolicy::Radius(radius) = policy {
@@ -191,7 +191,7 @@ impl FluxEstimation {
         let (mut flux_sum, mut num_sum) = (Vector::zero(), Val(0.0));
         for estimation in &estimations {
             let proportion = estimation.radius.powi(2) / radius2_avg;
-            flux_sum = flux_sum + estimation.flux / proportion;
+            flux_sum += estimation.flux / proportion;
             num_sum += estimation.num / proportion;
         }
         let len = Val::from(estimations.len());
