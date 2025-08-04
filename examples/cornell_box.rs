@@ -27,10 +27,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Light
     builder.add(
         Polygon::new([
-            Point::new(Val(343.0), Val(548.0), Val(227.0)),
-            Point::new(Val(343.0), Val(548.0), Val(332.0)),
-            Point::new(Val(213.0), Val(548.0), Val(332.0)),
-            Point::new(Val(213.0), Val(548.0), Val(227.0)),
+            Point::new(Val(343.0), Val(548.799), Val(227.0)),
+            Point::new(Val(343.0), Val(548.799), Val(332.0)),
+            Point::new(Val(213.0), Val(548.799), Val(332.0)),
+            Point::new(Val(213.0), Val(548.799), Val(227.0)),
         ])?,
         Emissive::new(Color::new(Val(0.9), Val(0.85), Val(0.4)) * Val(5.0)),
     );
@@ -158,7 +158,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene,
         Configuration {
-            iterations: 256,
+            iterations: 16,
             ..Configuration::default()
         },
     )?;

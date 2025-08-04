@@ -5,7 +5,7 @@ use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
@@ -43,9 +43,9 @@ impl Material for Emissive {
         _context: &mut RtContext<'_>,
         state: RtState,
         _ray: Ray,
-        _intersection: RayIntersection,
+        intersection: RayIntersection,
     ) -> Contribution {
-        if state.skip_emissive() {
+        if state.skip_emissive() || intersection.side() == SurfaceSide::Back {
             Contribution::new()
         } else {
             self.radiance.into()
