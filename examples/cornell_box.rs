@@ -6,7 +6,7 @@ use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::BvhSceneBuilder;
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::UnitVector;
-use fractured_ray::domain::math::geometry::Point;
+use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::shape::mesh::MeshConstructor;
@@ -32,7 +32,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(213.0), Val(548.799), Val(332.0)),
             Point::new(Val(213.0), Val(548.799), Val(227.0)),
         ])?,
-        Emissive::new(Color::new(Val(0.9), Val(0.85), Val(0.4)) * Val(5.0)),
+        Emissive::new(
+            Color::new(Val(0.9), Val(0.85), Val(0.4)) * Val(5.0),
+            SpreadAngle::hemisphere(),
+        ),
     );
 
     // Floor

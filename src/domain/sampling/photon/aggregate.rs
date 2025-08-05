@@ -54,7 +54,7 @@ impl PhotonSampling for AggregatePhotonSampler {
 #[cfg(test)]
 mod tests {
     use crate::domain::material::primitive::Emissive;
-    use crate::domain::math::geometry::Point;
+    use crate::domain::math::geometry::{Point, SpreadAngle};
     use crate::domain::sampling::photon::PhotonSamplerAdapter;
     use crate::domain::sampling::point::TrianglePointSampler;
     use crate::domain::shape::def::{ShapeId, ShapeKind};
@@ -74,7 +74,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
-            Emissive::new(Color::WHITE),
+            Emissive::new(Color::WHITE, SpreadAngle::hemisphere()),
         ));
         let sampler2: Box<dyn PhotonSampling> = Box::new(PhotonSamplerAdapter::new(
             TrianglePointSampler::new(
@@ -86,7 +86,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
-            Emissive::new(Color::WHITE * Val(0.25)),
+            Emissive::new(Color::WHITE * Val(0.25), SpreadAngle::hemisphere()),
         ));
         let sampler = AggregatePhotonSampler::new(vec![sampler1, sampler2]);
 

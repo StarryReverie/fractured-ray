@@ -6,7 +6,7 @@ use fractured_ray::domain::color::Color;
 use fractured_ray::domain::entity::BvhSceneBuilder;
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
-use fractured_ray::domain::math::geometry::{Point, Rotation, Translation};
+use fractured_ray::domain::math::geometry::{Point, Rotation, SpreadAngle, Translation};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::shape::instance::MeshConstructorInstance;
@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(2.0), Val(3.999), Val(2.0)),
             Point::new(Val(-2.0), Val(3.999), Val(2.0)),
         ])?,
-        Emissive::new(Color::WHITE),
+        Emissive::new(Color::WHITE, SpreadAngle::hemisphere()),
     );
 
     builder.add(

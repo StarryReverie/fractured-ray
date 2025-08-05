@@ -1,11 +1,12 @@
 use rand::prelude::*;
 
+use crate::domain::color::Color;
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::geometry::AllTransformation;
+use crate::domain::math::geometry::Transform;
 use crate::domain::math::numeric::Val;
 use crate::domain::shape::def::ShapeId;
 use crate::domain::shape::instance::Instance;
-use crate::domain::{color::Color, math::geometry::Transform};
 
 use super::{PhotonSample, PhotonSampling};
 

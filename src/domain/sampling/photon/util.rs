@@ -1,12 +1,13 @@
 use rand::prelude::*;
 
-use crate::domain::color::Color;
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::UnitVector;
+use crate::domain::math::geometry::{Rotation, Transform};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::sampling::point::PointSampling;
+use crate::domain::{color::Color, math::algebra::Vector};
 
 use super::{PhotonSample, PhotonSampling};
 
@@ -48,7 +49,7 @@ where
     PS: PointSampling,
 {
     pub fn new(inner: PS, emissive: Emissive) -> Self {
-        let area = inner.shape().map(|shape| shape.area()).unwrap_or(Val(0.0));
+        let area = inner.shape().map_or(Val(0.0), |shape| shape.area());
         Self {
             inner,
             emissive,
@@ -75,10 +76,27 @@ where
         let pdf_point = sample.pdf();
 
         let normal = sample.normal();
-        let dir = UnitVector::random_cosine_hemisphere(normal, rng);
+        let beam_angle = self.emissive.beam_angle();
+        let (dir, pdf_dir_div_cos) = if beam_angle.is_hemisphere() {
+            let dir = UnitVector::random_cosine_hemisphere(normal, rng);
+            (dir, Val::FRAC_1_PI)
+        } else if beam_angle.is_directional() {
+            (normal, Val(1.0))
+        } else {
+            let sin2_beam = beam_angle.angle().sin().powi(2);
+            let (u1_sin, u2) = (Val(rng.random()) * sin2_beam, Val(rng.random()));
+            let (sin_theta, cos_theta) = (u1_sin.sqrt(), (Val(1.0) - u1_sin).sqrt());
+            let (sin_phi, cos_phi) = (Val(0.5) * u2 * Val::FRAC_1_PI).sin_cos();
+            let (x, y, z) = (sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
+            let local_dir = Vector::new(x, y, z).normalize().unwrap();
+
+            let tr = Rotation::new(UnitVector::z_direction(), normal, Val(0.0));
+            let dir = local_dir.transform(&tr);
+            (dir, Val::FRAC_1_PI / sin2_beam)
+        };
 
         let ray = Ray::new(point, dir);
-        let throughput = self.radiance().to_vector() * Val::PI / pdf_point;
+        let throughput = self.radiance().to_vector() / (pdf_point * pdf_dir_div_cos);
         let photon = PhotonRay::new(ray, throughput);
         Some(PhotonSample::new(photon))
     }
@@ -86,7 +104,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::geometry::Point;
+    use crate::domain::math::geometry::{Point, SpreadAngle};
     use crate::domain::sampling::point::TrianglePointSampler;
     use crate::domain::shape::def::{ShapeId, ShapeKind};
     use crate::domain::shape::primitive::Triangle;
@@ -105,7 +123,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
-            Emissive::new(Color::WHITE),
+            Emissive::new(Color::WHITE, SpreadAngle::hemisphere()),
         );
 
         let photon = sampler.sample_photon(&mut rand::rng()).unwrap();

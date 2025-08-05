@@ -8,7 +8,7 @@ use fractured_ray::domain::material::primitive::{
     Emissive, Glossy, GlossyPredefinition, Refractive,
 };
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
-use fractured_ray::domain::math::geometry::{Point, Rotation, Translation};
+use fractured_ray::domain::math::geometry::{Point, Rotation, SpreadAngle, Translation};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::shape::instance::MeshConstructorInstance;
@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Point::new(Val(4.0) + dx, Val(18.0), Val(4.0) + dz),
                 Point::new(Val(-4.0) + dx, Val(18.0), Val(4.0) + dz),
             ])?,
-            Emissive::new(Color::WHITE * Val(2.0)),
+            Emissive::new(Color::WHITE * Val(2.0), SpreadAngle::hemisphere()),
         );
     }
 
