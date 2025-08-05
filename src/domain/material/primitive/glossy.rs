@@ -170,8 +170,9 @@ impl Material for Glossy {
         ray: Ray,
         intersection: RayIntersection,
     ) -> Contribution {
-        let light = self.shade_light(context, &ray, &intersection, true);
-        let mut res = self.shade_scattering(context, state, &ray, &intersection, true);
+        let light = self.shade_light(context, &ray, &intersection);
+        let state_next = state.with_skip_emissive(true);
+        let mut res = self.shade_scattering(context, state_next, &ray, &intersection);
         res.add_light(light.light());
         res
     }

@@ -8,7 +8,7 @@ use crate::domain::ray::photon::{Photon, PhotonRay, SearchPolicy};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{Contribution, PhotonInfo, PmContext, PmState, RtContext, RtState};
 
-use super::Material;
+use super::{Material, MaterialKind};
 
 pub trait MaterialExt: Material {
     fn shade_light(
@@ -16,46 +16,95 @@ pub trait MaterialExt: Material {
         context: &mut RtContext<'_>,
         ray: &Ray,
         intersection: &RayIntersection,
-        mis: bool,
+    ) -> Contribution {
+        const SAMPLE_LIGHT_PROB: Val = Val(0.5);
+        if Val(context.rng().random()) <= SAMPLE_LIGHT_PROB {
+            let radiance = self.shade_light_using_light_sampling(context, ray, intersection);
+            radiance * SAMPLE_LIGHT_PROB.recip()
+        } else {
+            let radiance = self.shade_light_using_coefficient_sampling(context, ray, intersection);
+            radiance * (Val(1.0) - SAMPLE_LIGHT_PROB).recip()
+        }
+    }
+
+    fn shade_light_using_light_sampling(
+        &self,
+        context: &mut RtContext<'_>,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution {
         let scene = context.scene();
         let lights = scene.get_lights();
+
         let res = lights.sample_light(ray, intersection, self.as_dyn(), *context.rng());
         let Some(sample) = res else {
             return Contribution::new();
         };
+        if sample.pdf() == Val(0.0) {
+            return Contribution::new();
+        }
 
-        let ray_next = sample.ray_next();
-        let range = (
-            Bound::Excluded(Val(0.0)),
-            Bound::Included(sample.distance()),
-        );
+        let (ray_next, distance) = (sample.ray_next(), sample.distance());
+        let range = (Bound::Excluded(Val(0.0)), Bound::Included(distance));
         let res = scene.test_intersection(ray_next, range.into(), sample.shape_id());
-        let (intersection_next, light_material) = if let Some(res) = res {
-            let intersection_next = res.0;
-            let material_id = res.1.material_id();
-            let light_material = scene.get_entities().get_material(material_id).unwrap();
-            (intersection_next, light_material)
+        let (intersection_next, light) = if let Some((intersection_next, id)) = res {
+            let id = id.material_id();
+            let material = scene.get_entities().get_material(id).unwrap();
+            if material.kind() == MaterialKind::Emissive {
+                (intersection_next, material)
+            } else {
+                return Contribution::new();
+            }
         } else {
             return Contribution::new();
         };
 
         let pdf_light = sample.pdf();
-        if pdf_light == Val(0.0) {
-            return Contribution::new();
-        }
-
-        let weight = if mis {
-            let pdf_scattering = self.pdf_coefficient(ray, intersection, ray_next);
-            pdf_light / (pdf_light + pdf_scattering)
-        } else {
-            Val(1.0)
-        };
+        let pdf_coefficient = self.pdf_coefficient(ray, intersection, ray_next);
+        let weight = pdf_light / (pdf_light + pdf_coefficient);
 
         let coefficient = sample.coefficient();
         let ray_next = sample.into_ray_next();
-        let radiance = light_material.shade(context, RtState::new(), ray_next, intersection_next);
-        coefficient * radiance * weight
+        let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
+        weight * coefficient * radiance
+    }
+
+    fn shade_light_using_coefficient_sampling(
+        &self,
+        context: &mut RtContext<'_>,
+        ray: &Ray,
+        intersection: &RayIntersection,
+    ) -> Contribution {
+        let scene = context.scene();
+        let lights = scene.get_lights();
+
+        let sample = self.sample_coefficient(ray, intersection, *context.rng());
+        if sample.pdf() == Val(0.0) {
+            return Contribution::new();
+        }
+
+        let ray_next = sample.ray_next();
+        let res = scene.find_intersection(ray_next, DisRange::positive());
+        let (intersection_next, light) = if let Some((intersection_next, id)) = res {
+            let id = id.material_id();
+            let material = scene.get_entities().get_material(id).unwrap();
+            if material.kind() == MaterialKind::Emissive {
+                (intersection_next, material)
+            } else {
+                return Contribution::new();
+            }
+        } else {
+            return Contribution::new();
+        };
+
+        let pdf_coefficient = sample.pdf();
+        let pdf_light = lights.pdf_light(intersection, ray_next);
+        let weight = pdf_coefficient / (pdf_light + pdf_coefficient);
+
+        let coefficient = sample.coefficient();
+        let ray_next = sample.into_ray_next();
+        let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
+        weight * coefficient * radiance
     }
 
     fn shade_scattering(
@@ -64,30 +113,18 @@ pub trait MaterialExt: Material {
         state_next: RtState,
         ray: &Ray,
         intersection: &RayIntersection,
-        mis: bool,
     ) -> Contribution {
         let renderer = context.renderer();
 
         let sample = self.sample_coefficient(ray, intersection, *context.rng());
-        let ray_next = sample.ray_next();
-
-        let pdf_scattering = sample.pdf();
-        if pdf_scattering == Val(0.0) {
+        if sample.pdf() == Val(0.0) {
             return Contribution::new();
         }
-
-        let weight = if mis {
-            let lights = context.scene().get_lights();
-            let pdf_light = lights.pdf_light(intersection, ray_next);
-            pdf_scattering / (pdf_light + pdf_scattering)
-        } else {
-            Val(1.0)
-        };
 
         let coefficient = sample.coefficient();
         let ray_next = sample.into_ray_next();
         let radiance = renderer.trace(context, state_next, ray_next, DisRange::positive());
-        coefficient * radiance * weight
+        coefficient * radiance
     }
 
     fn store_photon(

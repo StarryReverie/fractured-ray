@@ -52,7 +52,8 @@ impl Material for Specular {
         ray: Ray,
         intersection: RayIntersection,
     ) -> Contribution {
-        self.shade_scattering(context, state, &ray, &intersection, false)
+        let state_next = state.with_skip_emissive(false);
+        self.shade_scattering(context, state_next, &ray, &intersection)
     }
 
     fn receive(

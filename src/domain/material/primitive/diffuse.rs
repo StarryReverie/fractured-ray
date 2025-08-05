@@ -48,26 +48,24 @@ impl Material for Diffuse {
         intersection: RayIntersection,
     ) -> Contribution {
         if state.visible() {
-            let light = self.shade_light(context, &ray, &intersection, false);
+            let light = self.shade_light(context, &ray, &intersection);
             let caustic = self.estimate_flux(&ray, &intersection, context.photon_casutic());
             let mut res = self.shade_scattering(
                 context,
                 state.mark_invisible().with_skip_emissive(true),
                 &ray,
                 &intersection,
-                false,
             );
             res.add_light(light.light());
             res.set_caustic(caustic);
             res
         } else if state.invisible_depth() < context.config().max_invisible_depth {
-            let light = self.shade_light(context, &ray, &intersection, true);
+            let light = self.shade_light(context, &ray, &intersection);
             let mut res = self.shade_scattering(
                 context,
                 state.mark_invisible().with_skip_emissive(true),
                 &ray,
                 &intersection,
-                true,
             );
             res.add_light(light.light());
             res
