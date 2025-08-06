@@ -2,7 +2,7 @@ use rand::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::color::Color;
-use crate::domain::material::def::{Material, MaterialExt, MaterialKind};
+use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::{Rotation, Transform, Transformation};
 use crate::domain::math::numeric::Val;
@@ -11,7 +11,7 @@ use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{
     Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
 };
-use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
+use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Glossy {
@@ -142,27 +142,6 @@ impl Material for Glossy {
         MaterialKind::Glossy
     }
 
-    fn bsdf(
-        &self,
-        dir_out: UnitVector,
-        intersection: &RayIntersection,
-        dir_in: UnitVector,
-    ) -> Vector {
-        let normal = intersection.normal();
-        if normal.dot(dir_in) > Val(0.0) {
-            let mn = (dir_out + dir_in).normalize().unwrap();
-
-            let reflectance = self.calc_reflectance(dir_in.dot(mn));
-            let ndf = self.calc_ndf(normal, mn);
-            let g2 = self.calc_g2(dir_out, dir_in, normal);
-            let (cos, cos_next) = (dir_out.dot(normal), dir_in.dot(normal));
-
-            (reflectance * ndf * g2) / (Val(4.0) * cos * cos_next).abs()
-        } else {
-            Vector::broadcast(Val(0.0))
-        }
-    }
-
     fn shade(
         &self,
         context: &mut RtContext<'_>,
@@ -197,13 +176,36 @@ impl Material for Glossy {
     }
 }
 
-impl CoefficientSampling for Glossy {
-    fn sample_coefficient(
+impl BsdfMaterial for Glossy {
+    fn bsdf(
+        &self,
+        dir_out: UnitVector,
+        intersection: &RayIntersection,
+        dir_in: UnitVector,
+    ) -> Vector {
+        let normal = intersection.normal();
+        if normal.dot(dir_in) > Val(0.0) {
+            let mn = (dir_out + dir_in).normalize().unwrap();
+
+            let reflectance = self.calc_reflectance(dir_in.dot(mn));
+            let ndf = self.calc_ndf(normal, mn);
+            let g2 = self.calc_g2(dir_out, dir_in, normal);
+            let (cos, cos_next) = (dir_out.dot(normal), dir_in.dot(normal));
+
+            (reflectance * ndf * g2) / (Val(4.0) * cos * cos_next).abs()
+        } else {
+            Vector::broadcast(Val(0.0))
+        }
+    }
+}
+
+impl BsdfSampling for Glossy {
+    fn sample_bsdf(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
         rng: &mut dyn RngCore,
-    ) -> CoefficientSample {
+    ) -> BsdfSample {
         let dir = -ray.direction();
         let normal = intersection.normal();
 
@@ -219,10 +221,10 @@ impl CoefficientSampling for Glossy {
         let ndf = self.calc_ndf(normal, mn);
         let pdf = g1 * ndf * Val(0.25) / dir.dot(normal);
 
-        CoefficientSample::new(ray_next, coefficient, pdf)
+        BsdfSample::new(ray_next, coefficient, pdf)
     }
 
-    fn pdf_coefficient(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+    fn pdf_bsdf(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         let (dir, dir_next) = (-ray.direction(), ray_next.direction());
         let Ok(mn) = (dir + dir_next).normalize() else {
             return Val(0.0);

@@ -1,6 +1,5 @@
 use rand::prelude::*;
 
-use crate::domain::material::def::Material;
 use crate::domain::math::algebra::Product;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection};
@@ -29,9 +28,7 @@ impl LightSampling for EmptyLightSampler {
 
     fn sample_light(
         &self,
-        _ray: &Ray,
         _intersection: &RayIntersection,
-        _material: &dyn Material,
         _rng: &mut dyn RngCore,
     ) -> Option<LightSample> {
         None
@@ -73,9 +70,7 @@ where
 
     fn sample_light(
         &self,
-        ray: &Ray,
         intersection: &RayIntersection,
-        material: &dyn Material,
         rng: &mut dyn RngCore,
     ) -> Option<LightSample> {
         let sample = self.inner.sample_point(rng)?;
@@ -85,24 +80,11 @@ where
         };
         let ray_next = Ray::new(intersection.position(), direction);
 
-        let bsdf = material.bsdf(-ray.direction(), intersection, ray_next.direction());
-        if bsdf.norm_squared() != Val(0.0) {
-            let cos1 = direction.dot(intersection.normal());
-            let cos2 = sample.normal().dot(direction).abs();
-            let dis_squared = (sample.point() - intersection.position()).norm_squared();
-            let pdf = sample.pdf() * dis_squared / cos2;
-            let coefficient = bsdf * cos1 / pdf;
-            let distance = (sample.point() - intersection.position()).norm();
-            Some(LightSample::new(
-                ray_next,
-                coefficient,
-                pdf,
-                distance,
-                sample.shape_id(),
-            ))
-        } else {
-            None
-        }
+        let cos = sample.normal().dot(direction).abs();
+        let dis_squared = (sample.point() - intersection.position()).norm_squared();
+        let pdf = sample.pdf() * dis_squared / cos;
+        let distance = (sample.point() - intersection.position()).norm();
+        Some(LightSample::new(ray_next, pdf, distance, sample.shape_id()))
     }
 
     fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {

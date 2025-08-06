@@ -1,6 +1,5 @@
 use rand::prelude::*;
 
-use crate::domain::material::def::Material;
 use crate::domain::math::geometry::{AllTransformation, Transform, Transformation};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
@@ -41,16 +40,13 @@ impl LightSampling for InstanceLightSampler {
 
     fn sample_light(
         &self,
-        ray: &Ray,
         intersection: &RayIntersection,
-        material: &dyn Material,
         rng: &mut dyn RngCore,
     ) -> Option<LightSample> {
         if let Some(sampler) = &self.sampler {
-            let ray = ray.transform(&self.inv_transformation);
             let intersection = intersection.transform(&self.inv_transformation);
             sampler
-                .sample_light(&ray, &intersection, material, rng)
+                .sample_light(&intersection, rng)
                 .map(|sample| sample.transform(self.instance.transformation()))
         } else {
             None

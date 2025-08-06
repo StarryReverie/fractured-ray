@@ -4,7 +4,6 @@ use rand::prelude::*;
 use rand_distr::Uniform;
 
 use crate::domain::entity::Bvh;
-use crate::domain::material::def::Material;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
@@ -55,15 +54,13 @@ impl LightSampling for AggregateLightSampler {
 
     fn sample_light(
         &self,
-        ray: &Ray,
         intersection: &RayIntersection,
-        material: &dyn Material,
         rng: &mut dyn RngCore,
     ) -> Option<LightSample> {
         let which = rng.sample(Uniform::new(0, self.ids.len()).unwrap());
         let id = self.ids[which];
         (self.lights.lights.get(&id))
-            .and_then(|light| light.sample_light(ray, intersection, material, rng))
+            .and_then(|light| light.sample_light(intersection, rng))
             .map(|sample| sample.scale_pdf(self.weight))
     }
 

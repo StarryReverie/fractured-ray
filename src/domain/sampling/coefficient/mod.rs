@@ -1,3 +1,3 @@
 mod def;
 
-pub use def::{CoefficientSample, CoefficientSampling};
+pub use def::{BsdfSample, BsdfSampling};

@@ -4,13 +4,12 @@ use snafu::prelude::*;
 
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::math::algebra::{UnitVector, Vector};
+use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
-use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scattering {
@@ -33,15 +32,6 @@ impl Scattering {
 impl Material for Scattering {
     fn kind(&self) -> MaterialKind {
         MaterialKind::Scattering
-    }
-
-    fn bsdf(
-        &self,
-        _dir_out: UnitVector,
-        _intersection: &RayIntersection,
-        _dir_in: UnitVector,
-    ) -> Vector {
-        todo!("BSSRDF sampling is not yet implemented")
     }
 
     fn shade(
@@ -101,21 +91,6 @@ impl Material for Scattering {
 
     fn as_dyn(&self) -> &dyn Material {
         self
-    }
-}
-
-impl CoefficientSampling for Scattering {
-    fn sample_coefficient(
-        &self,
-        _ray: &Ray,
-        _intersection: &RayIntersection,
-        _rng: &mut dyn RngCore,
-    ) -> CoefficientSample {
-        todo!("BSSRDF sampling is not yet implemented")
-    }
-
-    fn pdf_coefficient(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
-        todo!("BSSRDF sampling is not yet implemented")
     }
 }
 

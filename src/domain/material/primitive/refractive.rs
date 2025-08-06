@@ -2,13 +2,13 @@ use rand::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::color::Color;
-use crate::domain::material::def::{Material, MaterialExt, MaterialKind};
+use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
-use crate::domain::sampling::coefficient::{CoefficientSample, CoefficientSampling};
+use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Refractive {
@@ -99,15 +99,6 @@ impl Material for Refractive {
         MaterialKind::Refractive
     }
 
-    fn bsdf(
-        &self,
-        _dir_out: UnitVector,
-        _intersection: &RayIntersection,
-        _dir_in: UnitVector,
-    ) -> Vector {
-        unimplemented!("dirac function in refractive BSDF can't be represented")
-    }
-
     fn shade(
         &self,
         context: &mut RtContext<'_>,
@@ -135,20 +126,31 @@ impl Material for Refractive {
     }
 }
 
-impl CoefficientSampling for Refractive {
-    fn sample_coefficient(
+impl BsdfMaterial for Refractive {
+    fn bsdf(
+        &self,
+        _dir_out: UnitVector,
+        _intersection: &RayIntersection,
+        _dir_in: UnitVector,
+    ) -> Vector {
+        Vector::zero()
+    }
+}
+
+impl BsdfSampling for Refractive {
+    fn sample_bsdf(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
         rng: &mut dyn RngCore,
-    ) -> CoefficientSample {
+    ) -> BsdfSample {
         let reflection_determination = Val(rng.random());
         let direction = self.calc_next_ray(ray, intersection, reflection_determination);
-        let pdf = self.pdf_coefficient(ray, intersection, &direction);
-        CoefficientSample::new(direction, self.color.to_vector(), pdf)
+        let pdf = self.pdf_bsdf(ray, intersection, &direction);
+        BsdfSample::new(direction, self.color.to_vector(), pdf)
     }
 
-    fn pdf_coefficient(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+    fn pdf_bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
         Val(1.0)
     }
 }

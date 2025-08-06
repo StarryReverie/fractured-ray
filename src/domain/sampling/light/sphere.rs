@@ -1,6 +1,5 @@
 use rand::prelude::*;
 
-use crate::domain::material::def::Material;
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::{Rotation, Transform};
 use crate::domain::math::numeric::Val;
@@ -33,9 +32,7 @@ impl LightSampling for SphereLightSampler {
 
     fn sample_light(
         &self,
-        ray: &Ray,
         intersection: &RayIntersection,
-        material: &dyn Material,
         rng: &mut dyn RngCore,
     ) -> Option<LightSample> {
         let radius2 = self.sphere.radius().powi(2);
@@ -58,23 +55,10 @@ impl LightSampling for SphereLightSampler {
         };
         let ray_next = Ray::new(intersection.position(), direction);
 
-        let bsdf = material.bsdf(-ray.direction(), intersection, ray_next.direction());
-        if bsdf.norm_squared() != Val(0.0) {
-            let cos = direction.dot(intersection.normal());
-            let solid_angle = Val(2.0) * Val::PI * (Val(1.0) - cos_max_half_cone_angle);
-            let pdf = solid_angle.recip();
-            let coefficient = bsdf * cos / pdf;
-            let distance = (self.sphere.center() + at_sphere - intersection.position()).norm();
-            Some(LightSample::new(
-                ray_next,
-                coefficient,
-                pdf,
-                distance,
-                self.id,
-            ))
-        } else {
-            None
-        }
+        let solid_angle = Val(2.0) * Val::PI * (Val(1.0) - cos_max_half_cone_angle);
+        let pdf = solid_angle.recip();
+        let distance = (self.sphere.center() + at_sphere - intersection.position()).norm();
+        Some(LightSample::new(ray_next, pdf, distance, self.id))
     }
 
     fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {

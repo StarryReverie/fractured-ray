@@ -5,17 +5,10 @@ use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
-use crate::domain::sampling::coefficient::CoefficientSampling;
+use crate::domain::sampling::coefficient::BsdfSampling;
 
-pub trait Material: CoefficientSampling + Any + Debug + Send + Sync + 'static {
+pub trait Material: Any + Debug + Send + Sync + 'static {
     fn kind(&self) -> MaterialKind;
-
-    fn bsdf(
-        &self,
-        dir_out: UnitVector,
-        intersection: &RayIntersection,
-        dir_in: UnitVector,
-    ) -> Vector;
 
     fn shade(
         &self,
@@ -34,6 +27,15 @@ pub trait Material: CoefficientSampling + Any + Debug + Send + Sync + 'static {
     );
 
     fn as_dyn(&self) -> &dyn Material;
+}
+
+pub trait BsdfMaterial: Material + BsdfSampling {
+    fn bsdf(
+        &self,
+        dir_out: UnitVector,
+        intersection: &RayIntersection,
+        dir_in: UnitVector,
+    ) -> Vector;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

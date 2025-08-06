@@ -2,15 +2,15 @@ use std::ops::{Bound, Mul};
 
 use rand::prelude::*;
 
-use crate::domain::math::algebra::Vector;
+use crate::domain::math::algebra::{Product, Vector};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::photon::{Photon, PhotonRay, SearchPolicy};
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{Contribution, PhotonInfo, PmContext, PmState, RtContext, RtState};
 
-use super::{Material, MaterialKind};
+use super::{BsdfMaterial, MaterialKind};
 
-pub trait MaterialExt: Material {
+pub trait BsdfMaterialExt: BsdfMaterial {
     fn shade_light(
         &self,
         context: &mut RtContext<'_>,
@@ -22,7 +22,7 @@ pub trait MaterialExt: Material {
             let radiance = self.shade_light_using_light_sampling(context, ray, intersection);
             radiance * SAMPLE_LIGHT_PROB.recip()
         } else {
-            let radiance = self.shade_light_using_coefficient_sampling(context, ray, intersection);
+            let radiance = self.shade_light_using_bsdf_sampling(context, ray, intersection);
             radiance * (Val(1.0) - SAMPLE_LIGHT_PROB).recip()
         }
     }
@@ -36,7 +36,7 @@ pub trait MaterialExt: Material {
         let scene = context.scene();
         let lights = scene.get_lights();
 
-        let res = lights.sample_light(ray, intersection, self.as_dyn(), *context.rng());
+        let res = lights.sample_light(intersection, *context.rng());
         let Some(sample) = res else {
             return Contribution::new();
         };
@@ -60,16 +60,19 @@ pub trait MaterialExt: Material {
         };
 
         let pdf_light = sample.pdf();
-        let pdf_coefficient = self.pdf_coefficient(ray, intersection, ray_next);
-        let weight = pdf_light / (pdf_light + pdf_coefficient);
+        let pdf_bsdf = self.pdf_bsdf(ray, intersection, ray_next);
+        let weight = pdf_light / (pdf_light + pdf_bsdf);
 
-        let coefficient = sample.coefficient();
+        let bsdf = self.bsdf(-ray.direction(), intersection, ray_next.direction());
+        let cos = intersection.normal().dot(ray_next.direction());
+        let coefficient = bsdf * cos / pdf_light;
+
         let ray_next = sample.into_ray_next();
         let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
         weight * coefficient * radiance
     }
 
-    fn shade_light_using_coefficient_sampling(
+    fn shade_light_using_bsdf_sampling(
         &self,
         context: &mut RtContext<'_>,
         ray: &Ray,
@@ -78,7 +81,7 @@ pub trait MaterialExt: Material {
         let scene = context.scene();
         let lights = scene.get_lights();
 
-        let sample = self.sample_coefficient(ray, intersection, *context.rng());
+        let sample = self.sample_bsdf(ray, intersection, *context.rng());
         if sample.pdf() == Val(0.0) {
             return Contribution::new();
         }
@@ -97,9 +100,9 @@ pub trait MaterialExt: Material {
             return Contribution::new();
         };
 
-        let pdf_coefficient = sample.pdf();
+        let pdf_bsdf = sample.pdf();
         let pdf_light = lights.pdf_light(intersection, ray_next);
-        let weight = pdf_coefficient / (pdf_light + pdf_coefficient);
+        let weight = pdf_bsdf / (pdf_light + pdf_bsdf);
 
         let coefficient = sample.coefficient();
         let ray_next = sample.into_ray_next();
@@ -116,7 +119,7 @@ pub trait MaterialExt: Material {
     ) -> Contribution {
         let renderer = context.renderer();
 
-        let sample = self.sample_coefficient(ray, intersection, *context.rng());
+        let sample = self.sample_bsdf(ray, intersection, *context.rng());
         if sample.pdf() == Val(0.0) {
             return Contribution::new();
         }
@@ -160,7 +163,7 @@ pub trait MaterialExt: Material {
             return;
         }
 
-        let sample = self.sample_coefficient(photon.ray(), &intersection, *context.rng());
+        let sample = self.sample_bsdf(photon.ray(), &intersection, *context.rng());
         let throughput_next = sample.coefficient() * throughput;
         let photon_next = PhotonRay::new(sample.into_ray_next(), throughput_next);
         renderer.emit(context, state_next, photon_next, DisRange::positive());
@@ -195,7 +198,7 @@ pub trait MaterialExt: Material {
     }
 }
 
-impl<M> MaterialExt for M where M: Material {}
+impl<M> BsdfMaterialExt for M where M: BsdfMaterial {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FluxEstimation {

@@ -1,5 +1,5 @@
 mod ext;
 mod material;
 
-pub use ext::{FluxEstimation, MaterialExt};
-pub use material::{Material, MaterialContainer, MaterialId, MaterialKind};
+pub use ext::{FluxEstimation, BsdfMaterialExt};
+pub use material::{BsdfMaterial, Material, MaterialContainer, MaterialId, MaterialKind};
