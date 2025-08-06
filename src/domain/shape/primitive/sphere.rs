@@ -1,5 +1,6 @@
 use std::ops::RangeBounds;
 
+use getset::CopyGetters;
 use snafu::prelude::*;
 
 use crate::domain::material::primitive::Emissive;
@@ -13,7 +14,8 @@ use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
 use crate::domain::sampling::point::SpherePointSampler;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct Sphere {
     center: Point,
     radius: Val,
@@ -30,14 +32,6 @@ impl Sphere {
             center,
             radius: Val(1.0),
         }
-    }
-
-    pub fn center(&self) -> Point {
-        self.center
-    }
-
-    pub fn radius(&self) -> Val {
-        self.radius
     }
 }
 

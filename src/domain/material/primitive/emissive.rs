@@ -1,3 +1,5 @@
+use getset::CopyGetters;
+
 use crate::domain::color::Color;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Product;
@@ -6,7 +8,8 @@ use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct Emissive {
     radiance: Color,
     beam_angle: SpreadAngle,
@@ -18,14 +21,6 @@ impl Emissive {
             radiance,
             beam_angle,
         }
-    }
-
-    pub fn radiance(&self) -> Color {
-        self.radiance
-    }
-
-    pub fn beam_angle(&self) -> SpreadAngle {
-        self.beam_angle
     }
 }
 

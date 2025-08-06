@@ -1,10 +1,13 @@
 use std::ops::{Bound, RangeBounds};
 
+use getset::CopyGetters;
+
 use crate::domain::math::geometry::{AllTransformation, Point, Transform};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct BoundingBox {
     min: Point,
     max: Point,
@@ -23,14 +26,6 @@ impl BoundingBox {
             min: self.min.component_min(&other.min),
             max: self.max.component_max(&other.max),
         }
-    }
-
-    pub fn min(&self) -> Point {
-        self.min
-    }
-
-    pub fn max(&self) -> Point {
-        self.max
     }
 
     pub fn centroid(&self) -> Point {

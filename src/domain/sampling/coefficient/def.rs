@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
 use crate::domain::math::algebra::Vector;
@@ -17,10 +18,13 @@ pub trait BsdfSampling: Debug + Send + Sync {
     fn pdf_bsdf(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val;
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]
 pub struct BsdfSample {
+    #[getset(get = "pub")]
     ray_next: Ray,
+    #[getset(get_copy = "pub")]
     coefficient: Vector,
+    #[getset(get_copy = "pub")]
     pdf: Val,
 }
 
@@ -33,19 +37,7 @@ impl BsdfSample {
         }
     }
 
-    pub fn ray_next(&self) -> &Ray {
-        &self.ray_next
-    }
-
     pub fn into_ray_next(self) -> Ray {
         self.ray_next
-    }
-
-    pub fn coefficient(&self) -> Vector {
-        self.coefficient
-    }
-
-    pub fn pdf(&self) -> Val {
-        self.pdf
     }
 }

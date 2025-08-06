@@ -1,5 +1,7 @@
 use std::ops::RangeBounds;
 
+use getset::CopyGetters;
+
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
@@ -10,7 +12,8 @@ use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct Plane {
     point: Point,
     normal: UnitVector,
@@ -19,14 +22,6 @@ pub struct Plane {
 impl Plane {
     pub fn new(point: Point, normal: UnitVector) -> Self {
         Self { point, normal }
-    }
-
-    pub fn point(&self) -> Point {
-        self.point
-    }
-
-    pub fn normal(&self) -> UnitVector {
-        self.normal
     }
 
     pub fn calc_ray_intersection(

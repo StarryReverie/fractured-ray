@@ -1,8 +1,12 @@
 use std::ops::{Add, Mul};
 
-use crate::domain::math::{algebra::Vector, numeric::Val};
+use getset::CopyGetters;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
+use crate::domain::math::algebra::Vector;
+use crate::domain::math::numeric::Val;
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct Color {
     red: Val,
     green: Val,
@@ -25,18 +29,6 @@ impl Color {
             green: green.max(Val(0.0)),
             blue: blue.max(Val(0.0)),
         }
-    }
-
-    pub fn red(&self) -> Val {
-        self.red
-    }
-
-    pub fn green(&self) -> Val {
-        self.green
-    }
-
-    pub fn blue(&self) -> Val {
-        self.blue
     }
 
     pub fn to_vector(&self) -> Vector {

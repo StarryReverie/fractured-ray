@@ -1,8 +1,11 @@
+use getset::CopyGetters;
+
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::{AllTransformation, Point, Transform};
 use crate::domain::math::numeric::Val;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct RayIntersection {
     distance: Val,
     position: Point,
@@ -18,22 +21,6 @@ impl RayIntersection {
             normal,
             side,
         }
-    }
-
-    pub fn distance(&self) -> Val {
-        self.distance
-    }
-
-    pub fn position(&self) -> Point {
-        self.position
-    }
-
-    pub fn normal(&self) -> UnitVector {
-        self.normal
-    }
-
-    pub fn side(&self) -> SurfaceSide {
-        self.side
     }
 }
 

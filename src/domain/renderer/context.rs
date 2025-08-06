@@ -1,3 +1,4 @@
+use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
 use crate::domain::entity::Scene;
@@ -5,12 +6,18 @@ use crate::domain::ray::photon::{Photon, PhotonMap, SearchPolicy};
 
 use super::{Configuration, Renderer};
 
+#[derive(Getters, CopyGetters)]
 pub struct RtContext<'a> {
+    #[getset(get_copy = "pub")]
     renderer: &'a dyn Renderer,
+    #[getset(get_copy = "pub")]
     scene: &'a dyn Scene,
     rng: &'a mut dyn RngCore,
+    #[getset(get_copy = "pub")]
     config: &'a Configuration,
+    #[getset(get = "pub")]
     photon_global: PhotonInfo<'a>,
+    #[getset(get = "pub")]
     photon_casutic: PhotonInfo<'a>,
 }
 
@@ -33,31 +40,13 @@ impl<'a> RtContext<'a> {
         }
     }
 
-    pub fn renderer(&self) -> &'a (dyn Renderer + 'static) {
-        self.renderer
-    }
-
-    pub fn scene(&self) -> &'a (dyn Scene + 'static) {
-        self.scene
-    }
-
     pub fn rng(&mut self) -> &mut &'a mut dyn RngCore {
         &mut self.rng
     }
-
-    pub fn config(&self) -> &'a Configuration {
-        self.config
-    }
-
-    pub fn photon_global(&self) -> &PhotonInfo<'a> {
-        &self.photon_global
-    }
-
-    pub fn photon_casutic(&self) -> &PhotonInfo<'a> {
-        &self.photon_casutic
-    }
 }
 
+#[derive(CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct PhotonInfo<'a> {
     photons: &'a PhotonMap,
     policy: SearchPolicy,
@@ -72,22 +61,13 @@ impl<'a> PhotonInfo<'a> {
             emitted,
         }
     }
-
-    pub fn photons(&self) -> &'a PhotonMap {
-        self.photons
-    }
-
-    pub fn policy(&self) -> SearchPolicy {
-        self.policy
-    }
-
-    pub fn emitted(&self) -> usize {
-        self.emitted
-    }
 }
 
+#[derive(CopyGetters)]
 pub struct PmContext<'a> {
+    #[getset(get_copy = "pub")]
     renderer: &'a dyn Renderer,
+    #[getset(get_copy = "pub")]
     scene: &'a dyn Scene,
     rng: &'a mut dyn RngCore,
     photons: &'a mut Vec<Photon>,
@@ -106,14 +86,6 @@ impl<'a> PmContext<'a> {
             rng,
             photons,
         }
-    }
-
-    pub fn renderer(&self) -> &'a (dyn Renderer + 'static) {
-        self.renderer
-    }
-
-    pub fn scene(&self) -> &'a (dyn Scene + 'static) {
-        self.scene
     }
 
     pub fn rng(&mut self) -> &mut &'a mut dyn RngCore {

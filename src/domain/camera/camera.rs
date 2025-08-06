@@ -1,3 +1,4 @@
+use getset::CopyGetters;
 use snafu::prelude::*;
 
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
@@ -6,10 +7,13 @@ use crate::domain::math::numeric::Val;
 
 use super::{Offset, Resolution, TryNewViewportError, Viewport};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, CopyGetters)]
 pub struct Camera {
+    #[getset(get_copy = "pub")]
     position: Point,
+    #[getset(get_copy = "pub")]
     orientation: UnitVector,
+    #[getset(get_copy = "pub")]
     focal_length: Val,
     viewport: Viewport,
     viewport_horizontal_edge: Vector,
@@ -58,18 +62,6 @@ impl Camera {
             viewport_horizontal_edge,
             viewport_vertical_edge,
         })
-    }
-
-    pub fn position(&self) -> Point {
-        self.position
-    }
-
-    pub fn orientation(&self) -> UnitVector {
-        self.orientation
-    }
-
-    pub fn focal_length(&self) -> Val {
-        self.focal_length
     }
 
     pub fn resolution(&self) -> &Resolution {

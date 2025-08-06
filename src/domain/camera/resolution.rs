@@ -1,6 +1,8 @@
+use getset::CopyGetters;
 use snafu::prelude::*;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct Resolution {
     width: usize,
     height: usize,
@@ -23,14 +25,6 @@ impl Resolution {
             width: height * aspect_ratio.0 / aspect_ratio.1,
             height,
         })
-    }
-
-    pub fn width(&self) -> usize {
-        self.width
-    }
-
-    pub fn height(&self) -> usize {
-        self.height
     }
 }
 

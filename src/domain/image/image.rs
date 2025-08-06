@@ -1,9 +1,12 @@
+use getset::Getters;
+
 use crate::domain::camera::Resolution;
 use crate::domain::color::Color;
 use crate::domain::math::numeric::Val;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Getters)]
 pub struct Image {
+    #[getset(get = "pub")]
     resolution: Resolution,
     data: Vec<Color>,
     count: Vec<usize>,
@@ -25,10 +28,6 @@ impl Image {
             data,
             count,
         }
-    }
-
-    pub fn resolution(&self) -> &Resolution {
-        &self.resolution
     }
 
     pub fn get(&self, row: usize, column: usize) -> Option<Color> {

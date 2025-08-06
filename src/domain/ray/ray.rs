@@ -1,8 +1,11 @@
+use getset::CopyGetters;
+
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::{AllTransformation, Point, Transform};
 use crate::domain::math::numeric::Val;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct Ray {
     start: Point,
     direction: UnitVector,
@@ -11,14 +14,6 @@ pub struct Ray {
 impl Ray {
     pub fn new(start: Point, direction: UnitVector) -> Self {
         Self { start, direction }
-    }
-
-    pub fn start(&self) -> Point {
-        self.start
-    }
-
-    pub fn direction(&self) -> UnitVector {
-        self.direction
     }
 
     pub fn at(&self, distance: Val) -> Point {

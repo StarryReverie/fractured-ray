@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use getset::Getters;
+
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::{
@@ -12,9 +14,11 @@ use crate::domain::sampling::light::{InstanceLightSampler, LightSampling};
 use crate::domain::sampling::photon::{InstancePhotonSampler, PhotonSampling};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Getters)]
 pub struct Instance {
+    #[getset(get = "pub")]
     prototype: Arc<dyn Shape>,
+    #[getset(get = "pub")]
     transformation: AllTransformation,
 }
 
@@ -55,14 +59,6 @@ impl Instance {
             },
             ..self
         }
-    }
-
-    pub fn prototype(&self) -> &dyn Shape {
-        &*self.prototype
-    }
-
-    pub fn transformation(&self) -> &AllTransformation {
-        &self.transformation
     }
 }
 

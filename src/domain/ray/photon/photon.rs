@@ -1,20 +1,20 @@
+use getset::{CopyGetters, Getters};
+
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::ray::Ray;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]
 pub struct PhotonRay {
+    #[getset(get = "pub")]
     ray: Ray,
+    #[getset(get_copy = "pub")]
     throughput: Vector,
 }
 
 impl PhotonRay {
     pub fn new(ray: Ray, throughput: Vector) -> Self {
         Self { ray, throughput }
-    }
-
-    pub fn ray(&self) -> &Ray {
-        &self.ray
     }
 
     pub fn start(&self) -> Point {
@@ -24,13 +24,10 @@ impl PhotonRay {
     pub fn direction(&self) -> UnitVector {
         self.ray.direction()
     }
-
-    pub fn throughput(&self) -> Vector {
-        self.throughput
-    }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct Photon {
     position: Point,
     direction: UnitVector,
@@ -44,17 +41,5 @@ impl Photon {
             direction,
             throughput,
         }
-    }
-
-    pub fn position(&self) -> Point {
-        self.position
-    }
-
-    pub fn direction(&self) -> UnitVector {
-        self.direction
-    }
-
-    pub fn throughput(&self) -> Vector {
-        self.throughput
     }
 }

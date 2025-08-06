@@ -1,14 +1,19 @@
+use getset::{CopyGetters, Getters};
 use snafu::prelude::*;
 
 use crate::domain::math::numeric::Val;
 
 use super::Resolution;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]
 pub struct Viewport {
+    #[getset(get = "pub")]
     resolution: Resolution,
+    #[getset(get_copy = "pub")]
     width: Val,
+    #[getset(get_copy = "pub")]
     height: Val,
+    #[getset(get_copy = "pub")]
     pixel_size: Val,
 }
 
@@ -26,22 +31,6 @@ impl Viewport {
             height,
             pixel_size,
         })
-    }
-
-    pub fn resolution(&self) -> &Resolution {
-        &self.resolution
-    }
-
-    pub fn width(&self) -> Val {
-        self.width
-    }
-
-    pub fn height(&self) -> Val {
-        self.height
-    }
-
-    pub fn pixel_size(&self) -> Val {
-        self.pixel_size
     }
 
     pub fn index_to_percentage(

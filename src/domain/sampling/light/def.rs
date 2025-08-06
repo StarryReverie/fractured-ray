@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
 use crate::domain::math::geometry::{AllTransformation, Transform};
@@ -21,11 +22,15 @@ pub trait LightSampling: Debug + Send + Sync {
     fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val;
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]
 pub struct LightSample {
+    #[getset(get = "pub")]
     ray_next: Ray,
+    #[getset(get_copy = "pub")]
     pdf: Val,
+    #[getset(get_copy = "pub")]
     distance: Val,
+    #[getset(get_copy = "pub")]
     shape_id: ShapeId,
 }
 
@@ -39,24 +44,8 @@ impl LightSample {
         }
     }
 
-    pub fn ray_next(&self) -> &Ray {
-        &self.ray_next
-    }
-
     pub fn into_ray_next(self) -> Ray {
         self.ray_next
-    }
-
-    pub fn pdf(&self) -> Val {
-        self.pdf
-    }
-
-    pub fn distance(&self) -> Val {
-        self.distance
-    }
-
-    pub fn shape_id(&self) -> ShapeId {
-        self.shape_id
     }
 
     pub fn scale_pdf(self, multiplier: Val) -> Self {

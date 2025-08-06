@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use getset::CopyGetters;
 use rand::prelude::*;
 
 use crate::domain::math::algebra::UnitVector;
@@ -17,7 +18,8 @@ pub trait PointSampling: Debug + Send + Sync {
     fn pdf_point(&self, point: Point, checked_inside: bool) -> Val;
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct PointSample {
     point: Point,
     normal: UnitVector,
@@ -33,22 +35,6 @@ impl PointSample {
             pdf,
             shape_id,
         }
-    }
-
-    pub fn point(&self) -> Point {
-        self.point
-    }
-
-    pub fn normal(&self) -> UnitVector {
-        self.normal
-    }
-
-    pub fn pdf(&self) -> Val {
-        self.pdf
-    }
-
-    pub fn shape_id(&self) -> ShapeId {
-        self.shape_id
     }
 
     pub fn scale_pdf(self, multiplier: Val) -> Self {

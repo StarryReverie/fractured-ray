@@ -1,8 +1,12 @@
-#[derive(Debug, Clone, PartialEq, Eq)]
+use getset::{CopyGetters, WithSetters};
+
+#[derive(Debug, Clone, PartialEq, Eq, CopyGetters, WithSetters)]
 pub struct RtState {
+    #[getset(get_copy = "pub")]
     visible: bool,
     depth: u8,
     invisible_depth: u8,
+    #[getset(get_copy = "pub", set_with = "pub")]
     skip_emissive: bool,
 }
 
@@ -38,17 +42,6 @@ impl RtState {
         }
     }
 
-    pub fn with_skip_emissive(self, skip_emissive: bool) -> Self {
-        Self {
-            skip_emissive,
-            ..self
-        }
-    }
-
-    pub fn visible(&self) -> bool {
-        self.visible
-    }
-
     pub fn depth(&self) -> usize {
         self.depth as usize
     }
@@ -56,14 +49,12 @@ impl RtState {
     pub fn invisible_depth(&self) -> usize {
         self.invisible_depth as usize
     }
-
-    pub fn skip_emissive(&self) -> bool {
-        self.skip_emissive
-    }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, CopyGetters, WithSetters)]
+#[getset(get_copy = "pub")]
 pub struct PmState {
+    #[getset(set_with = "pub")]
     has_specular: bool,
     policy: StoragePolicy,
 }
@@ -74,21 +65,6 @@ impl PmState {
             has_specular,
             policy,
         }
-    }
-
-    pub fn with_has_specular(self, has_specular: bool) -> Self {
-        Self {
-            has_specular,
-            ..self
-        }
-    }
-
-    pub fn has_specular(&self) -> bool {
-        self.has_specular
-    }
-
-    pub fn policy(&self) -> StoragePolicy {
-        self.policy
     }
 }
 

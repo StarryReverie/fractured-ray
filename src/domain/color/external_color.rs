@@ -1,8 +1,11 @@
+use getset::CopyGetters;
+
 use crate::domain::math::numeric::Val;
 
 use super::Color;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct ExternalColor {
     red: u8,
     green: u8,
@@ -10,18 +13,6 @@ pub struct ExternalColor {
 }
 
 impl ExternalColor {
-    pub fn red(&self) -> u8 {
-        self.red
-    }
-
-    pub fn green(&self) -> u8 {
-        self.green
-    }
-
-    pub fn blue(&self) -> u8 {
-        self.blue
-    }
-
     fn encode_gamma(linear: Val) -> Val {
         if linear <= Val(0.0031308) {
             Val(12.92) * linear

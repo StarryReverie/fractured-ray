@@ -27,38 +27,47 @@ impl UnitVector {
         }
     }
 
+    #[inline]
     pub fn x_direction() -> Self {
         Self(Vector::new(Val(1.0), Val(0.0), Val(0.0)))
     }
 
+    #[inline]
     pub fn y_direction() -> Self {
         Self(Vector::new(Val(0.0), Val(1.0), Val(0.0)))
     }
 
+    #[inline]
     pub fn z_direction() -> Self {
         Self(Vector::new(Val(0.0), Val(0.0), Val(1.0)))
     }
 
+    #[inline]
     pub fn x(&self) -> Val {
         self.0.x()
     }
 
+    #[inline]
     pub fn y(&self) -> Val {
         self.0.y()
     }
 
+    #[inline]
     pub fn z(&self) -> Val {
         self.0.z()
     }
 
+    #[inline]
     pub fn norm(&self) -> Val {
         Val(1.0)
     }
 
+    #[inline]
     pub fn norm_squared(&self) -> Val {
         Val(1.0)
     }
 
+    #[inline]
     pub fn to_vector(&self) -> Vector {
         self.0
     }
@@ -71,6 +80,7 @@ impl UnitVector {
         (basis1, basis2)
     }
 
+    #[inline]
     pub fn is_perpendicular_to<V>(&self, rhs: V) -> bool
     where
         Self: Product<V, Output = Self>,
@@ -78,6 +88,7 @@ impl UnitVector {
         self.dot(rhs) == Val(0.0)
     }
 
+    #[inline]
     pub fn is_parallel_to<V>(&self, rhs: V) -> bool
     where
         Self: Product<V, Output = Self>,

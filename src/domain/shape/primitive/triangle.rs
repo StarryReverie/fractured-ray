@@ -1,5 +1,6 @@
 use std::ops::RangeBounds;
 
+use getset::CopyGetters;
 use snafu::prelude::*;
 
 use crate::domain::material::primitive::Emissive;
@@ -13,7 +14,8 @@ use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
 use crate::domain::sampling::point::TrianglePointSampler;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct Triangle {
     vertex0: Point,
     vertex1: Point,
@@ -48,18 +50,6 @@ impl Triangle {
             ParallelSidesSnafu
         );
         Ok(())
-    }
-
-    pub fn vertex0(&self) -> Point {
-        self.vertex0
-    }
-
-    pub fn vertex1(&self) -> Point {
-        self.vertex1
-    }
-
-    pub fn vertex2(&self) -> Point {
-        self.vertex2
     }
 
     pub fn calc_ray_intersection(

@@ -10,18 +10,22 @@ use super::{Rotation, Transform, Translation};
 pub struct Point(Vector);
 
 impl Point {
+    #[inline]
     pub fn new(x: Val, y: Val, z: Val) -> Self {
         Vector::new(x, y, z).into()
     }
 
+    #[inline]
     pub fn x(&self) -> Val {
         self.0.x()
     }
 
+    #[inline]
     pub fn y(&self) -> Val {
         self.0.y()
     }
 
+    #[inline]
     pub fn z(&self) -> Val {
         self.0.z()
     }
@@ -35,6 +39,7 @@ impl Point {
         }
     }
 
+    #[inline]
     pub fn into_vector(self) -> Vector {
         self.0
     }

@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use getset::CopyGetters;
+
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
@@ -35,7 +37,8 @@ pub trait ShapeConstructor: Debug + Send + Sync + 'static {
     fn construct<C: ShapeContainer>(self, container: &mut C) -> Vec<ShapeId>;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct ShapeId {
     kind: ShapeKind,
     index: u32,
@@ -44,14 +47,6 @@ pub struct ShapeId {
 impl ShapeId {
     pub fn new(kind: ShapeKind, index: u32) -> Self {
         Self { kind, index }
-    }
-
-    pub fn kind(&self) -> ShapeKind {
-        self.kind
-    }
-
-    pub fn index(&self) -> u32 {
-        self.index
     }
 }
 

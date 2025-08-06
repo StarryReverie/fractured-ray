@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use getset::Getters;
 use rand::prelude::*;
 
 use crate::domain::color::Color;
@@ -16,18 +17,15 @@ pub trait PhotonSampling: Debug + Send + Sync {
     fn sample_photon(&self, rng: &mut dyn RngCore) -> Option<PhotonSample>;
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Getters)]
 pub struct PhotonSample {
+    #[getset(get = "pub")]
     photon: PhotonRay,
 }
 
 impl PhotonSample {
     pub fn new(photon: PhotonRay) -> Self {
         Self { photon }
-    }
-
-    pub fn photon(&self) -> &PhotonRay {
-        &self.photon
     }
 
     pub fn into_photon(self) -> PhotonRay {

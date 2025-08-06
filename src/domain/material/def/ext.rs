@@ -1,5 +1,6 @@
 use std::ops::{Bound, Mul};
 
+use getset::CopyGetters;
 use rand::prelude::*;
 
 use crate::domain::math::algebra::{Product, Vector};
@@ -200,10 +201,13 @@ pub trait BsdfMaterialExt: BsdfMaterial {
 
 impl<M> BsdfMaterialExt for M where M: BsdfMaterial {}
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
 pub struct FluxEstimation {
+    #[getset(get_copy = "pub")]
     flux: Vector,
+    #[getset(get_copy = "pub")]
     num: Val,
+    #[getset(get_copy = "pub")]
     radius: Val,
 }
 
@@ -236,18 +240,6 @@ impl FluxEstimation {
         }
         let len = Val::from(estimations.len());
         Self::new(flux_sum / len, num_sum / len, radius2_avg.sqrt())
-    }
-
-    pub fn flux(&self) -> Vector {
-        self.flux
-    }
-
-    pub fn num(&self) -> Val {
-        self.num
-    }
-
-    pub fn radius(&self) -> Val {
-        self.radius
     }
 
     pub fn is_empty(&self) -> bool {
