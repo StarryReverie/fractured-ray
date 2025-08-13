@@ -43,7 +43,7 @@ impl Scattering {
             Self::calc_scattering_distance(albedo.blue(), mean_free_path),
         );
         Ok(Self {
-            albedo: albedo.into(),
+            albedo,
             scattering_distance,
             refractive_index,
         })

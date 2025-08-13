@@ -47,7 +47,7 @@ impl Contribution {
         }
 
         let light_sum = (estimations.iter()).map(|e| e.light()).sum::<Spectrum>();
-        let light_avg = Spectrum::from(light_sum / Val::from(estimations.len()));
+        let light_avg = light_sum / Val::from(estimations.len());
 
         let iter_global = estimations.iter().flat_map(|e| e.global());
         let global_avg = FluxEstimation::average(iter_global);
@@ -67,8 +67,8 @@ impl Contribution {
 
     pub fn add_light(&mut self, light: Spectrum) {
         match self {
-            Contribution::Light(color) => *color = *color + light,
-            Contribution::All(s) => s.light = s.light + light,
+            Contribution::Light(color) => *color += light,
+            Contribution::All(s) => s.light += light,
         }
     }
 
@@ -143,7 +143,7 @@ impl Mul<Val> for Contribution {
         match self {
             Contribution::Light(light) => (light * rhs).into(),
             Contribution::All(mut s) => {
-                s.light = s.light * rhs;
+                s.light *= rhs;
                 s.global = s.global * rhs;
                 s.caustic = s.caustic * rhs;
                 Contribution::All(s)
@@ -168,7 +168,7 @@ impl Mul<Spectrum> for Contribution {
         match self {
             Contribution::Light(light) => (light * rhs).into(),
             Contribution::All(mut s) => {
-                s.light = s.light * rhs;
+                s.light *= rhs;
                 s.global = s.global * rhs;
                 s.caustic = s.caustic * rhs;
                 Contribution::All(s)
