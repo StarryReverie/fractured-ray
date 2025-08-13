@@ -1,13 +1,14 @@
 use rand::prelude::*;
 
+use crate::domain::color::Spectrum;
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::{Rotation, Transform};
+use crate::domain::math::algebra::Vector;
+use crate::domain::math::geometry::Frame;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::sampling::point::PointSampling;
-use crate::domain::{color::Spectrum, math::algebra::Vector};
 
 use super::{PhotonSample, PhotonSampling};
 
@@ -90,8 +91,8 @@ where
             let (x, y, z) = (sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
             let local_dir = Vector::new(x, y, z).normalize().unwrap();
 
-            let tr = Rotation::new(UnitVector::z_direction(), normal, Val(0.0));
-            let dir = local_dir.transform(&tr);
+            let frame = Frame::new(normal);
+            let dir = frame.to_canonical_unit(local_dir);
             (dir, Val::FRAC_1_PI / sin2_beam)
         };
 

@@ -8,7 +8,7 @@ use crate::domain::entity::Scene;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::material::primitive::Specular;
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Point, PositionedFrame};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
@@ -25,7 +25,7 @@ pub struct Scattering {
 }
 
 impl Scattering {
-    const PROJECTION_AXIS_PROB: [Val; 3] = [Val(0.25), Val(0.25), Val(0.5)];
+    const PROJECTION_AXIS_PROB: [Val; 3] = [Val(0.5), Val(0.25), Val(0.25)];
     const COLOR_CHANNEL_PROB: [Val; 3] = [Val(1.0 / 3.0); 3];
     const MAX_RADIUS_CDF: Val = Val(0.999);
 
@@ -89,31 +89,33 @@ impl Scattering {
         exp_sum / (Val(8.0) * Val::PI * d * radius)
     }
 
-    fn generate_projection_axes(normal: UnitVector, rng: &mut dyn RngCore) -> [UnitVector; 3] {
-        let (b1, b2) = normal.orthonormal_basis();
+    fn generate_projection_frame(
+        intersection: &RayIntersection,
+        rng: &mut dyn RngCore,
+    ) -> PositionedFrame {
+        let frame = PositionedFrame::new(intersection.position(), intersection.normal());
         let r = Val(rng.random());
         if r < Self::PROJECTION_AXIS_PROB[0] {
-            [normal, b1, b2]
+            frame
         } else if r < Self::PROJECTION_AXIS_PROB[0] + Self::PROJECTION_AXIS_PROB[1] {
-            [b2, normal, b1]
+            frame.permute_axes()
         } else {
-            [b1, b2, normal]
+            frame.permute_axes().permute_axes()
         }
     }
 
     fn project_normalized_diffusion_point(
-        position_out: Point,
         scene: &dyn Scene,
-        axes: &[UnitVector; 3],
+        frame: &PositionedFrame,
         (radius, phi): (Val, Val),
         radius_max: Val,
     ) -> Option<RayIntersection> {
         let (x_local, y_local) = (radius * phi.cos(), radius * phi.sin());
-        let point_disk = position_out + x_local * axes[0] + y_local * axes[1];
+        let point_disk = frame.to_canonical(Point::new(x_local, y_local, Val(0.0)));
 
         let proj_ray_max_len = Val(2.0) * (radius_max.powi(2) - radius.powi(2)).sqrt();
-        let proj_ray_start = point_disk + (Val(0.5) * proj_ray_max_len) * axes[2];
-        let proj_ray = Ray::new(proj_ray_start, -axes[2]);
+        let proj_ray_start = point_disk + (Val(0.5) * proj_ray_max_len) * frame.normal();
+        let proj_ray = Ray::new(proj_ray_start, -frame.normal());
 
         let mut range = DisRange::inclusive(Val(0.0), proj_ray_max_len);
         while let Some((intersection, id)) = scene.find_intersection(&proj_ray, range) {
@@ -202,11 +204,10 @@ impl BssrdfSampling for Scattering {
         let radius = Self::generate_normailzed_diffusion_radius(d, rng)?;
         let phi = Val(2.0) * Val::PI * Val(rng.random());
 
-        let axes = Self::generate_projection_axes(intersection_out.normal(), rng);
+        let frame = Self::generate_projection_frame(intersection_out, rng);
         let intersection_in = Self::project_normalized_diffusion_point(
-            intersection_out.position(),
             scene,
-            &axes,
+            &frame,
             (radius, phi),
             Self::calc_max_normailzed_diffusion_radius(d),
         )?;
@@ -227,16 +228,14 @@ impl BssrdfSampling for Scattering {
         intersection_out: &RayIntersection,
         intersection_in: &RayIntersection,
     ) -> Val {
-        let radius_vec = intersection_in.position() - intersection_out.position();
         let normal = intersection_out.normal();
-        let (tangent1, tangent2) = normal.orthonormal_basis();
-        let mut axes = [normal, tangent1, tangent2];
+        let mut frame = PositionedFrame::new(intersection_out.position(), normal);
 
         let mut pdf = Val(0.0);
         for axis in 0..3 {
-            let (x_local, y_local) = (radius_vec.dot(axes[0]), radius_vec.dot(axes[1]));
-            let radius = (x_local.powi(2) + y_local.powi(2)).sqrt();
-            let cos = intersection_in.normal().dot(axes[2]).max(Val(0.0));
+            let in_local = frame.to_local(intersection_in.position());
+            let radius = (in_local.x().powi(2) + in_local.y().powi(2)).sqrt();
+            let cos = intersection_in.normal().dot(frame.normal()).max(Val(0.0));
 
             for channel in 0..3 {
                 let d = self.scattering_distance.axis(channel);
@@ -245,7 +244,8 @@ impl BssrdfSampling for Scattering {
                     * Self::PROJECTION_AXIS_PROB[axis]
                     * Self::COLOR_CHANNEL_PROB[channel]
             }
-            axes.rotate_right(1);
+
+            frame = frame.permute_axes();
         }
 
         pdf

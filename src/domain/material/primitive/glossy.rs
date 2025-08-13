@@ -6,7 +6,7 @@ use snafu::prelude::*;
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
-use crate::domain::math::geometry::{Rotation, Transform, Transformation};
+use crate::domain::math::geometry::Frame;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
@@ -74,10 +74,10 @@ impl Glossy {
         normal: UnitVector,
         rng: &mut dyn RngCore,
     ) -> UnitVector {
-        let tr = Rotation::new(normal, UnitVector::z_direction(), Val(0.0));
-        let local_dir = dir.transform(&tr);
+        let frame = Frame::new(normal);
+        let local_dir = frame.to_local_unit(dir);
         let local_mn = self.generate_local_microfacet_normal(local_dir, rng);
-        local_mn.transform(&tr.inverse())
+        frame.to_canonical_unit(local_mn)
     }
 
     fn generate_local_microfacet_normal(
@@ -90,7 +90,6 @@ impl Glossy {
         let ldir_tr = Vector::new(alpha * local_dir.x(), alpha * local_dir.y(), local_dir.z())
             .normalize()
             .unwrap();
-        let (b1, b2) = ldir_tr.orthonormal_basis();
 
         let r = Val(rng.random()).sqrt();
         let phi = Val(2.0) * Val::PI * Val(rng.random());
@@ -99,7 +98,7 @@ impl Glossy {
         let t2 = (Val(1.0) - s) * (Val(1.0) - t1.powi(2)).sqrt() + s * t2;
 
         let t3 = (Val(1.0) - t1.powi(2) - t2.powi(2)).max(Val(0.0)).sqrt();
-        let mn_tr = t1 * b1 + t2 * b2 + t3 * ldir_tr;
+        let mn_tr = Frame::new(ldir_tr).to_canonical(Vector::new(t1, t2, t3));
         let mn = Vector::new(
             alpha * mn_tr.x(),
             alpha * mn_tr.y(),

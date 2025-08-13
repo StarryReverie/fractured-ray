@@ -1,7 +1,7 @@
 use rand::prelude::*;
 
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
-use crate::domain::math::geometry::{Rotation, Transform};
+use crate::domain::math::geometry::Frame;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::shape::def::{Shape, ShapeId};
@@ -48,8 +48,8 @@ impl LightSampling for SphereLightSampler {
         let local_at_sphere = Vector::new(x, y, z) * self.sphere.radius();
 
         let global_dir = -to_center.normalize().unwrap_or(UnitVector::z_direction());
-        let tr = Rotation::new(UnitVector::z_direction(), global_dir, Val(0.0));
-        let at_sphere = local_at_sphere.transform(&tr);
+        let frame = Frame::new(global_dir);
+        let at_sphere = frame.to_canonical(local_at_sphere);
         let Ok(direction) = (to_center + at_sphere).normalize() else {
             return None;
         };

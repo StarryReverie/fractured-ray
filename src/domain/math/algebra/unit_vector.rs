@@ -101,9 +101,13 @@ impl TryFrom<Vector> for UnitVector {
     type Error = TryIntoUnitVectorError;
 
     fn try_from(value: Vector) -> Result<Self, Self::Error> {
-        let norm = value.norm();
-        ensure!(norm > Val(0.0), ZeroVectorSnafu);
-        Ok(UnitVector(value / norm))
+        let norm_squared = value.norm_squared();
+        if norm_squared == Val(1.0) {
+            Ok(UnitVector(value))
+        } else {
+            ensure!(norm_squared > Val(0.0), ZeroVectorSnafu);
+            Ok(UnitVector(value / norm_squared.sqrt()))
+        }
     }
 }
 
