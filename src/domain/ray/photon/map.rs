@@ -1,6 +1,7 @@
 use std::collections::BinaryHeap;
 
-use crate::domain::math::algebra::{UnitVector, Vector};
+use crate::domain::color::Spectrum;
+use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
 
@@ -215,7 +216,7 @@ impl Default for KdTreeNode {
             Photon::new(
                 Point::default(),
                 UnitVector::x_direction(),
-                Vector::default(),
+                Spectrum::zero(),
             ),
             0,
             None,
@@ -294,7 +295,7 @@ mod tests {
         Photon::new(
             Point::new(Val(x), Val(y), Val(z)),
             UnitVector::x_direction(),
-            Vector::default(),
+            Spectrum::zero(),
         )
     }
 }

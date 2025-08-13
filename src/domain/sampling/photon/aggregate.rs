@@ -19,7 +19,7 @@ impl AggregatePhotonSampler {
             samplers.push(Box::new(EmptyPhotonSampler::new()));
         }
         let weights = (samplers.iter())
-            .map(|sampler| sampler.radiance().to_vector().norm() * sampler.area())
+            .map(|sampler| sampler.radiance().norm() * sampler.area())
             .map(|weight| weight.0.max(Val::PRECISION))
             .collect::<Vec<_>>();
         let index_sampler = WeightedIndex::new(weights).unwrap();
@@ -74,7 +74,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
-            Emissive::new(Spectrum::WHITE, SpreadAngle::hemisphere()),
+            Emissive::new(Spectrum::broadcast(Val(1.0)), SpreadAngle::hemisphere()),
         ));
         let sampler2: Box<dyn PhotonSampling> = Box::new(PhotonSamplerAdapter::new(
             TrianglePointSampler::new(
@@ -86,13 +86,13 @@ mod tests {
                 )
                 .unwrap(),
             ),
-            Emissive::new(Spectrum::WHITE * Val(0.25), SpreadAngle::hemisphere()),
+            Emissive::new(Spectrum::broadcast(Val(0.25)), SpreadAngle::hemisphere()),
         ));
         let sampler = AggregatePhotonSampler::new(vec![sampler1, sampler2]);
 
         let photon = sampler.sample_photon(&mut rand::rng()).unwrap();
-        assert_eq!(photon.photon().throughput().x(), Val::PI);
-        assert_eq!(photon.photon().throughput().y(), Val::PI);
-        assert_eq!(photon.photon().throughput().z(), Val::PI);
+        assert_eq!(photon.photon().throughput().red(), Val::PI);
+        assert_eq!(photon.photon().throughput().green(), Val::PI);
+        assert_eq!(photon.photon().throughput().blue(), Val::PI);
     }
 }

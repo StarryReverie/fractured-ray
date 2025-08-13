@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use snafu::prelude::*;
 
-use crate::domain::math::{algebra::Vector, numeric::Val};
+use crate::domain::math::numeric::Val;
 
 use super::Spectrum;
 
@@ -10,14 +10,14 @@ use super::Spectrum;
 pub struct Albedo(Spectrum);
 
 impl Albedo {
-    pub const BLACK: Self = Self(Spectrum::BLACK);
-    pub const RED: Self = Self(Spectrum::RED);
-    pub const GREEN: Self = Self(Spectrum::GREEN);
-    pub const BLUE: Self = Self(Spectrum::BLUE);
-    pub const YELLOW: Self = Self(Spectrum::YELLOW);
-    pub const MAGENTA: Self = Self(Spectrum::MAGENTA);
-    pub const CYAN: Self = Self(Spectrum::CYAN);
-    pub const WHITE: Self = Self(Spectrum::WHITE);
+    pub const BLACK: Self = Self(Spectrum::new(Val(0.0), Val(0.0), Val(0.0)));
+    pub const RED: Self = Self(Spectrum::new(Val(1.0), Val(0.0), Val(0.0)));
+    pub const GREEN: Self = Self(Spectrum::new(Val(0.0), Val(1.0), Val(0.0)));
+    pub const BLUE: Self = Self(Spectrum::new(Val(0.0), Val(0.0), Val(1.0)));
+    pub const YELLOW: Self = Self(Spectrum::new(Val(1.0), Val(1.0), Val(0.0)));
+    pub const MAGENTA: Self = Self(Spectrum::new(Val(1.0), Val(0.0), Val(1.0)));
+    pub const CYAN: Self = Self(Spectrum::new(Val(0.0), Val(1.0), Val(1.0)));
+    pub const WHITE: Self = Self(Spectrum::new(Val(1.0), Val(1.0), Val(1.0)));
 
     pub fn new(red: Val, green: Val, blue: Val) -> Result<Self, TryNewAlbedoError> {
         let range = Val(0.0)..=Val(1.0);
@@ -25,6 +25,11 @@ impl Albedo {
         ensure!(range.contains(&green), InvalidComponentSnafu);
         ensure!(range.contains(&blue), InvalidComponentSnafu);
         Ok(Self(Spectrum::new(red, green, blue)))
+    }
+
+    #[inline]
+    pub fn broadcast(val: Val) -> Result<Self, TryNewAlbedoError> {
+        Self::new(val, val, val)
     }
 
     #[inline]
@@ -45,11 +50,6 @@ impl Albedo {
     #[inline]
     pub fn to_spectrum(&self) -> Spectrum {
         self.0
-    }
-
-    #[inline]
-    pub fn to_vector(&self) -> Vector {
-        self.0.to_vector()
     }
 }
 

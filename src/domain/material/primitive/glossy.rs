@@ -3,7 +3,7 @@ use std::any::Any;
 use rand::prelude::*;
 use snafu::prelude::*;
 
-use crate::domain::color::Albedo;
+use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::{Rotation, Transform, Transformation};
@@ -17,12 +17,12 @@ use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Glossy {
-    r0: Vector,
+    r0: Spectrum,
     alpha: Val,
 }
 
 impl Glossy {
-    const DIELECTRIC_R0: Vector = Vector::broadcast(Val(0.04));
+    const DIELECTRIC_R0: Spectrum = Spectrum::broadcast(Val(0.04));
 
     pub fn new(albedo: Albedo, metalness: Val, roughness: Val) -> Result<Self, TryNewGlossyError> {
         ensure!(
@@ -34,7 +34,7 @@ impl Glossy {
             InvalidRoughnessSnafu
         );
 
-        let r0 = Vector::lerp(Self::DIELECTRIC_R0, albedo.to_vector(), metalness);
+        let r0 = Spectrum::lerp(Self::DIELECTRIC_R0, albedo.into(), metalness);
         let alpha = roughness.powi(2);
         Ok(Self { r0, alpha })
     }
@@ -64,7 +64,7 @@ impl Glossy {
             GlossyPredefinition::Titanium => (0.542, 0.497, 0.449),
             GlossyPredefinition::Zinc => (0.664, 0.824, 0.850),
         };
-        let r0 = Vector::new(Val(r0_r), Val(r0_g), Val(r0_b));
+        let r0 = Spectrum::new(Val(r0_r), Val(r0_g), Val(r0_b));
         Ok(Self { r0, alpha })
     }
 
@@ -114,8 +114,8 @@ impl Glossy {
         Ray::new(intersection.position(), dir_next.normalize().unwrap())
     }
 
-    fn calc_reflectance(&self, cos: Val) -> Vector {
-        self.r0 + (Vector::broadcast(Val(1.0)) - self.r0) * (Val(1.0) - cos).powi(5)
+    fn calc_reflectance(&self, cos: Val) -> Spectrum {
+        self.r0 + (Spectrum::broadcast(Val(1.0)) - self.r0) * (Val(1.0) - cos).powi(5)
     }
 
     fn calc_ndf(&self, normal: UnitVector, mn: UnitVector) -> Val {
@@ -184,7 +184,7 @@ impl BsdfMaterial for Glossy {
         dir_out: UnitVector,
         intersection: &RayIntersection,
         dir_in: UnitVector,
-    ) -> Vector {
+    ) -> Spectrum {
         let normal = intersection.normal();
         if normal.dot(dir_in) > Val(0.0) {
             let mn = (dir_out + dir_in).normalize().unwrap();
@@ -196,7 +196,7 @@ impl BsdfMaterial for Glossy {
 
             (reflectance * ndf * g2) / (Val(4.0) * cos * cos_next).abs()
         } else {
-            Vector::broadcast(Val(0.0))
+            Spectrum::zero()
         }
     }
 }

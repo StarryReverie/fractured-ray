@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
-use crate::domain::math::algebra::Vector;
+use crate::domain::color::Spectrum;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
 
@@ -23,13 +23,13 @@ pub struct BsdfSample {
     #[getset(get = "pub")]
     ray_next: Ray,
     #[getset(get_copy = "pub")]
-    coefficient: Vector,
+    coefficient: Spectrum,
     #[getset(get_copy = "pub")]
     pdf: Val,
 }
 
 impl BsdfSample {
-    pub fn new(ray_next: Ray, coefficient: Vector, pdf: Val) -> Self {
+    pub fn new(ray_next: Ray, coefficient: Spectrum, pdf: Val) -> Self {
         Self {
             ray_next,
             coefficient,

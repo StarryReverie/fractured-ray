@@ -1,7 +1,8 @@
 use std::any::Any;
 use std::fmt::Debug;
 
-use crate::domain::math::algebra::{UnitVector, Vector};
+use crate::domain::color::Spectrum;
+use crate::domain::math::algebra::UnitVector;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
@@ -37,7 +38,7 @@ pub trait BsdfMaterial: Material + BsdfSampling {
         dir_out: UnitVector,
         intersection: &RayIntersection,
         dir_in: UnitVector,
-    ) -> Vector;
+    ) -> Spectrum;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

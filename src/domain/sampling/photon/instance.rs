@@ -31,7 +31,7 @@ impl PhotonSampling for InstancePhotonSampler {
     fn radiance(&self) -> Spectrum {
         self.sampler
             .as_ref()
-            .map_or(Spectrum::BLACK, |sampler| sampler.radiance())
+            .map_or(Spectrum::zero(), |sampler| sampler.radiance())
     }
 
     fn area(&self) -> Val {

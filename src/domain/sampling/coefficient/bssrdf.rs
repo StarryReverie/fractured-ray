@@ -3,8 +3,8 @@ use std::fmt::Debug;
 use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
+use crate::domain::color::Spectrum;
 use crate::domain::entity::Scene;
-use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::{Ray, RayIntersection};
 
@@ -38,7 +38,7 @@ pub struct BssrdfDiffusionSample {
     #[getset(get = "pub")]
     intersection_in: RayIntersection,
     #[getset(get_copy = "pub")]
-    bssrdf_diffusion: Vector,
+    bssrdf_diffusion: Spectrum,
     #[getset(get_copy = "pub")]
     pdf: Val,
 }
@@ -47,7 +47,7 @@ impl BssrdfDiffusionSample {
     pub fn new(
         distance: Val,
         intersection_in: RayIntersection,
-        bssrdf_diffusion: Vector,
+        bssrdf_diffusion: Spectrum,
         pdf: Val,
     ) -> Self {
         Self {
@@ -64,13 +64,13 @@ pub struct BssrdfDirectionSample {
     #[getset(get = "pub")]
     ray_next: Ray,
     #[getset(get_copy = "pub")]
-    bssrdf_direction: Vector,
+    bssrdf_direction: Spectrum,
     #[getset(get_copy = "pub")]
     pdf: Val,
 }
 
 impl BssrdfDirectionSample {
-    pub fn new(ray_next: Ray, bssrdf_direction: Vector, pdf: Val) -> Self {
+    pub fn new(ray_next: Ray, bssrdf_direction: Spectrum, pdf: Val) -> Self {
         Self {
             ray_next,
             bssrdf_direction,

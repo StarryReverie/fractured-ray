@@ -18,7 +18,7 @@ impl Image {
         let height = resolution.height();
 
         let mut data = Vec::new();
-        data.resize(width * height, Spectrum::BLACK);
+        data.resize(width * height, Spectrum::zero());
 
         let mut count = Vec::new();
         count.resize(width * height, 1);

@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
-use fractured_ray::domain::color::Spectrum;
+use fractured_ray::domain::color::{Albedo, Spectrum};
 use fractured_ray::domain::entity::BvhSceneBuilder;
 use fractured_ray::domain::material::primitive::{
     Emissive, Glossy, GlossyPredefinition, Refractive,
@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Val(0.0),
             ))
             .translate(Translation::new(Vector::new(Val(3.0), Val(0.0), Val(-2.0)))),
-        Refractive::new((Spectrum::WHITE * Val(0.9)).into(), Val(2.417))?,
+        Refractive::new(Albedo::broadcast(Val(0.9))?, Val(2.417))?,
     );
 
     scene.add(
@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Point::new(Val(4.0) + dx, Val(18.0), Val(4.0) + dz),
                 Point::new(Val(-4.0) + dx, Val(18.0), Val(4.0) + dz),
             ])?,
-            Emissive::new(Spectrum::WHITE * Val(2.0), SpreadAngle::hemisphere()),
+            Emissive::new(Spectrum::broadcast(Val(2.0)), SpreadAngle::hemisphere()),
         );
     }
 
@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         scene.build(),
         Configuration {
             iterations: 1024,
-            background_color: Spectrum::WHITE * Val(0.01),
+            background_color: Spectrum::broadcast(Val(0.01)),
             ..Configuration::default()
         },
     )?;

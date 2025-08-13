@@ -3,7 +3,7 @@ use std::any::Any;
 use rand::prelude::*;
 use snafu::prelude::*;
 
-use crate::domain::color::Albedo;
+use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::entity::Scene;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::material::primitive::Specular;
@@ -54,10 +54,10 @@ impl Scattering {
         mean_free_path / scaling_factor
     }
 
-    fn calc_normalized_diffusion(&self, d: Val, radius: Val) -> Vector {
+    fn calc_normalized_diffusion(&self, d: Val, radius: Val) -> Spectrum {
         let exp_13 = (-radius / (Val(3.0) * d)).exp();
         let exp_sum = exp_13 * (Val(1.0) + exp_13.powi(2));
-        self.albedo.to_vector() * (Val(8.0) * Val::PI * radius * d).recip() * exp_sum
+        self.albedo * (Val(8.0) * Val::PI * radius * d).recip() * exp_sum
     }
 
     fn generate_normailzed_diffusion_radius(d: Val, rng: &mut dyn RngCore) -> Option<Val> {
@@ -262,7 +262,7 @@ impl BssrdfSampling for Scattering {
 
         let cos = ray_next.direction().dot(intersection_in.normal());
         let transmittance = self.calc_transmittance(cos);
-        let bssrdf_direction = Vector::broadcast(Val::FRAC_1_PI * transmittance);
+        let bssrdf_direction = Spectrum::broadcast(Val::FRAC_1_PI * transmittance);
         let pdf = Val::FRAC_1_PI * cos;
         BssrdfDirectionSample::new(ray_next, bssrdf_direction, pdf)
     }
@@ -338,13 +338,13 @@ impl<'a> BsdfMaterial for ScatteringBsdfMaterialAdapter<'a> {
         _dir_out: UnitVector,
         intersection: &RayIntersection,
         dir_in: UnitVector,
-    ) -> Vector {
+    ) -> Spectrum {
         let cos = dir_in.dot(intersection.normal());
         if cos > Val(0.0) {
             let transmittance = self.inner.calc_transmittance(cos);
-            Vector::broadcast(Val::FRAC_1_PI * transmittance)
+            Spectrum::broadcast(Val::FRAC_1_PI * transmittance)
         } else {
-            Vector::zero()
+            Spectrum::zero()
         }
     }
 }

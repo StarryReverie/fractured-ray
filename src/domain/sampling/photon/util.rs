@@ -22,7 +22,7 @@ impl EmptyPhotonSampler {
 
 impl PhotonSampling for EmptyPhotonSampler {
     fn radiance(&self) -> Spectrum {
-        Spectrum::BLACK
+        Spectrum::zero()
     }
 
     fn area(&self) -> Val {
@@ -96,7 +96,7 @@ where
         };
 
         let ray = Ray::new(point, dir);
-        let throughput = self.radiance().to_vector() / (pdf_point * pdf_dir_div_cos);
+        let throughput = self.radiance() / (pdf_point * pdf_dir_div_cos);
         let photon = PhotonRay::new(ray, throughput);
         Some(PhotonSample::new(photon))
     }
@@ -123,12 +123,12 @@ mod tests {
                 )
                 .unwrap(),
             ),
-            Emissive::new(Spectrum::WHITE, SpreadAngle::hemisphere()),
+            Emissive::new(Spectrum::broadcast(Val(1.0)), SpreadAngle::hemisphere()),
         );
 
         let photon = sampler.sample_photon(&mut rand::rng()).unwrap();
-        assert_eq!(photon.photon().throughput().x(), Val::PI * Val(0.5));
-        assert_eq!(photon.photon().throughput().y(), Val::PI * Val(0.5));
-        assert_eq!(photon.photon().throughput().z(), Val::PI * Val(0.5));
+        assert_eq!(photon.photon().throughput().red(), Val::PI * Val(0.5));
+        assert_eq!(photon.photon().throughput().green(), Val::PI * Val(0.5));
+        assert_eq!(photon.photon().throughput().blue(), Val::PI * Val(0.5));
     }
 }

@@ -2,9 +2,9 @@ use std::any::Any;
 
 use rand::prelude::*;
 
-use crate::domain::color::Albedo;
+use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
-use crate::domain::math::algebra::{Product, UnitVector, Vector};
+use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
@@ -71,8 +71,8 @@ impl BsdfMaterial for Specular {
         _dir_out: UnitVector,
         _intersection: &RayIntersection,
         _dir_in: UnitVector,
-    ) -> Vector {
-        Vector::zero()
+    ) -> Spectrum {
+        Spectrum::zero()
     }
 }
 
@@ -85,7 +85,7 @@ impl BsdfSampling for Specular {
     ) -> BsdfSample {
         let direction = self.calc_next_ray(ray, intersection);
         let pdf = self.pdf_bsdf(ray, intersection, &direction);
-        BsdfSample::new(direction, self.albedo.to_vector(), pdf)
+        BsdfSample::new(direction, self.albedo.into(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {

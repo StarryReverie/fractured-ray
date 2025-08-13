@@ -3,7 +3,8 @@ use std::ops::{Bound, Mul};
 use getset::CopyGetters;
 use rand::prelude::*;
 
-use crate::domain::math::algebra::{Product, Vector};
+use crate::domain::color::Spectrum;
+use crate::domain::math::algebra::Product;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::photon::{Photon, PhotonRay, SearchPolicy};
 use crate::domain::ray::{Ray, RayIntersection};
@@ -154,9 +155,9 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         let renderer = context.renderer();
         let mut throughput = photon.throughput();
 
-        let continue_prob = (throughput.x())
-            .max(throughput.y())
-            .max(throughput.z())
+        let continue_prob = (throughput.red())
+            .max(throughput.green())
+            .max(throughput.blue())
             .clamp(Val(0.0), Val(1.0));
         if Val(context.rng().random()) < continue_prob {
             throughput /= continue_prob;
@@ -180,7 +181,7 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         let center = intersection.position();
         let photons = pm.search(center, policy);
 
-        let mut flux = Vector::zero();
+        let mut flux = Spectrum::zero();
         for photon in &photons {
             let bsdf = self.bsdf(-ray.direction(), intersection, photon.direction());
             flux += bsdf * photon.throughput();
@@ -204,7 +205,7 @@ impl<M> BsdfMaterialExt for M where M: BsdfMaterial {}
 #[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
 pub struct FluxEstimation {
     #[getset(get_copy = "pub")]
-    flux: Vector,
+    flux: Spectrum,
     #[getset(get_copy = "pub")]
     num: Val,
     #[getset(get_copy = "pub")]
@@ -212,12 +213,12 @@ pub struct FluxEstimation {
 }
 
 impl FluxEstimation {
-    pub fn new(flux: Vector, num: Val, radius: Val) -> Self {
+    pub fn new(flux: Spectrum, num: Val, radius: Val) -> Self {
         Self { flux, num, radius }
     }
 
     pub fn empty() -> Self {
-        Self::new(Vector::zero(), Val(0.0), Val::INFINITY)
+        Self::new(Spectrum::zero(), Val(0.0), Val::INFINITY)
     }
 
     pub fn average<'a, I>(estimations: I) -> Self
@@ -232,7 +233,7 @@ impl FluxEstimation {
         let radius2_sum = estimations.iter().map(|e| e.radius.powi(2)).sum::<Val>();
         let radius2_avg = radius2_sum / Val::from(estimations.len());
 
-        let (mut flux_sum, mut num_sum) = (Vector::zero(), Val(0.0));
+        let (mut flux_sum, mut num_sum) = (Spectrum::zero(), Val(0.0));
         for estimation in &estimations {
             let proportion = estimation.radius.powi(2) / radius2_avg;
             flux_sum += estimation.flux / proportion;
@@ -267,10 +268,10 @@ impl Mul<FluxEstimation> for Val {
     }
 }
 
-impl Mul<Vector> for FluxEstimation {
+impl Mul<Spectrum> for FluxEstimation {
     type Output = Self;
 
-    fn mul(self, rhs: Vector) -> Self::Output {
+    fn mul(self, rhs: Spectrum) -> Self::Output {
         Self {
             flux: self.flux * rhs,
             ..self
@@ -278,8 +279,8 @@ impl Mul<Vector> for FluxEstimation {
     }
 }
 
-impl Mul<FluxEstimation> for Vector {
-    type Output = FluxEstimation;
+impl Mul<FluxEstimation> for Spectrum {
+    type Output = <FluxEstimation as Mul<Spectrum>>::Output;
 
     #[inline]
     fn mul(self, rhs: FluxEstimation) -> Self::Output {

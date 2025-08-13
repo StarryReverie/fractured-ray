@@ -10,7 +10,6 @@ use crate::domain::color::Spectrum;
 use crate::domain::entity::{BvhScene, Scene};
 use crate::domain::image::Image;
 use crate::domain::material::def::FluxEstimation;
-use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::{PhotonMap, PhotonRay, SearchPolicy};
@@ -237,7 +236,7 @@ impl Default for Configuration {
             photons_global: 200000,
             photons_caustic: 1000000,
             initial_num_nearest: 100,
-            background_color: Spectrum::BLACK,
+            background_color: Spectrum::zero(),
         }
     }
 }
@@ -294,8 +293,8 @@ impl Pixel {
             }
         }
         cont.light()
-            + (self.global.as_ref()).map_or(Spectrum::BLACK, |o| o.radiance(emitted_global))
-            + (self.caustic.as_ref()).map_or(Spectrum::BLACK, |o| o.radiance(emitted_caustic))
+            + (self.global.as_ref()).map_or(Spectrum::zero(), |o| o.radiance(emitted_global))
+            + (self.caustic.as_ref()).map_or(Spectrum::zero(), |o| o.radiance(emitted_caustic))
     }
 
     fn get_policy_global(&self, default_num: usize) -> SearchPolicy {
@@ -317,7 +316,7 @@ impl Pixel {
 
 #[derive(Debug, Clone, PartialEq)]
 struct Observation {
-    flux: Vector,
+    flux: Spectrum,
     num: usize,
     radius: Val,
 }
@@ -343,6 +342,6 @@ impl Observation {
 
     fn radiance(&self, num_emitted: usize) -> Spectrum {
         let area = Val::PI * self.radius.powi(2);
-        (self.flux / (area * Val::from(num_emitted))).into()
+        self.flux / (area * Val::from(num_emitted))
     }
 }

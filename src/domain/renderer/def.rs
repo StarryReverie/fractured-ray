@@ -3,7 +3,6 @@ use std::ops::Mul;
 use crate::domain::color::Spectrum;
 use crate::domain::image::Image;
 use crate::domain::material::def::FluxEstimation;
-use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::PhotonRay;
@@ -39,7 +38,7 @@ pub enum Contribution {
 
 impl Contribution {
     pub fn new() -> Self {
-        Spectrum::BLACK.into()
+        Spectrum::zero().into()
     }
 
     pub fn average(estimations: Vec<Contribution>) -> Contribution {
@@ -47,9 +46,7 @@ impl Contribution {
             return Contribution::new();
         }
 
-        let light_sum = (estimations.iter())
-            .map(|e| e.light().to_vector())
-            .sum::<Vector>();
+        let light_sum = (estimations.iter()).map(|e| e.light()).sum::<Spectrum>();
         let light_avg = Spectrum::from(light_sum / Val::from(estimations.len()));
 
         let iter_global = estimations.iter().flat_map(|e| e.global());
@@ -164,10 +161,10 @@ impl Mul<Contribution> for Val {
     }
 }
 
-impl Mul<Vector> for Contribution {
+impl Mul<Spectrum> for Contribution {
     type Output = Self;
 
-    fn mul(self, rhs: Vector) -> Self::Output {
+    fn mul(self, rhs: Spectrum) -> Self::Output {
         match self {
             Contribution::Light(light) => (light * rhs).into(),
             Contribution::All(mut s) => {
@@ -180,8 +177,8 @@ impl Mul<Vector> for Contribution {
     }
 }
 
-impl Mul<Contribution> for Vector {
-    type Output = Contribution;
+impl Mul<Contribution> for Spectrum {
+    type Output = <Contribution as Mul<Spectrum>>::Output;
 
     #[inline]
     fn mul(self, rhs: Contribution) -> Self::Output {

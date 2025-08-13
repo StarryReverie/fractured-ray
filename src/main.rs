@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(2.0), Val(3.999), Val(2.0)),
             Point::new(Val(-2.0), Val(3.999), Val(2.0)),
         ])?,
-        Emissive::new(Spectrum::WHITE, SpreadAngle::hemisphere()),
+        Emissive::new(Spectrum::broadcast(Val(1.0)), SpreadAngle::hemisphere()),
     );
 
     builder.add(

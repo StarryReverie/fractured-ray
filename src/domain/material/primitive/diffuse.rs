@@ -2,9 +2,9 @@ use std::any::Any;
 
 use rand::prelude::*;
 
-use crate::domain::color::Albedo;
+use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
-use crate::domain::math::algebra::{Product, UnitVector, Vector};
+use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
@@ -87,11 +87,11 @@ impl BsdfMaterial for Diffuse {
         _dir_out: UnitVector,
         intersection: &RayIntersection,
         dir_in: UnitVector,
-    ) -> Vector {
+    ) -> Spectrum {
         if intersection.normal().dot(dir_in) > Val(0.0) {
-            Val::FRAC_1_PI * self.albedo.to_vector()
+            Val::FRAC_1_PI * self.albedo
         } else {
-            Vector::zero()
+            Spectrum::zero()
         }
     }
 }
@@ -108,7 +108,7 @@ impl BsdfSampling for Diffuse {
 
         let ray_next = Ray::new(intersection.position(), direction);
         let pdf = self.pdf_bsdf(ray, intersection, &ray_next);
-        BsdfSample::new(ray_next, self.albedo.to_vector(), pdf)
+        BsdfSample::new(ray_next, self.albedo.into(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
