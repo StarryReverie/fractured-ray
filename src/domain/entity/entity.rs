@@ -239,7 +239,7 @@ impl MaterialContainer for MaterialPool {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::color::Color;
+    use crate::domain::color::Albedo;
     use crate::domain::math::geometry::Point;
     use crate::domain::math::numeric::Val;
 
@@ -250,7 +250,7 @@ mod tests {
         let mut pool = EntityPool::new();
         let shape_id = pool
             .add_shape(Sphere::new(Point::new(Val(0.0), Val(0.0), Val(0.0)), Val(1.0)).unwrap());
-        let material_id = pool.add_material(Diffuse::new(Color::WHITE));
+        let material_id = pool.add_material(Diffuse::new(Albedo::WHITE));
         let id = EntityId::new(shape_id, material_id);
         assert_eq!(
             pool.get_shape(id.shape_id()).unwrap().kind(),

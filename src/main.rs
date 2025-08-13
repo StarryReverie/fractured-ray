@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
-use fractured_ray::domain::color::Color;
+use fractured_ray::domain::color::{Albedo, Color};
 use fractured_ray::domain::entity::BvhSceneBuilder;
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
@@ -30,42 +30,42 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(-4.0), Val(0.0), Val(0.0)),
             UnitVector::x_direction(),
         ),
-        Diffuse::new(Color::GREEN),
+        Diffuse::new(Albedo::GREEN),
     );
     builder.add(
         Plane::new(
             Point::new(Val(4.0), Val(0.0), Val(0.0)),
             -UnitVector::x_direction(),
         ),
-        Diffuse::new(Color::RED),
+        Diffuse::new(Albedo::RED),
     );
     builder.add(
         Plane::new(
             Point::new(Val(0.0), Val(0.0), Val(15.0)),
             -UnitVector::z_direction(),
         ),
-        Diffuse::new(Color::WHITE * Val(0.8)),
+        Diffuse::new(Albedo::WHITE),
     );
     builder.add(
         Plane::new(
             Point::new(Val(0.0), Val(0.0), Val(-5.0)),
             UnitVector::z_direction(),
         ),
-        Diffuse::new(Color::WHITE * Val(0.8)),
+        Diffuse::new(Albedo::WHITE),
     );
     builder.add(
         Plane::new(
             Point::new(Val(0.0), Val(0.0), Val(-2.0)),
             UnitVector::y_direction(),
         ),
-        Specular::new(Color::WHITE * Val(0.4)),
+        Specular::new((Albedo::WHITE * Val(0.4)).into()),
     );
     builder.add(
         Plane::new(
             Point::new(Val(0.0), Val(4.0), Val(-0.0)),
             -UnitVector::y_direction(),
         ),
-        Diffuse::new(Color::WHITE * Val(0.8)),
+        Diffuse::new(Albedo::WHITE),
     );
 
     builder.add(
@@ -80,15 +80,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     builder.add(
         Sphere::new(Point::new(Val(0.0), Val(1.0), Val(-1.0)), Val(1.0))?,
-        Refractive::new(Color::WHITE, Val(1.5))?,
+        Refractive::new(Albedo::WHITE, Val(1.5))?,
     );
     builder.add(
         Sphere::new(Point::new(Val(-3.0), Val(1.0), Val(-1.0)), Val(1.0))?,
-        Diffuse::new(Color::CYAN),
+        Diffuse::new(Albedo::CYAN),
     );
     builder.add(
         Sphere::new(Point::new(Val(1.0), Val(1.0), Val(-3.0)), Val(1.0))?,
-        Diffuse::new(Color::YELLOW),
+        Diffuse::new(Albedo::YELLOW),
     );
 
     builder.add_constructor(
@@ -114,7 +114,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Val::PI / Val(3.0),
         ))
         .translate(Translation::new(Vector::new(Val(2.0), Val(0.0), Val(0.0)))),
-        Diffuse::new(Color::WHITE),
+        Diffuse::new(Albedo::WHITE),
     );
 
     let scene = builder.build();

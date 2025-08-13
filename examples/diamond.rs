@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Val(0.0),
             ))
             .translate(Translation::new(Vector::new(Val(3.0), Val(0.0), Val(-2.0)))),
-        Refractive::new(Color::WHITE * Val(0.9), Val(2.417))?,
+        Refractive::new((Color::WHITE * Val(0.9)).into(), Val(2.417))?,
     );
 
     scene.add(

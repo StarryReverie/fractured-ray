@@ -3,7 +3,7 @@ use std::any::Any;
 use rand::prelude::*;
 use snafu::prelude::*;
 
-use crate::domain::color::Color;
+use crate::domain::color::Albedo;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::{Rotation, Transform, Transformation};
@@ -24,7 +24,7 @@ pub struct Glossy {
 impl Glossy {
     const DIELECTRIC_R0: Vector = Vector::broadcast(Val(0.04));
 
-    pub fn new(color: Color, metalness: Val, roughness: Val) -> Result<Self, TryNewGlossyError> {
+    pub fn new(albedo: Albedo, metalness: Val, roughness: Val) -> Result<Self, TryNewGlossyError> {
         ensure!(
             Val(0.0) <= metalness && metalness <= Val(1.0),
             InvalidMetalnessSnafu
@@ -34,7 +34,7 @@ impl Glossy {
             InvalidRoughnessSnafu
         );
 
-        let r0 = Vector::lerp(Self::DIELECTRIC_R0, color.to_vector(), metalness);
+        let r0 = Vector::lerp(Self::DIELECTRIC_R0, albedo.to_vector(), metalness);
         let alpha = roughness.powi(2);
         Ok(Self { r0, alpha })
     }

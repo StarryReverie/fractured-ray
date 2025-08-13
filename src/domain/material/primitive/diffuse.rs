@@ -2,7 +2,7 @@ use std::any::Any;
 
 use rand::prelude::*;
 
-use crate::domain::color::Color;
+use crate::domain::color::Albedo;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
@@ -15,12 +15,12 @@ use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Diffuse {
-    color: Color,
+    albedo: Albedo,
 }
 
 impl Diffuse {
-    pub fn new(color: Color) -> Self {
-        Self { color }
+    pub fn new(albedo: Albedo) -> Self {
+        Self { albedo }
     }
 }
 
@@ -89,7 +89,7 @@ impl BsdfMaterial for Diffuse {
         dir_in: UnitVector,
     ) -> Vector {
         if intersection.normal().dot(dir_in) > Val(0.0) {
-            Val::FRAC_1_PI * self.color.to_vector()
+            Val::FRAC_1_PI * self.albedo.to_vector()
         } else {
             Vector::zero()
         }
@@ -108,7 +108,7 @@ impl BsdfSampling for Diffuse {
 
         let ray_next = Ray::new(intersection.position(), direction);
         let pdf = self.pdf_bsdf(ray, intersection, &ray_next);
-        BsdfSample::new(ray_next, self.color.to_vector(), pdf)
+        BsdfSample::new(ray_next, self.albedo.to_vector(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {

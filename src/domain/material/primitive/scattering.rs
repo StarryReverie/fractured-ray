@@ -3,7 +3,7 @@ use std::any::Any;
 use rand::prelude::*;
 use snafu::prelude::*;
 
-use crate::domain::color::Color;
+use crate::domain::color::Albedo;
 use crate::domain::entity::Scene;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::material::primitive::Specular;
@@ -19,7 +19,7 @@ use crate::domain::sampling::coefficient::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scattering {
-    color: Color,
+    albedo: Albedo,
     scattering_distance: Vector,
     refractive_index: Val,
 }
@@ -30,7 +30,7 @@ impl Scattering {
     const MAX_RADIUS_CDF: Val = Val(0.999);
 
     pub fn new(
-        color: Color,
+        albedo: Albedo,
         mean_free_path: Val,
         refractive_index: Val,
     ) -> Result<Self, TryNewScatteringError> {
@@ -38,12 +38,12 @@ impl Scattering {
         ensure!(refractive_index > Val(0.0), InvalidRefractiveIndexSnafu);
 
         let scattering_distance = Vector::new(
-            Self::calc_scattering_distance(color.red(), mean_free_path),
-            Self::calc_scattering_distance(color.green(), mean_free_path),
-            Self::calc_scattering_distance(color.blue(), mean_free_path),
+            Self::calc_scattering_distance(albedo.red(), mean_free_path),
+            Self::calc_scattering_distance(albedo.green(), mean_free_path),
+            Self::calc_scattering_distance(albedo.blue(), mean_free_path),
         );
         Ok(Self {
-            color,
+            albedo: albedo.into(),
             scattering_distance,
             refractive_index,
         })
@@ -57,7 +57,7 @@ impl Scattering {
     fn calc_normalized_diffusion(&self, d: Val, radius: Val) -> Vector {
         let exp_13 = (-radius / (Val(3.0) * d)).exp();
         let exp_sum = exp_13 * (Val(1.0) + exp_13.powi(2));
-        self.color.to_vector() * (Val(8.0) * Val::PI * radius * d).recip() * exp_sum
+        self.albedo.to_vector() * (Val(8.0) * Val::PI * radius * d).recip() * exp_sum
     }
 
     fn generate_normailzed_diffusion_radius(d: Val, rng: &mut dyn RngCore) -> Option<Val> {
@@ -160,7 +160,7 @@ impl Material for Scattering {
                 Contribution::new()
             }
         } else {
-            let specular = Specular::new(self.color);
+            let specular = Specular::new(self.albedo);
             specular.shade(context, state, ray, intersection)
         }
     }
@@ -181,7 +181,7 @@ impl Material for Scattering {
                 adapter.receive(context, state, photon, intersection)
             }
         } else {
-            let specular = Specular::new(self.color);
+            let specular = Specular::new(self.albedo);
             specular.receive(context, state, photon, intersection);
         }
     }

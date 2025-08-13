@@ -2,7 +2,7 @@ use std::any::Any;
 
 use rand::prelude::*;
 
-use crate::domain::color::Color;
+use crate::domain::color::Albedo;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
@@ -13,12 +13,12 @@ use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Specular {
-    color: Color,
+    albedo: Albedo,
 }
 
 impl Specular {
-    pub fn new(albedo: Color) -> Self {
-        Self { color: albedo }
+    pub fn new(albedo: Albedo) -> Self {
+        Self { albedo }
     }
 
     fn calc_next_ray(&self, ray: &Ray, intersection: &RayIntersection) -> Ray {
@@ -85,7 +85,7 @@ impl BsdfSampling for Specular {
     ) -> BsdfSample {
         let direction = self.calc_next_ray(ray, intersection);
         let pdf = self.pdf_bsdf(ray, intersection, &direction);
-        BsdfSample::new(direction, self.color.to_vector(), pdf)
+        BsdfSample::new(direction, self.albedo.to_vector(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
@@ -119,7 +119,7 @@ mod tests {
             SurfaceSide::Back,
         );
 
-        let specular = Specular::new(Color::WHITE);
+        let specular = Specular::new(Albedo::WHITE);
 
         let ray_next = specular.calc_next_ray(&ray, &intersection);
         assert_eq!(

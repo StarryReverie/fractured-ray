@@ -5,7 +5,7 @@ use getset::CopyGetters;
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::Val;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, CopyGetters)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct Color {
     red: Val,

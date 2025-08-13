@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
-use fractured_ray::domain::color::Color;
+use fractured_ray::domain::color::{Albedo, Color};
 use fractured_ray::domain::entity::BvhSceneBuilder;
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::UnitVector;
@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(0.0), Val(0.0), Val(559.2)),
             Point::new(Val(549.6), Val(0.0), Val(559.2)),
         ])?,
-        Diffuse::new(Color::WHITE),
+        Diffuse::new(Albedo::WHITE),
     );
 
     // Ceiling
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(0.0), Val(548.8), Val(559.2)),
             Point::new(Val(0.0), Val(548.8), Val(0.0)),
         ])?,
-        Diffuse::new(Color::WHITE),
+        Diffuse::new(Albedo::WHITE),
     );
 
     // Left Wall
@@ -68,7 +68,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(556.0), Val(548.8), Val(559.2)),
             Point::new(Val(556.0), Val(548.8), Val(0.0)),
         ])?,
-        Diffuse::new(Color::RED),
+        Diffuse::new(Albedo::RED),
     );
 
     // Right Wall
@@ -79,7 +79,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(0.0), Val(548.8), Val(0.0)),
             Point::new(Val(0.0), Val(548.8), Val(559.2)),
         ])?,
-        Diffuse::new(Color::GREEN),
+        Diffuse::new(Albedo::GREEN),
     );
 
     // Back Wall
@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(0.0), Val(548.8), Val(559.2)),
             Point::new(Val(556.0), Val(548.8), Val(559.2)),
         ])?,
-        Diffuse::new(Color::WHITE),
+        Diffuse::new(Albedo::WHITE),
     );
 
     // Short Block
@@ -115,7 +115,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 vec![4, 6, 7, 5],
             ],
         )?,
-        Diffuse::new(Color::WHITE),
+        Diffuse::new(Albedo::WHITE),
     );
 
     // Tall Block
@@ -140,19 +140,19 @@ fn main() -> Result<(), Box<dyn Error>> {
                 vec![4, 5, 6, 7],
             ],
         )?,
-        Diffuse::new(Color::WHITE),
+        Diffuse::new(Albedo::WHITE),
     );
 
     // Specular Ball
     builder.add(
         Sphere::new(Point::new(Val(400.0), Val(90.0), Val(180.0)), Val(90.0))?,
-        Specular::new(Color::WHITE * Val(0.8)),
+        Specular::new((Albedo::WHITE * Val(0.8)).into()),
     );
 
     // Refractive Ball
     builder.add(
         Sphere::new(Point::new(Val(185.0), Val(240.0), Val(169.5)), Val(75.0))?,
-        Refractive::new(Color::WHITE * Val(0.8), Val(1.5))?,
+        Refractive::new((Albedo::WHITE * Val(0.8)).into(), Val(1.5))?,
     );
 
     let scene = builder.build();

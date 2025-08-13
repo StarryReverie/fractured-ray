@@ -211,7 +211,7 @@ impl Scene for BvhScene {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::color::Color;
+    use crate::domain::color::Albedo;
     use crate::domain::material::primitive::Diffuse;
     use crate::domain::math::algebra::Vector;
     use crate::domain::math::geometry::Point;
@@ -225,7 +225,7 @@ mod tests {
         let mut builder = BvhSceneBuilder::new();
         builder.add(
             Sphere::new(Point::new(Val(1.0), Val(0.0), Val(2.0)), Val(1.0)).unwrap(),
-            Diffuse::new(Color::WHITE),
+            Diffuse::new(Albedo::WHITE),
         );
         builder.add(
             Triangle::new(
@@ -234,7 +234,7 @@ mod tests {
                 Point::new(Val(0.0), Val(0.0), Val(1.0)),
             )
             .unwrap(),
-            Diffuse::new(Color::WHITE),
+            Diffuse::new(Albedo::WHITE),
         );
         builder.add(
             Polygon::new([
@@ -244,7 +244,7 @@ mod tests {
                 Point::new(Val(0.0), Val(0.0), Val(-1.0)),
             ])
             .unwrap(),
-            Diffuse::new(Color::WHITE),
+            Diffuse::new(Albedo::WHITE),
         );
         let scene = builder.build();
 

@@ -3,7 +3,7 @@ use std::any::Any;
 use rand::prelude::*;
 use snafu::prelude::*;
 
-use crate::domain::color::Color;
+use crate::domain::color::Albedo;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
@@ -14,16 +14,16 @@ use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Refractive {
-    color: Color,
+    albedo: Albedo,
     refractive_index: Val,
 }
 
 impl Refractive {
-    pub fn new(color: Color, refractive_index: Val) -> Result<Self, TryNewRefractiveError> {
+    pub fn new(albedo: Albedo, refractive_index: Val) -> Result<Self, TryNewRefractiveError> {
         ensure!(refractive_index > Val(0.0), InvalidRefractiveIndexSnafu);
 
         Ok(Self {
-            color,
+            albedo,
             refractive_index,
         })
     }
@@ -149,7 +149,7 @@ impl BsdfSampling for Refractive {
         let reflection_determination = Val(rng.random());
         let direction = self.calc_next_ray(ray, intersection, reflection_determination);
         let pdf = self.pdf_bsdf(ray, intersection, &direction);
-        BsdfSample::new(direction, self.color.to_vector(), pdf)
+        BsdfSample::new(direction, self.albedo.to_vector(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn refractive_new_fails_when_refractive_index_is_invalid() {
         assert!(matches!(
-            Refractive::new(Color::WHITE, Val(0.0)),
+            Refractive::new(Albedo::WHITE, Val(0.0)),
             Err(TryNewRefractiveError::InvalidRefractiveIndex),
         ));
     }
@@ -197,7 +197,7 @@ mod tests {
             SurfaceSide::Front,
         );
 
-        let refractive = Refractive::new(Color::WHITE, Val(3.0).sqrt()).unwrap();
+        let refractive = Refractive::new(Albedo::WHITE, Val(3.0).sqrt()).unwrap();
 
         let ray_next = refractive.calc_next_ray(&ray, &intersection, Val(1.0));
         assert_eq!(
@@ -226,7 +226,7 @@ mod tests {
             SurfaceSide::Back,
         );
 
-        let refractive = Refractive::new(Color::WHITE, Val(3.0).sqrt()).unwrap();
+        let refractive = Refractive::new(Albedo::WHITE, Val(3.0).sqrt()).unwrap();
 
         let ray_next = refractive.calc_next_ray(&ray, &intersection, Val(1.0));
         assert_eq!(
@@ -255,7 +255,7 @@ mod tests {
             SurfaceSide::Front,
         );
 
-        let refractive = Refractive::new(Color::WHITE, Val(3.0).sqrt()).unwrap();
+        let refractive = Refractive::new(Albedo::WHITE, Val(3.0).sqrt()).unwrap();
 
         let ray_next = refractive.calc_next_ray(&ray, &intersection, Val(0.0));
         assert_eq!(
