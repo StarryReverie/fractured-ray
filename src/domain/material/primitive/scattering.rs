@@ -5,7 +5,9 @@ use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::entity::Scene;
-use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
+use crate::domain::material::def::{
+    BsdfMaterial, BsdfMaterialExt, BssrdfMaterial, Material, MaterialKind,
+};
 use crate::domain::material::primitive::Specular;
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::{Point, PositionedFrame};
@@ -192,6 +194,8 @@ impl Material for Scattering {
         Some(self)
     }
 }
+
+impl BssrdfMaterial for Scattering {}
 
 impl BssrdfSampling for Scattering {
     fn sample_bssrdf_diffusion(

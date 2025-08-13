@@ -6,7 +6,7 @@ use crate::domain::math::algebra::UnitVector;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
-use crate::domain::sampling::coefficient::BsdfSampling;
+use crate::domain::sampling::coefficient::{BsdfSampling, BssrdfSampling};
 
 pub trait Material: Debug + Send + Sync {
     fn kind(&self) -> MaterialKind;
@@ -40,6 +40,8 @@ pub trait BsdfMaterial: Material + BsdfSampling {
         dir_in: UnitVector,
     ) -> Spectrum;
 }
+
+pub trait BssrdfMaterial: Material + BssrdfSampling {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MaterialKind {
