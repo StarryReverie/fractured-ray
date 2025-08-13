@@ -7,7 +7,7 @@ use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::sampling::point::PointSampling;
-use crate::domain::{color::Color, math::algebra::Vector};
+use crate::domain::{color::Spectrum, math::algebra::Vector};
 
 use super::{PhotonSample, PhotonSampling};
 
@@ -21,8 +21,8 @@ impl EmptyPhotonSampler {
 }
 
 impl PhotonSampling for EmptyPhotonSampler {
-    fn radiance(&self) -> Color {
-        Color::BLACK
+    fn radiance(&self) -> Spectrum {
+        Spectrum::BLACK
     }
 
     fn area(&self) -> Val {
@@ -62,7 +62,7 @@ impl<PS> PhotonSampling for PhotonSamplerAdapter<PS>
 where
     PS: PointSampling,
 {
-    fn radiance(&self) -> Color {
+    fn radiance(&self) -> Spectrum {
         self.emissive.radiance()
     }
 
@@ -123,7 +123,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
-            Emissive::new(Color::WHITE, SpreadAngle::hemisphere()),
+            Emissive::new(Spectrum::WHITE, SpreadAngle::hemisphere()),
         );
 
         let photon = sampler.sample_photon(&mut rand::rng()).unwrap();

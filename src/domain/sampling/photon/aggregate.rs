@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use rand_distr::weighted::WeightedIndex;
 
-use crate::domain::color::Color;
+use crate::domain::color::Spectrum;
 use crate::domain::math::numeric::{Val, WrappedVal};
 
 use super::{EmptyPhotonSampler, PhotonSample, PhotonSampling};
@@ -35,7 +35,7 @@ impl AggregatePhotonSampler {
 }
 
 impl PhotonSampling for AggregatePhotonSampler {
-    fn radiance(&self) -> Color {
+    fn radiance(&self) -> Spectrum {
         unimplemented!("AggregatePhotonSampler doesn't have a unique radiance")
     }
 
@@ -74,7 +74,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
-            Emissive::new(Color::WHITE, SpreadAngle::hemisphere()),
+            Emissive::new(Spectrum::WHITE, SpreadAngle::hemisphere()),
         ));
         let sampler2: Box<dyn PhotonSampling> = Box::new(PhotonSamplerAdapter::new(
             TrianglePointSampler::new(
@@ -86,7 +86,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
-            Emissive::new(Color::WHITE * Val(0.25), SpreadAngle::hemisphere()),
+            Emissive::new(Spectrum::WHITE * Val(0.25), SpreadAngle::hemisphere()),
         ));
         let sampler = AggregatePhotonSampler::new(vec![sampler1, sampler2]);
 

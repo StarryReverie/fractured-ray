@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
-use fractured_ray::domain::color::{Albedo, Color};
+use fractured_ray::domain::color::{Albedo, Spectrum};
 use fractured_ray::domain::entity::BvhSceneBuilder;
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(2.0), Val(3.999), Val(2.0)),
             Point::new(Val(-2.0), Val(3.999), Val(2.0)),
         ])?,
-        Emissive::new(Color::WHITE, SpreadAngle::hemisphere()),
+        Emissive::new(Spectrum::WHITE, SpreadAngle::hemisphere()),
     );
 
     builder.add(

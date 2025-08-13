@@ -1,14 +1,14 @@
 use getset::Getters;
 
 use crate::domain::camera::Resolution;
-use crate::domain::color::Color;
+use crate::domain::color::Spectrum;
 use crate::domain::math::numeric::Val;
 
 #[derive(Debug, Clone, PartialEq, Getters)]
 pub struct Image {
     #[getset(get = "pub")]
     resolution: Resolution,
-    data: Vec<Color>,
+    data: Vec<Spectrum>,
     count: Vec<usize>,
 }
 
@@ -18,7 +18,7 @@ impl Image {
         let height = resolution.height();
 
         let mut data = Vec::new();
-        data.resize(width * height, Color::BLACK);
+        data.resize(width * height, Spectrum::BLACK);
 
         let mut count = Vec::new();
         count.resize(width * height, 1);
@@ -30,7 +30,7 @@ impl Image {
         }
     }
 
-    pub fn get(&self, row: usize, column: usize) -> Option<Color> {
+    pub fn get(&self, row: usize, column: usize) -> Option<Spectrum> {
         if self.contains_index(row, column) {
             self.data
                 .get(row * self.resolution.width() + column)
@@ -40,7 +40,7 @@ impl Image {
         }
     }
 
-    pub fn record(&mut self, row: usize, column: usize, color: Color) -> bool {
+    pub fn record(&mut self, row: usize, column: usize, color: Spectrum) -> bool {
         if self.contains_index(row, column) {
             let index = row * self.resolution.width() + column;
             let count = self

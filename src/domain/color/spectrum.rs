@@ -7,21 +7,21 @@ use crate::domain::math::numeric::Val;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, CopyGetters)]
 #[getset(get_copy = "pub")]
-pub struct Color {
+pub struct Spectrum {
     red: Val,
     green: Val,
     blue: Val,
 }
 
-impl Color {
-    pub const BLACK: Self = Color::new(Val(0.0), Val(0.0), Val(0.0));
-    pub const RED: Self = Color::new(Val(1.0), Val(0.0), Val(0.0));
-    pub const GREEN: Self = Color::new(Val(0.0), Val(1.0), Val(0.0));
-    pub const BLUE: Self = Color::new(Val(0.0), Val(0.0), Val(1.0));
-    pub const YELLOW: Self = Color::new(Val(1.0), Val(1.0), Val(0.0));
-    pub const MAGENTA: Self = Color::new(Val(1.0), Val(0.0), Val(1.0));
-    pub const CYAN: Self = Color::new(Val(0.0), Val(1.0), Val(1.0));
-    pub const WHITE: Self = Color::new(Val(1.0), Val(1.0), Val(1.0));
+impl Spectrum {
+    pub const BLACK: Self = Spectrum::new(Val(0.0), Val(0.0), Val(0.0));
+    pub const RED: Self = Spectrum::new(Val(1.0), Val(0.0), Val(0.0));
+    pub const GREEN: Self = Spectrum::new(Val(0.0), Val(1.0), Val(0.0));
+    pub const BLUE: Self = Spectrum::new(Val(0.0), Val(0.0), Val(1.0));
+    pub const YELLOW: Self = Spectrum::new(Val(1.0), Val(1.0), Val(0.0));
+    pub const MAGENTA: Self = Spectrum::new(Val(1.0), Val(0.0), Val(1.0));
+    pub const CYAN: Self = Spectrum::new(Val(0.0), Val(1.0), Val(1.0));
+    pub const WHITE: Self = Spectrum::new(Val(1.0), Val(1.0), Val(1.0));
 
     pub const fn new(red: Val, green: Val, blue: Val) -> Self {
         Self {
@@ -36,7 +36,7 @@ impl Color {
     }
 }
 
-impl Add for Color {
+impl Add for Spectrum {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -48,7 +48,7 @@ impl Add for Color {
     }
 }
 
-impl Mul for Color {
+impl Mul for Spectrum {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -60,7 +60,7 @@ impl Mul for Color {
     }
 }
 
-impl Mul<Val> for Color {
+impl Mul<Val> for Spectrum {
     type Output = Self;
 
     fn mul(self, rhs: Val) -> Self::Output {
@@ -68,16 +68,16 @@ impl Mul<Val> for Color {
     }
 }
 
-impl Mul<Color> for Val {
-    type Output = Color;
+impl Mul<Spectrum> for Val {
+    type Output = Spectrum;
 
-    fn mul(self, rhs: Color) -> Self::Output {
-        Color::new(self * rhs.red, self * rhs.green, self * rhs.blue)
+    fn mul(self, rhs: Spectrum) -> Self::Output {
+        Spectrum::new(self * rhs.red, self * rhs.green, self * rhs.blue)
     }
 }
 
-impl Mul<Vector> for Color {
-    type Output = Color;
+impl Mul<Vector> for Spectrum {
+    type Output = Spectrum;
 
     fn mul(self, rhs: Vector) -> Self::Output {
         Self::new(
@@ -88,11 +88,11 @@ impl Mul<Vector> for Color {
     }
 }
 
-impl Mul<Color> for Vector {
-    type Output = Color;
+impl Mul<Spectrum> for Vector {
+    type Output = Spectrum;
 
-    fn mul(self, rhs: Color) -> Self::Output {
-        Color::new(
+    fn mul(self, rhs: Spectrum) -> Self::Output {
+        Spectrum::new(
             self.x() * rhs.red,
             self.y() * rhs.green,
             self.z() * rhs.blue,
@@ -100,14 +100,14 @@ impl Mul<Color> for Vector {
     }
 }
 
-impl From<Vector> for Color {
+impl From<Vector> for Spectrum {
     fn from(value: Vector) -> Self {
         Self::new(value.x(), value.y(), value.z())
     }
 }
 
-impl From<Color> for Vector {
-    fn from(value: Color) -> Self {
+impl From<Spectrum> for Vector {
+    fn from(value: Spectrum) -> Self {
         Self::new(value.red, value.green, value.blue)
     }
 }

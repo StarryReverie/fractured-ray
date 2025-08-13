@@ -6,7 +6,7 @@ use rayon::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::camera::{Camera, Offset};
-use crate::domain::color::Color;
+use crate::domain::color::Spectrum;
 use crate::domain::entity::{BvhScene, Scene};
 use crate::domain::image::Image;
 use crate::domain::material::def::FluxEstimation;
@@ -57,7 +57,7 @@ impl CoreRenderer {
         pixel: &mut Pixel,
         photon_global: PhotonInfo<'_>,
         photon_caustic: PhotonInfo<'_>,
-    ) -> Color {
+    ) -> Spectrum {
         let mut rng = rand::rng();
         let mut context = RtContext::new(
             self,
@@ -224,7 +224,7 @@ pub struct Configuration {
     pub photons_global: usize,
     pub photons_caustic: usize,
     pub initial_num_nearest: usize,
-    pub background_color: Color,
+    pub background_color: Spectrum,
 }
 
 impl Default for Configuration {
@@ -237,7 +237,7 @@ impl Default for Configuration {
             photons_global: 200000,
             photons_caustic: 1000000,
             initial_num_nearest: 100,
-            background_color: Color::BLACK,
+            background_color: Spectrum::BLACK,
         }
     }
 }
@@ -278,7 +278,7 @@ impl Pixel {
         cont: Contribution,
         emitted_global: usize,
         emitted_caustic: usize,
-    ) -> Color {
+    ) -> Spectrum {
         if let Some(flux) = cont.global() {
             if let Some(global) = &mut self.global {
                 global.accumulate(flux);
@@ -294,8 +294,8 @@ impl Pixel {
             }
         }
         cont.light()
-            + (self.global.as_ref()).map_or(Color::BLACK, |o| o.radiance(emitted_global))
-            + (self.caustic.as_ref()).map_or(Color::BLACK, |o| o.radiance(emitted_caustic))
+            + (self.global.as_ref()).map_or(Spectrum::BLACK, |o| o.radiance(emitted_global))
+            + (self.caustic.as_ref()).map_or(Spectrum::BLACK, |o| o.radiance(emitted_caustic))
     }
 
     fn get_policy_global(&self, default_num: usize) -> SearchPolicy {
@@ -341,7 +341,7 @@ impl Observation {
         self.radius *= fraction.sqrt();
     }
 
-    fn radiance(&self, num_emitted: usize) -> Color {
+    fn radiance(&self, num_emitted: usize) -> Spectrum {
         let area = Val::PI * self.radius.powi(2);
         (self.flux / (area * Val::from(num_emitted))).into()
     }

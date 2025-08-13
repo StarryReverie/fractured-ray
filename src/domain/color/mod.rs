@@ -1,7 +1,7 @@
 mod albedo;
-mod color;
 mod external_color;
+mod spectrum;
 
 pub use albedo::Albedo;
-pub use color::Color;
 pub use external_color::ExternalColor;
+pub use spectrum::Spectrum;

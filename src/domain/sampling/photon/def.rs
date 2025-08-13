@@ -3,14 +3,14 @@ use std::fmt::Debug;
 use getset::Getters;
 use rand::prelude::*;
 
-use crate::domain::color::Color;
+use crate::domain::color::Spectrum;
 use crate::domain::math::geometry::{AllTransformation, Transform};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::PhotonRay;
 
 pub trait PhotonSampling: Debug + Send + Sync {
-    fn radiance(&self) -> Color;
+    fn radiance(&self) -> Spectrum;
 
     fn area(&self) -> Val;
 

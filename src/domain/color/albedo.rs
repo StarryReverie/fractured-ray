@@ -4,27 +4,27 @@ use snafu::prelude::*;
 
 use crate::domain::math::{algebra::Vector, numeric::Val};
 
-use super::Color;
+use super::Spectrum;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct Albedo(Color);
+pub struct Albedo(Spectrum);
 
 impl Albedo {
-    pub const BLACK: Self = Self(Color::BLACK);
-    pub const RED: Self = Self(Color::RED);
-    pub const GREEN: Self = Self(Color::GREEN);
-    pub const BLUE: Self = Self(Color::BLUE);
-    pub const YELLOW: Self = Self(Color::YELLOW);
-    pub const MAGENTA: Self = Self(Color::MAGENTA);
-    pub const CYAN: Self = Self(Color::CYAN);
-    pub const WHITE: Self = Self(Color::WHITE);
+    pub const BLACK: Self = Self(Spectrum::BLACK);
+    pub const RED: Self = Self(Spectrum::RED);
+    pub const GREEN: Self = Self(Spectrum::GREEN);
+    pub const BLUE: Self = Self(Spectrum::BLUE);
+    pub const YELLOW: Self = Self(Spectrum::YELLOW);
+    pub const MAGENTA: Self = Self(Spectrum::MAGENTA);
+    pub const CYAN: Self = Self(Spectrum::CYAN);
+    pub const WHITE: Self = Self(Spectrum::WHITE);
 
     pub fn new(red: Val, green: Val, blue: Val) -> Result<Self, TryNewAlbedoError> {
         let range = Val(0.0)..=Val(1.0);
         ensure!(range.contains(&red), InvalidComponentSnafu);
         ensure!(range.contains(&green), InvalidComponentSnafu);
         ensure!(range.contains(&blue), InvalidComponentSnafu);
-        Ok(Self(Color::new(red, green, blue)))
+        Ok(Self(Spectrum::new(red, green, blue)))
     }
 
     #[inline]
@@ -43,7 +43,7 @@ impl Albedo {
     }
 
     #[inline]
-    pub fn to_color(&self) -> Color {
+    pub fn to_spectrum(&self) -> Spectrum {
         self.0
     }
 
@@ -53,16 +53,16 @@ impl Albedo {
     }
 }
 
-impl From<Albedo> for Color {
+impl From<Albedo> for Spectrum {
     #[inline]
     fn from(value: Albedo) -> Self {
-        value.to_color()
+        value.to_spectrum()
     }
 }
 
-impl From<Color> for Albedo {
-    fn from(value: Color) -> Self {
-        Self(Color::new(
+impl From<Spectrum> for Albedo {
+    fn from(value: Spectrum) -> Self {
+        Self(Spectrum::new(
             value.red().clamp(Val(0.0), Val(1.0)),
             value.green().clamp(Val(0.0), Val(1.0)),
             value.blue().clamp(Val(0.0), Val(1.0)),
@@ -71,7 +71,7 @@ impl From<Color> for Albedo {
 }
 
 impl Mul<Val> for Albedo {
-    type Output = Color;
+    type Output = Spectrum;
 
     #[inline]
     fn mul(self, rhs: Val) -> Self::Output {
@@ -88,16 +88,16 @@ impl Mul<Albedo> for Val {
     }
 }
 
-impl Mul<Color> for Albedo {
-    type Output = Color;
+impl Mul<Spectrum> for Albedo {
+    type Output = Spectrum;
 
     #[inline]
-    fn mul(self, rhs: Color) -> Self::Output {
+    fn mul(self, rhs: Spectrum) -> Self::Output {
         self.0 * rhs
     }
 }
 
-impl Mul<Albedo> for Color {
+impl Mul<Albedo> for Spectrum {
     type Output = <Albedo as Mul<Self>>::Output;
 
     #[inline]

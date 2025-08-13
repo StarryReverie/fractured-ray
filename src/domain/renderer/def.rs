@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use crate::domain::color::Color;
+use crate::domain::color::Spectrum;
 use crate::domain::image::Image;
 use crate::domain::material::def::FluxEstimation;
 use crate::domain::math::algebra::Vector;
@@ -33,13 +33,13 @@ pub trait Renderer: Send + Sync + 'static {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Contribution {
-    Light(Color),
+    Light(Spectrum),
     All(Box<ContributionInner>),
 }
 
 impl Contribution {
     pub fn new() -> Self {
-        Color::BLACK.into()
+        Spectrum::BLACK.into()
     }
 
     pub fn average(estimations: Vec<Contribution>) -> Contribution {
@@ -50,7 +50,7 @@ impl Contribution {
         let light_sum = (estimations.iter())
             .map(|e| e.light().to_vector())
             .sum::<Vector>();
-        let light_avg = Color::from(light_sum / Val::from(estimations.len()));
+        let light_avg = Spectrum::from(light_sum / Val::from(estimations.len()));
 
         let iter_global = estimations.iter().flat_map(|e| e.global());
         let global_avg = FluxEstimation::average(iter_global);
@@ -68,7 +68,7 @@ impl Contribution {
         }
     }
 
-    pub fn add_light(&mut self, light: Color) {
+    pub fn add_light(&mut self, light: Spectrum) {
         match self {
             Contribution::Light(color) => *color = *color + light,
             Contribution::All(s) => s.light = s.light + light,
@@ -111,7 +111,7 @@ impl Contribution {
         }
     }
 
-    pub fn light(&self) -> Color {
+    pub fn light(&self) -> Spectrum {
         match self {
             Contribution::Light(light) => *light,
             Contribution::All(s) => s.light,
@@ -133,8 +133,8 @@ impl Contribution {
     }
 }
 
-impl From<Color> for Contribution {
-    fn from(value: Color) -> Self {
+impl From<Spectrum> for Contribution {
+    fn from(value: Spectrum) -> Self {
         Self::Light(value)
     }
 }
@@ -191,7 +191,7 @@ impl Mul<Contribution> for Vector {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ContributionInner {
-    light: Color,
+    light: Spectrum,
     global: FluxEstimation,
     caustic: FluxEstimation,
 }

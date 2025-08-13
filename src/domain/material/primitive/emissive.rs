@@ -2,7 +2,7 @@ use std::any::Any;
 
 use getset::CopyGetters;
 
-use crate::domain::color::Color;
+use crate::domain::color::Spectrum;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Product;
 use crate::domain::math::geometry::SpreadAngle;
@@ -13,12 +13,12 @@ use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtSta
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct Emissive {
-    radiance: Color,
+    radiance: Spectrum,
     beam_angle: SpreadAngle,
 }
 
 impl Emissive {
-    pub fn new(radiance: Color, beam_angle: SpreadAngle) -> Self {
+    pub fn new(radiance: Spectrum, beam_angle: SpreadAngle) -> Self {
         Self {
             radiance,
             beam_angle,

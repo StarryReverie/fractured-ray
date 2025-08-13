@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::domain::color::Color;
+use crate::domain::color::Spectrum;
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::geometry::AllTransformation;
 use crate::domain::math::geometry::Transform;
@@ -28,10 +28,10 @@ impl InstancePhotonSampler {
 }
 
 impl PhotonSampling for InstancePhotonSampler {
-    fn radiance(&self) -> Color {
+    fn radiance(&self) -> Spectrum {
         self.sampler
             .as_ref()
-            .map_or(Color::BLACK, |sampler| sampler.radiance())
+            .map_or(Spectrum::BLACK, |sampler| sampler.radiance())
     }
 
     fn area(&self) -> Val {

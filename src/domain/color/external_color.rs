@@ -2,7 +2,7 @@ use getset::CopyGetters;
 
 use crate::domain::math::numeric::Val;
 
-use super::Color;
+use super::Spectrum;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, CopyGetters)]
 #[getset(get_copy = "pub")]
@@ -22,8 +22,8 @@ impl ExternalColor {
     }
 }
 
-impl From<Color> for ExternalColor {
-    fn from(value: Color) -> Self {
+impl From<Spectrum> for ExternalColor {
+    fn from(value: Spectrum) -> Self {
         let red = Val(256.0) * Self::encode_gamma(value.red()).clamp(Val(0.0), Val(0.999));
         let green = Val(256.0) * Self::encode_gamma(value.green()).clamp(Val(0.0), Val(0.999));
         let blue = Val(256.0) * Self::encode_gamma(value.blue()).clamp(Val(0.0), Val(0.999));
