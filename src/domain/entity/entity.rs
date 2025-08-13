@@ -78,9 +78,10 @@ impl ShapeContainer for EntityPool {
 }
 
 impl MaterialContainer for EntityPool {
-    fn add_material<M: Material>(&mut self, material: M) -> MaterialId
+    fn add_material<M>(&mut self, material: M) -> MaterialId
     where
         Self: Sized,
+        M: Material + 'static,
     {
         self.materials.add_material(material)
     }
@@ -174,7 +175,11 @@ struct MaterialPool {
 }
 
 impl MaterialPool {
-    fn downcast_and_push<M: Material>(material: impl Material, collection: &mut Vec<M>) -> u32 {
+    fn downcast_and_push<MI, M>(material: MI, collection: &mut Vec<M>) -> u32
+    where
+        MI: Material + Any,
+        M: Material + Any,
+    {
         assert_eq!(TypeId::of::<M>(), material.type_id());
         // SAFETY: Already checked that M == impl Material + Any.
         let material = unsafe { std::mem::transmute_copy(&ManuallyDrop::new(material)) };
@@ -189,7 +194,10 @@ impl MaterialPool {
 }
 
 impl MaterialContainer for MaterialPool {
-    fn add_material<M: Material>(&mut self, material: M) -> MaterialId {
+    fn add_material<M>(&mut self, material: M) -> MaterialId
+    where
+        M: Material + Any,
+    {
         let kind = material.kind();
         let type_id = TypeId::of::<M>();
 

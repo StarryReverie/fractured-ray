@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use rand::prelude::*;
 use rand_distr::Exp;
 use snafu::prelude::*;
@@ -89,8 +91,8 @@ impl Material for Scattering {
     ) {
     }
 
-    fn as_dyn(&self) -> &dyn Material {
-        self
+    fn as_any(&self) -> Option<&dyn Any> {
+        Some(self)
     }
 }
 

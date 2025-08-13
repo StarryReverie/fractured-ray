@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use getset::CopyGetters;
 
 use crate::domain::color::Color;
@@ -59,7 +61,7 @@ impl Material for Emissive {
     ) {
     }
 
-    fn as_dyn(&self) -> &dyn Material {
-        self
+    fn as_any(&self) -> Option<&dyn Any> {
+        Some(self)
     }
 }

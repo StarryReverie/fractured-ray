@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use crate::domain::material::def::{Material, MaterialContainer, MaterialKind};
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::numeric::DisRange;
@@ -58,7 +56,7 @@ impl BvhSceneBuilder {
     pub fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
     where
         S: Shape,
-        M: Material,
+        M: Material + 'static,
     {
         let shape_id = self.entities.add_shape(shape);
         let material_id = self.entities.add_material(material);
@@ -71,7 +69,7 @@ impl BvhSceneBuilder {
     pub fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self
     where
         C: ShapeConstructor,
-        M: Material,
+        M: Material + 'static,
     {
         let shape_ids = constructor.construct(self.entities.as_mut());
         let material_id = self.entities.add_material(material);
@@ -107,10 +105,11 @@ impl BvhSceneBuilder {
 
             let material_id = entity_id.material_id();
             let material = self.entities.get_material(material_id).unwrap();
-            let emissive = (material as &dyn Any).downcast_ref::<Emissive>().unwrap();
-
-            if let Some(sampler) = shape.get_photon_sampler(shape_id, emissive.clone()) {
-                self.emitters.push(sampler);
+            if let Some(material) = material.as_any() {
+                let emissive = material.downcast_ref::<Emissive>().unwrap();
+                if let Some(sampler) = shape.get_photon_sampler(shape_id, emissive.clone()) {
+                    self.emitters.push(sampler);
+                }
             }
         }
     }

@@ -1,13 +1,15 @@
+use std::any::Any;
+
 use rand::prelude::*;
 
 use crate::domain::color::Color;
-use crate::domain::material::def::{BsdfMaterial, Material, BsdfMaterialExt, MaterialKind};
+use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
-use crate::domain::sampling::coefficient::{BsdfSampling, BsdfSample};
+use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Specular {
@@ -58,8 +60,8 @@ impl Material for Specular {
         self.maybe_bounce_next_photon(context, state_next, photon, intersection);
     }
 
-    fn as_dyn(&self) -> &dyn Material {
-        self
+    fn as_any(&self) -> Option<&dyn Any> {
+        Some(self)
     }
 }
 

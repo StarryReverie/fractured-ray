@@ -7,7 +7,7 @@ use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::BsdfSampling;
 
-pub trait Material: Any + Debug + Send + Sync + 'static {
+pub trait Material: Debug + Send + Sync {
     fn kind(&self) -> MaterialKind;
 
     fn shade(
@@ -26,7 +26,9 @@ pub trait Material: Any + Debug + Send + Sync + 'static {
         intersection: RayIntersection,
     );
 
-    fn as_dyn(&self) -> &dyn Material;
+    fn as_any(&self) -> Option<&dyn Any> {
+        None
+    }
 }
 
 pub trait BsdfMaterial: Material + BsdfSampling {
@@ -69,9 +71,10 @@ impl MaterialId {
 }
 
 pub trait MaterialContainer: Debug + Send + Sync + 'static {
-    fn add_material<M: Material>(&mut self, material: M) -> MaterialId
+    fn add_material<M>(&mut self, material: M) -> MaterialId
     where
-        Self: Sized;
+        Self: Sized,
+        M: Material + Any;
 
     fn get_material(&self, id: MaterialId) -> Option<&dyn Material>;
 }

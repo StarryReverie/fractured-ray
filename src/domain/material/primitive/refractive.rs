@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use rand::prelude::*;
 use snafu::prelude::*;
 
@@ -121,8 +123,8 @@ impl Material for Refractive {
         self.maybe_bounce_next_photon(context, state_next, photon, intersection);
     }
 
-    fn as_dyn(&self) -> &dyn Material {
-        self
+    fn as_any(&self) -> Option<&dyn Any> {
+        Some(self)
     }
 }
 

@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use rand::prelude::*;
 use snafu::prelude::*;
 
@@ -171,8 +173,8 @@ impl Material for Glossy {
         }
     }
 
-    fn as_dyn(&self) -> &dyn Material {
-        self
+    fn as_any(&self) -> Option<&dyn Any> {
+        Some(self)
     }
 }
 
