@@ -22,6 +22,15 @@ impl DisRange {
         Self((Bound::Excluded(Val(0.0)), Bound::Excluded(Val(0.0))))
     }
 
+    pub fn advance_start(self, offset: Val) -> Self {
+        let start = match self.0.0 {
+            Bound::Included(o) => Bound::Excluded(o + offset),
+            Bound::Excluded(o) => Bound::Excluded(o + offset),
+            Bound::Unbounded => Bound::Unbounded,
+        };
+        (start, self.0.1).into()
+    }
+
     pub fn shrink_end(self, end: Val) -> Self {
         let end = match self.0.1 {
             b @ Bound::Included(o) if o < end => b,

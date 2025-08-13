@@ -14,7 +14,7 @@ pub trait BssrdfSampling: Debug + Send + Sync {
         scene: &dyn Scene,
         intersection_out: &RayIntersection,
         rng: &mut dyn RngCore,
-    ) -> BssrdfDiffusionSample;
+    ) -> Option<BssrdfDiffusionSample>;
 
     fn pdf_bssrdf_diffusion(
         &self,
@@ -76,5 +76,9 @@ impl BssrdfDirectionSample {
             bssrdf_direction,
             pdf,
         }
+    }
+
+    pub fn into_ray_next(self) -> Ray {
+        self.ray_next
     }
 }

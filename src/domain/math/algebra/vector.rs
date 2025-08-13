@@ -40,6 +40,15 @@ impl Vector {
         self.2
     }
 
+    pub fn axis(&self, axis: usize) -> Val {
+        match axis {
+            0 => self.x(),
+            1 => self.y(),
+            2 => self.z(),
+            _ => panic!("axis should be in [0, 3)"),
+        }
+    }
+
     #[inline]
     pub fn norm(&self) -> Val {
         self.norm_squared().sqrt()
