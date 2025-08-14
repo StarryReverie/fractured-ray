@@ -42,6 +42,15 @@ impl Spectrum {
     pub fn norm(&self) -> Val {
         (self.red.powi(2) + self.green.powi(2) + self.blue.powi(2)).sqrt()
     }
+
+    pub fn channel(&self, index: usize) -> Val {
+        match index {
+            0 => self.red,
+            1 => self.green,
+            2 => self.blue,
+            _ => panic!("channel index out of range"),
+        }
+    }
 }
 
 impl Add for Spectrum {

@@ -5,24 +5,22 @@ use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::entity::Scene;
-use crate::domain::material::def::{
-    BsdfMaterial, BsdfMaterialExt, BssrdfMaterial, Material, MaterialKind,
-};
+use crate::domain::material::def::{BssrdfMaterial, BssrdfMaterialExt, Material, MaterialKind};
 use crate::domain::material::primitive::Specular;
-use crate::domain::math::algebra::{Product, UnitVector, Vector};
+use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{Point, PositionedFrame};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{
-    BsdfSample, BsdfSampling, BssrdfDiffusionSample, BssrdfDirectionSample, BssrdfSampling,
+    BssrdfDiffusionSample, BssrdfDirectionSample, BssrdfSampling,
 };
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scattering {
     albedo: Albedo,
-    scattering_distance: Vector,
+    scattering_distance: Spectrum,
     refractive_index: Val,
 }
 
@@ -39,7 +37,7 @@ impl Scattering {
         ensure!(mean_free_path > Val(0.0), InvalidMeanFreePathSnafu);
         ensure!(refractive_index > Val(0.0), InvalidRefractiveIndexSnafu);
 
-        let scattering_distance = Vector::new(
+        let scattering_distance = Spectrum::new(
             Self::calc_scattering_distance(albedo.red(), mean_free_path),
             Self::calc_scattering_distance(albedo.green(), mean_free_path),
             Self::calc_scattering_distance(albedo.blue(), mean_free_path),
@@ -155,14 +153,7 @@ impl Material for Scattering {
     ) -> Contribution {
         let cos = intersection.normal().dot(-ray.direction());
         if Val(context.rng().random()) < self.calc_transmittance(cos) {
-            let scene = context.scene();
-            let sample = self.sample_bssrdf_diffusion(scene, &intersection, *context.rng());
-            if let Some(diffusion) = sample {
-                let adapter = ScatteringBsdfMaterialAdapter::new(self, &diffusion);
-                adapter.shade(context, state, ray, intersection)
-            } else {
-                Contribution::new()
-            }
+            self.shade_impl(context, state, ray, intersection)
         } else {
             let specular = Specular::new(self.albedo);
             specular.shade(context, state, ray, intersection)
@@ -178,12 +169,7 @@ impl Material for Scattering {
     ) {
         let cos = intersection.normal().dot(-photon.direction());
         if Val(context.rng().random()) < self.calc_transmittance(cos) {
-            let scene = context.scene();
-            let res = self.sample_bssrdf_diffusion(scene, &intersection, *context.rng());
-            if let Some(diffusion) = res {
-                let adapter = ScatteringBsdfMaterialAdapter::new(self, &diffusion);
-                adapter.receive(context, state, photon, intersection)
-            }
+            self.receive_impl(context, state, photon, intersection);
         } else {
             let specular = Specular::new(self.albedo);
             specular.receive(context, state, photon, intersection);
@@ -195,7 +181,17 @@ impl Material for Scattering {
     }
 }
 
-impl BssrdfMaterial for Scattering {}
+impl BssrdfMaterial for Scattering {
+    fn bssrdf_direction(&self, intersection_in: &RayIntersection, dir_in: UnitVector) -> Spectrum {
+        let cos = dir_in.dot(intersection_in.normal());
+        if cos > Val(0.0) {
+            let transmittance = self.calc_transmittance(cos);
+            Spectrum::broadcast(Val::FRAC_1_PI * transmittance)
+        } else {
+            Spectrum::zero()
+        }
+    }
+}
 
 impl BssrdfSampling for Scattering {
     fn sample_bssrdf_diffusion(
@@ -204,7 +200,7 @@ impl BssrdfSampling for Scattering {
         intersection_out: &RayIntersection,
         rng: &mut dyn RngCore,
     ) -> Option<BssrdfDiffusionSample> {
-        let d = self.scattering_distance.axis(rng.random_range(0..2));
+        let d = self.scattering_distance.channel(rng.random_range(0..2));
         let radius = Self::generate_normailzed_diffusion_radius(d, rng)?;
         let phi = Val(2.0) * Val::PI * Val(rng.random());
 
@@ -242,7 +238,7 @@ impl BssrdfSampling for Scattering {
             let cos = intersection_in.normal().dot(frame.normal()).max(Val(0.0));
 
             for channel in 0..3 {
-                let d = self.scattering_distance.axis(channel);
+                let d = self.scattering_distance.channel(channel);
                 pdf += Self::calc_normailzed_diffusion_pdf(d, radius)
                     * cos
                     * Self::PROJECTION_AXIS_PROB[axis]
@@ -284,90 +280,4 @@ pub enum TryNewScatteringError {
     InvalidMeanFreePath,
     #[snafu(display("refractive index is not positive"))]
     InvalidRefractiveIndex,
-}
-
-#[derive(Debug)]
-struct ScatteringBsdfMaterialAdapter<'a> {
-    inner: &'a Scattering,
-    diffusion: &'a BssrdfDiffusionSample,
-}
-
-impl<'a> ScatteringBsdfMaterialAdapter<'a> {
-    fn new(inner: &'a Scattering, diffusion: &'a BssrdfDiffusionSample) -> Self {
-        Self { inner, diffusion }
-    }
-}
-
-impl<'a> Material for ScatteringBsdfMaterialAdapter<'a> {
-    fn kind(&self) -> MaterialKind {
-        MaterialKind::Refractive
-    }
-
-    fn shade(
-        &self,
-        context: &mut RtContext<'_>,
-        state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
-    ) -> Contribution {
-        let light = self.shade_light(context, &ray, &intersection);
-        let state_next = state.with_skip_emissive(true);
-        let mut res = self.shade_scattering(context, state_next, &ray, &intersection);
-        res.add_light(light.light());
-        res * (self.diffusion.bssrdf_diffusion() / self.diffusion.pdf())
-    }
-
-    fn receive(
-        &self,
-        context: &mut PmContext<'_>,
-        state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
-    ) {
-        let photon_next = PhotonRay::new(
-            Ray::new(photon.start(), photon.direction()),
-            photon.throughput() * (self.diffusion.bssrdf_diffusion() / self.diffusion.pdf()),
-        );
-        self.maybe_bounce_next_photon(context, state, photon_next, intersection);
-    }
-
-    fn as_any(&self) -> Option<&dyn Any> {
-        None
-    }
-}
-
-impl<'a> BsdfMaterial for ScatteringBsdfMaterialAdapter<'a> {
-    fn bsdf(
-        &self,
-        _dir_out: UnitVector,
-        intersection: &RayIntersection,
-        dir_in: UnitVector,
-    ) -> Spectrum {
-        let cos = dir_in.dot(intersection.normal());
-        if cos > Val(0.0) {
-            let transmittance = self.inner.calc_transmittance(cos);
-            Spectrum::broadcast(Val::FRAC_1_PI * transmittance)
-        } else {
-            Spectrum::zero()
-        }
-    }
-}
-
-impl<'a> BsdfSampling for ScatteringBsdfMaterialAdapter<'a> {
-    fn sample_bsdf(
-        &self,
-        _ray: &Ray,
-        intersection: &RayIntersection,
-        rng: &mut dyn RngCore,
-    ) -> BsdfSample {
-        let sample = self.inner.sample_bssrdf_direction(intersection, rng);
-        let cos = intersection.normal().dot(sample.ray_next().direction());
-        let pdf = sample.pdf();
-        let coefficient = sample.bssrdf_direction() * cos / pdf;
-        BsdfSample::new(sample.into_ray_next(), coefficient, pdf)
-    }
-
-    fn pdf_bsdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
-        self.inner.pdf_bssrdf_direction(intersection, ray_next)
-    }
 }

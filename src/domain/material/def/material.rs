@@ -41,7 +41,9 @@ pub trait BsdfMaterial: Material + BsdfSampling {
     ) -> Spectrum;
 }
 
-pub trait BssrdfMaterial: Material + BssrdfSampling {}
+pub trait BssrdfMaterial: Material + BssrdfSampling {
+    fn bssrdf_direction(&self, intersection_in: &RayIntersection, dir_in: UnitVector) -> Spectrum;
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MaterialKind {
