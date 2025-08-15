@@ -258,7 +258,7 @@ impl BssrdfSampling for Scattering {
     ) -> BssrdfDirectionSample {
         let normal = intersection_in.normal();
         let direction = UnitVector::random_cosine_hemisphere(normal, rng);
-        let ray_next = Ray::new(intersection_in.position(), direction);
+        let ray_next = intersection_in.spawn(direction);
 
         let cos = ray_next.direction().dot(intersection_in.normal());
         let transmittance = self.calc_transmittance(cos);

@@ -95,11 +95,11 @@ where
         photon: PhotonRay,
         intersection: RayIntersection,
     ) {
-        let photon_next = PhotonRay::new(
+        let photon_scaled = PhotonRay::new(
             Ray::new(photon.start(), photon.direction()),
             photon.throughput() * (self.diffusion.bssrdf_diffusion() / self.diffusion.pdf()),
         );
-        self.maybe_bounce_next_photon(context, state, photon_next, intersection);
+        self.maybe_bounce_next_photon(context, state, photon_scaled, intersection);
     }
 
     fn as_any(&self) -> Option<&dyn Any> {

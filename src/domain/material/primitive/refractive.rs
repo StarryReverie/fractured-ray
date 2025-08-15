@@ -31,12 +31,10 @@ impl Refractive {
     fn calc_next_reflective_ray(&self, ray: &Ray, intersection: &RayIntersection) -> Ray {
         let normal = intersection.normal();
         let dir = ray.direction();
-        Ray::new(
-            intersection.position(),
-            (dir - Val(2.0) * dir.dot(normal) * normal)
-                .normalize()
-                .expect("reflective ray's direction should not be zero vector"),
-        )
+        let direction = (dir - Val(2.0) * dir.dot(normal) * normal)
+            .normalize()
+            .expect("reflective ray's direction should not be zero vector");
+        intersection.spawn(direction)
     }
 
     fn calc_next_refractive_direction(
@@ -62,7 +60,7 @@ impl Refractive {
             .normalize()
             .expect("dir_refr should not be zero vector");
 
-        Some(Ray::new(intersection.position(), dir_refr))
+        Some(intersection.spawn(dir_refr))
     }
 
     fn calc_reflectance(&self, cos_i: Val, refractive_index: Val) -> Val {

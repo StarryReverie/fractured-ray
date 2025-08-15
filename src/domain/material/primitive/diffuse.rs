@@ -106,7 +106,7 @@ impl BsdfSampling for Diffuse {
         let normal = intersection.normal();
         let direction = UnitVector::random_cosine_hemisphere(normal, rng);
 
-        let ray_next = Ray::new(intersection.position(), direction);
+        let ray_next = intersection.spawn(direction);
         let pdf = self.pdf_bsdf(ray, intersection, &ray_next);
         BsdfSample::new(ray_next, self.albedo.into(), pdf)
     }

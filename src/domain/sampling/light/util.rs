@@ -78,7 +78,7 @@ where
         let Ok(direction) = (sample.point() - intersection.position()).normalize() else {
             return None;
         };
-        let ray_next = Ray::new(intersection.position(), direction);
+        let ray_next = intersection.spawn(direction);
 
         let cos = sample.normal().dot(direction).abs();
         let dis_squared = (sample.point() - intersection.position()).norm_squared();
@@ -133,13 +133,13 @@ mod tests {
             SurfaceSide::Front,
         );
 
-        let ray_next = Ray::new(intersection.position(), -UnitVector::z_direction());
+        let ray_next = intersection.spawn(-UnitVector::z_direction());
         assert_eq!(
             sampler.pdf_light(&intersection, &ray_next),
             Val(2.0).powi(2) / Val(1.5) / Val(0.6666666667),
         );
 
-        let ray_next = Ray::new(intersection.position(), UnitVector::y_direction());
+        let ray_next = intersection.spawn(UnitVector::y_direction());
         assert_eq!(sampler.pdf_light(&intersection, &ray_next), Val(0.0));
     }
 }

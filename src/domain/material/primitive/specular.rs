@@ -24,12 +24,10 @@ impl Specular {
     fn calc_next_ray(&self, ray: &Ray, intersection: &RayIntersection) -> Ray {
         let normal = intersection.normal();
         let dir = ray.direction();
-        Ray::new(
-            intersection.position(),
-            (dir - Val(2.0) * dir.dot(normal) * normal)
-                .normalize()
-                .expect("reflective ray's direction should not be zero vector"),
-        )
+        let direction = (dir - Val(2.0) * dir.dot(normal) * normal)
+            .normalize()
+            .expect("reflective ray's direction should not be zero vector");
+        intersection.spawn(direction)
     }
 }
 

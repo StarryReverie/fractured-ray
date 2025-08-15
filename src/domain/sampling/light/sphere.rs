@@ -53,7 +53,7 @@ impl LightSampling for SphereLightSampler {
         let Ok(direction) = (to_center + at_sphere).normalize() else {
             return None;
         };
-        let ray_next = Ray::new(intersection.position(), direction);
+        let ray_next = intersection.spawn(direction);
 
         let solid_angle = Val(2.0) * Val::PI * (Val(1.0) - cos_max_half_cone_angle);
         let pdf = solid_angle.recip();

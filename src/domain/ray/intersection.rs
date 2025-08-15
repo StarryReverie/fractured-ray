@@ -4,6 +4,8 @@ use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::{AllTransformation, Point, Transform};
 use crate::domain::math::numeric::Val;
 
+use super::Ray;
+
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct RayIntersection {
@@ -21,6 +23,11 @@ impl RayIntersection {
             normal,
             side,
         }
+    }
+
+    #[inline]
+    pub fn spawn(&self, direction: UnitVector) -> Ray {
+        Ray::new(self.position, direction)
     }
 }
 

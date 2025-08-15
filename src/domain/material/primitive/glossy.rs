@@ -110,7 +110,7 @@ impl Glossy {
     fn calc_next_ray(&self, ray: &Ray, intersection: &RayIntersection, mn: UnitVector) -> Ray {
         let dir = ray.direction();
         let dir_next = dir - Val(2.0) * dir.dot(mn) * mn;
-        Ray::new(intersection.position(), dir_next.normalize().unwrap())
+        intersection.spawn(dir_next.normalize().unwrap())
     }
 
     fn calc_reflectance(&self, cos: Val) -> Spectrum {
