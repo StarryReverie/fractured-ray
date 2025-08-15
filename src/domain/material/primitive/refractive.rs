@@ -37,7 +37,7 @@ impl Refractive {
         intersection.spawn(direction)
     }
 
-    fn calc_next_refractive_direction(
+    fn calc_next_refractive_ray(
         &self,
         ray: &Ray,
         intersection: &RayIntersection,
@@ -85,8 +85,7 @@ impl Refractive {
         let reflectance = self.calc_reflectance(cos_i, ri);
         if reflection_determination < reflectance {
             self.calc_next_reflective_ray(ray, intersection)
-        } else if let Some(ray) = self.calc_next_refractive_direction(ray, intersection, cos_i, ri)
-        {
+        } else if let Some(ray) = self.calc_next_refractive_ray(ray, intersection, cos_i, ri) {
             ray
         } else {
             self.calc_next_reflective_ray(ray, intersection)

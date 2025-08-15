@@ -46,6 +46,7 @@ Diamond
   - [ ] Shading Normal
 - [ ] Materials
   - [ ] Common Material Primitives
+    - [x] Blurry
     - [x] Diffuse
     - [x] Emissive
     - [x] Glossy

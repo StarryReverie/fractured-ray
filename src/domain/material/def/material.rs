@@ -47,6 +47,7 @@ pub trait BssrdfMaterial: Material + BssrdfSampling {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MaterialKind {
+    Blurry,
     Diffuse,
     Emissive,
     Glossy,

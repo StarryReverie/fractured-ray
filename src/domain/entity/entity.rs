@@ -4,7 +4,7 @@ use std::mem::ManuallyDrop;
 
 use crate::domain::material::def::{Material, MaterialContainer, MaterialId, MaterialKind};
 use crate::domain::material::primitive::{
-    Diffuse, Emissive, Glossy, Refractive, Scattering, Specular,
+    Blurry, Diffuse, Emissive, Glossy, Refractive, Scattering, Specular,
 };
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId, ShapeKind};
 use crate::domain::shape::instance::Instance;
@@ -166,6 +166,7 @@ impl ShapeContainer for ShapePool {
 
 #[derive(Debug, Default)]
 struct MaterialPool {
+    blurry: Vec<Blurry>,
     diffuse: Vec<Diffuse>,
     emissive: Vec<Emissive>,
     glossy: Vec<Glossy>,
@@ -201,7 +202,10 @@ impl MaterialContainer for MaterialPool {
         let kind = material.kind();
         let type_id = TypeId::of::<M>();
 
-        if type_id == TypeId::of::<Diffuse>() {
+        if type_id == TypeId::of::<Blurry>() {
+            let index = Self::downcast_and_push(material, &mut self.blurry);
+            MaterialId::new(kind, index)
+        } else if type_id == TypeId::of::<Diffuse>() {
             let index = Self::downcast_and_push(material, &mut self.diffuse);
             MaterialId::new(kind, index)
         } else if type_id == TypeId::of::<Emissive>() {
@@ -227,6 +231,7 @@ impl MaterialContainer for MaterialPool {
     fn get_material(&self, material_id: MaterialId) -> Option<&dyn Material> {
         let index = material_id.index() as usize;
         match material_id.kind() {
+            MaterialKind::Blurry => self.blurry.get(index).map(Self::upcast),
             MaterialKind::Diffuse => self.diffuse.get(index).map(Self::upcast),
             MaterialKind::Emissive => self.emissive.get(index).map(Self::upcast),
             MaterialKind::Glossy => self.glossy.get(index).map(Self::upcast),
