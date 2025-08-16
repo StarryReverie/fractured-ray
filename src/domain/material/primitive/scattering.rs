@@ -5,16 +5,21 @@ use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::entity::Scene;
-use crate::domain::material::def::{BssrdfMaterial, BssrdfMaterialExt, Material, MaterialKind};
+use crate::domain::material::def::{
+    BsdfMaterial, BsdfMaterialExt, BssrdfMaterial, BssrdfMaterialExt, Material, MaterialKind,
+};
 use crate::domain::material::primitive::Specular;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{Point, PositionedFrame};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::photon::PhotonRay;
+use crate::domain::ray::util as ray_util;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
-use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
+use crate::domain::renderer::{
+    Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
+};
 use crate::domain::sampling::coefficient::{
-    BssrdfDiffusionSample, BssrdfDirectionSample, BssrdfSampling,
+    BsdfSample, BsdfSampling, BssrdfDiffusionSample, BssrdfDirectionSample, BssrdfSampling,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -29,6 +34,7 @@ impl Scattering {
     const PROJECTION_AXIS_PROB: [Val; 3] = [Val(0.5), Val(0.25), Val(0.25)];
     const COLOR_CHANNEL_PROB: [Val; 3] = [Val(1.0 / 3.0); 3];
     const MAX_RADIUS_CDF: Val = Val(0.999);
+    const IGNORE_BACK_THRESHOLD: Val = Val(0.01);
 
     pub fn new(
         albedo: Albedo,
@@ -139,6 +145,117 @@ impl Scattering {
         let reflectance = r0 + (Val(1.0) - r0) * (Val(1.0) - cos_i).powi(5);
         Val(1.0) - reflectance
     }
+
+    fn shade_front_face(
+        &self,
+        context: &mut RtContext<'_>,
+        state: RtState,
+        ray: Ray,
+        intersection: RayIntersection,
+    ) -> Contribution {
+        let cos = intersection.normal().dot(-ray.direction());
+        if Val(context.rng().random()) < self.calc_transmittance(cos) {
+            let state_next = state.mark_invisible();
+
+            let scene = context.scene();
+            let back = self.determine_back_face(scene, &ray, &intersection, *context.rng());
+
+            if let Some((ray_back, intersection_back)) = back {
+                self.shade_back_face(context, state_next, ray_back, intersection_back)
+            } else {
+                self.shade_impl(context, state_next, ray, intersection)
+            }
+        } else {
+            let specular = Specular::new(self.albedo);
+            specular.shade(context, state, ray, intersection)
+        }
+    }
+
+    fn shade_back_face(
+        &self,
+        context: &mut RtContext<'_>,
+        state: RtState,
+        ray: Ray,
+        intersection: RayIntersection,
+    ) -> Contribution {
+        let adapter = BackFaceTransmissionAdapter::new(self);
+        let state_next = state.mark_invisible();
+        adapter.shade(context, state_next, ray, intersection)
+    }
+
+    fn receive_front_face(
+        &self,
+        context: &mut PmContext<'_>,
+        state: PmState,
+        photon: PhotonRay,
+        intersection: RayIntersection,
+    ) {
+        let cos = intersection.normal().dot(-photon.direction());
+        if Val(context.rng().random()) < self.calc_transmittance(cos) {
+            if state.policy() == StoragePolicy::Caustic {
+                return;
+            }
+
+            let scene = context.scene();
+            let back = self.determine_back_face(scene, photon.ray(), &intersection, *context.rng());
+
+            if let Some((ray_back, intersection_back)) = back {
+                let photon_back = PhotonRay::new(ray_back, photon.throughput());
+                self.receive_back_face(context, state, photon_back, intersection_back);
+            } else {
+                self.receive_impl(context, state, photon, intersection);
+            }
+        } else {
+            let specular = Specular::new(self.albedo);
+            specular.receive(context, state, photon, intersection);
+        }
+    }
+
+    fn receive_back_face(
+        &self,
+        context: &mut PmContext<'_>,
+        state: PmState,
+        photon: PhotonRay,
+        intersection: RayIntersection,
+    ) {
+        let adapter = BackFaceTransmissionAdapter::new(self);
+        adapter.receive(context, state, photon, intersection);
+    }
+
+    fn determine_back_face(
+        &self,
+        scene: &dyn Scene,
+        ray: &Ray,
+        intersection: &RayIntersection,
+        rng: &mut dyn RngCore,
+    ) -> Option<(Ray, RayIntersection)> {
+        let ray_back = ray_util::pure_refract(ray, intersection, self.refractive_index)
+            .expect("refractive ray always exists when incident ray hits front face");
+
+        let res = scene.find_intersection(&ray_back, DisRange::positive());
+        let intersection_back = if let Some((intersection_back, id)) = res {
+            if id.material_id().kind() != MaterialKind::Scattering {
+                return None;
+            }
+            if intersection_back.side() != SurfaceSide::Back {
+                return None;
+            }
+            intersection_back
+        } else {
+            return None;
+        };
+
+        let distance = intersection_back.distance();
+        let volume_transmittance = (-distance / self.mean_free_path).exp();
+        if volume_transmittance < Self::IGNORE_BACK_THRESHOLD {
+            return None;
+        }
+        if Val(rng.random()) > volume_transmittance {
+            return None;
+        }
+
+        Some((ray_back, intersection_back))
+    }
 }
 
 impl Material for Scattering {
@@ -153,12 +270,10 @@ impl Material for Scattering {
         ray: Ray,
         intersection: RayIntersection,
     ) -> Contribution {
-        let cos = intersection.normal().dot(-ray.direction());
-        if Val(context.rng().random()) < self.calc_transmittance(cos) {
-            self.shade_impl(context, state, ray, intersection)
+        if intersection.side() == SurfaceSide::Front {
+            self.shade_front_face(context, state, ray, intersection)
         } else {
-            let specular = Specular::new(self.albedo);
-            specular.shade(context, state, ray, intersection)
+            self.shade_back_face(context, state, ray, intersection)
         }
     }
 
@@ -169,12 +284,10 @@ impl Material for Scattering {
         photon: PhotonRay,
         intersection: RayIntersection,
     ) {
-        let cos = intersection.normal().dot(-photon.direction());
-        if Val(context.rng().random()) < self.calc_transmittance(cos) {
-            self.receive_impl(context, state, photon, intersection);
+        if intersection.side() == SurfaceSide::Front {
+            self.receive_front_face(context, state, photon, intersection);
         } else {
-            let specular = Specular::new(self.albedo);
-            specular.receive(context, state, photon, intersection);
+            self.receive_back_face(context, state, photon, intersection);
         }
     }
 
@@ -185,7 +298,12 @@ impl Material for Scattering {
 
 impl BssrdfMaterial for Scattering {
     fn bssrdf_direction(&self, intersection_in: &RayIntersection, dir_in: UnitVector) -> Spectrum {
-        let cos = dir_in.dot(intersection_in.normal());
+        let normal = if intersection_in.side() == SurfaceSide::Front {
+            intersection_in.normal()
+        } else {
+            -intersection_in.normal()
+        };
+        let cos = dir_in.dot(normal);
         if cos > Val(0.0) {
             let transmittance = self.calc_transmittance(cos);
             Spectrum::broadcast(Val::FRAC_1_PI * transmittance)
@@ -258,11 +376,15 @@ impl BssrdfSampling for Scattering {
         intersection_in: &RayIntersection,
         rng: &mut dyn RngCore,
     ) -> BssrdfDirectionSample {
-        let normal = intersection_in.normal();
+        let normal = if intersection_in.side() == SurfaceSide::Front {
+            intersection_in.normal()
+        } else {
+            -intersection_in.normal()
+        };
         let direction = UnitVector::random_cosine_hemisphere(normal, rng);
         let ray_next = intersection_in.spawn(direction);
 
-        let cos = ray_next.direction().dot(intersection_in.normal());
+        let cos = ray_next.direction().dot(normal);
         let transmittance = self.calc_transmittance(cos);
         let bssrdf_direction = Spectrum::broadcast(Val::FRAC_1_PI * transmittance);
         let pdf = Val::FRAC_1_PI * cos;
@@ -270,7 +392,12 @@ impl BssrdfSampling for Scattering {
     }
 
     fn pdf_bssrdf_direction(&self, intersection_in: &RayIntersection, ray_next: &Ray) -> Val {
-        let cos = ray_next.direction().dot(intersection_in.normal());
+        let normal = if intersection_in.side() == SurfaceSide::Front {
+            intersection_in.normal()
+        } else {
+            -intersection_in.normal()
+        };
+        let cos = ray_next.direction().dot(normal);
         Val::FRAC_1_PI * cos.max(Val(0.0))
     }
 }
@@ -282,4 +409,82 @@ pub enum TryNewScatteringError {
     InvalidMeanFreePath,
     #[snafu(display("refractive index is not positive"))]
     InvalidRefractiveIndex,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct BackFaceTransmissionAdapter<'a> {
+    inner: &'a Scattering,
+}
+
+impl<'a> BackFaceTransmissionAdapter<'a> {
+    fn new(inner: &'a Scattering) -> Self {
+        Self { inner }
+    }
+}
+
+impl<'a> Material for BackFaceTransmissionAdapter<'a> {
+    fn kind(&self) -> MaterialKind {
+        MaterialKind::Refractive
+    }
+
+    fn shade(
+        &self,
+        context: &mut RtContext<'_>,
+        state: RtState,
+        ray: Ray,
+        intersection: RayIntersection,
+    ) -> Contribution {
+        let light = self.shade_light(context, &ray, &intersection);
+        let state_next = state.with_skip_emissive(true);
+        let mut res = self.shade_scattering(context, state_next, &ray, &intersection);
+        res.add_light(light.light());
+        res
+    }
+
+    fn receive(
+        &self,
+        context: &mut PmContext<'_>,
+        state: PmState,
+        photon: PhotonRay,
+        intersection: RayIntersection,
+    ) {
+        match state.policy() {
+            StoragePolicy::Global => {
+                self.maybe_bounce_next_photon(context, state, photon, intersection);
+            }
+            StoragePolicy::Caustic => {}
+        }
+    }
+}
+
+impl<'a> BsdfMaterial for BackFaceTransmissionAdapter<'a> {
+    fn bsdf(
+        &self,
+        _dir_out: UnitVector,
+        intersection: &RayIntersection,
+        dir_in: UnitVector,
+    ) -> Spectrum {
+        self.inner.albedo * self.inner.bssrdf_direction(intersection, dir_in)
+    }
+}
+
+impl<'a> BsdfSampling for BackFaceTransmissionAdapter<'a> {
+    fn sample_bsdf(
+        &self,
+        _ray: &Ray,
+        intersection: &RayIntersection,
+        rng: &mut dyn RngCore,
+    ) -> BsdfSample {
+        let sample = self.inner.sample_bssrdf_direction(intersection, rng);
+        let cos = (intersection.normal())
+            .dot(sample.ray_next().direction())
+            .abs();
+        let pdf = sample.pdf();
+        let coefficient = self.inner.albedo * sample.bssrdf_direction() * cos / pdf;
+        BsdfSample::new(sample.into_ray_next(), coefficient, pdf)
+    }
+
+    fn pdf_bsdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+        self.inner.pdf_bssrdf_direction(intersection, ray_next)
+    }
 }
