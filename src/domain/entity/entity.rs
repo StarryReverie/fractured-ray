@@ -9,7 +9,7 @@ use crate::domain::material::primitive::{
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId, ShapeKind};
 use crate::domain::shape::instance::Instance;
 use crate::domain::shape::mesh::{MeshPolygon, MeshTriangle};
-use crate::domain::shape::primitive::{Plane, Polygon, Sphere, Triangle};
+use crate::domain::shape::primitive::{Aabb, Plane, Polygon, Sphere, Triangle};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EntityId {
@@ -95,6 +95,7 @@ impl EntityContainer for EntityPool {}
 
 #[derive(Debug, Default)]
 struct ShapePool {
+    aabbs: Vec<Aabb>,
     instances: Vec<Instance>,
     mesh_polygons: Vec<MeshPolygon>,
     mesh_triangles: Vec<MeshTriangle>,
@@ -124,7 +125,10 @@ impl ShapeContainer for ShapePool {
         let kind = shape.kind();
         let type_id = TypeId::of::<S>();
 
-        if type_id == TypeId::of::<Instance>() {
+        if type_id == TypeId::of::<Aabb>() {
+            let index = Self::downcast_and_push(shape, &mut self.aabbs);
+            ShapeId::new(kind, index)
+        } else if type_id == TypeId::of::<Instance>() {
             let index = Self::downcast_and_push(shape, &mut self.instances);
             ShapeId::new(kind, index)
         } else if type_id == TypeId::of::<MeshPolygon>() {
@@ -153,6 +157,7 @@ impl ShapeContainer for ShapePool {
     fn get_shape(&self, shape_id: ShapeId) -> Option<&dyn Shape> {
         let index = shape_id.index() as usize;
         match shape_id.kind() {
+            ShapeKind::Aabb => self.aabbs.get(index).map(Self::upcast),
             ShapeKind::Instance => self.instances.get(index).map(Self::upcast),
             ShapeKind::MeshPolygon => self.mesh_polygons.get(index).map(Self::upcast),
             ShapeKind::MeshTriangle => self.mesh_triangles.get(index).map(Self::upcast),

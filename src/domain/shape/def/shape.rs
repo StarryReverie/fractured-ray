@@ -24,6 +24,7 @@ pub trait Shape: Sampleable + Debug + Send + Sync + 'static {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ShapeKind {
+    Aabb,
     Instance,
     MeshPolygon,
     MeshTriangle,
