@@ -8,6 +8,7 @@ use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, Mate
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
+use crate::domain::ray::util as ray_util;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::{
     Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
@@ -39,37 +40,6 @@ impl Blurry {
             refractive_index,
             alpha: roughness.powi(2),
         })
-    }
-
-    fn calc_next_reflective_ray(
-        &self,
-        ray: &Ray,
-        intersection: &RayIntersection,
-        mn: UnitVector,
-    ) -> Ray {
-        let dir = ray.direction();
-        let dir_next = dir - Val(2.0) * dir.dot(mn) * mn;
-        intersection.spawn(dir_next.normalize().unwrap())
-    }
-
-    fn calc_next_refractive_ray(
-        &self,
-        ray: &Ray,
-        intersection: &RayIntersection,
-        mn: UnitVector,
-        cos: Val,
-    ) -> Option<Ray> {
-        let ri = self.calc_current_refractive_index(intersection.side());
-        let dir_next_perp = (ray.direction() + cos * mn) / ri;
-
-        let tmp = Val(1.0) - dir_next_perp.norm_squared();
-        if tmp.is_sign_negative() {
-            return None;
-        }
-
-        let dir_next_para = -tmp.sqrt() * mn;
-        let dir_next = (dir_next_para + dir_next_perp).normalize().unwrap();
-        Some(intersection.spawn(dir_next))
     }
 
     fn calc_current_refractive_index(&self, side: SurfaceSide) -> Val {
@@ -190,25 +160,16 @@ impl BsdfSampling for Blurry {
         let dir = -ray.direction();
         let normal = intersection.normal();
         let ri = self.calc_current_refractive_index(intersection.side());
-
         let mn = self.generate_microfacet_normal(dir, normal, rng);
-        let cos = dir.dot(mn);
 
-        let reflectance = self.calc_reflectance(cos, intersection.side());
-        let reflectance = reflectance.channel(0).min(Val(1.0));
-
-        let (ray_next, is_reflective) = if Val(rng.random()) < reflectance {
-            (self.calc_next_reflective_ray(ray, intersection, mn), true)
-        } else if let Some(ray) = self.calc_next_refractive_ray(ray, intersection, mn, cos) {
-            (ray, false)
-        } else {
-            (self.calc_next_reflective_ray(ray, intersection, mn), true)
-        };
-
+        let (ray_next, scatter_kind) =
+            ray_util::fresnel_refract_microfacet(ray, intersection, mn, ri, rng);
+        let reflectance = scatter_kind.reflectance();
         let dir_next = ray_next.direction();
+
         let g2 = self.calc_g2(dir, dir_next, normal);
         let g1 = self.calc_g1(dir, normal);
-        let coefficient = if is_reflective {
+        let coefficient = if scatter_kind.is_reflective() {
             self.albedo * g2 / g1
         } else {
             let (o_mn, i_mn) = (mn.dot(dir).abs(), mn.dot(dir_next).abs());
@@ -218,7 +179,7 @@ impl BsdfSampling for Blurry {
 
         let ndf = self.calc_ndf(normal, mn);
         let pdf_vndf = g1 * ndf * Val(0.25) / dir.dot(normal);
-        let pdf = if is_reflective {
+        let pdf = if scatter_kind.is_reflective() {
             reflectance * pdf_vndf
         } else {
             (Val(1.0) - reflectance) * pdf_vndf

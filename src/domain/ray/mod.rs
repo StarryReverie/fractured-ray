@@ -1,4 +1,5 @@
 pub mod photon;
+pub mod util;
 
 mod intersection;
 mod ray;

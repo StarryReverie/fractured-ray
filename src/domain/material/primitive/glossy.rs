@@ -9,6 +9,7 @@ use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::Frame;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
+use crate::domain::ray::util as ray_util;
 use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::{
     Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
@@ -138,12 +139,6 @@ impl Glossy {
         let r0 = Spectrum::new(Val(r0_r), Val(r0_g), Val(r0_b));
         Ok(Self { r0, alpha })
     }
-
-    fn calc_next_ray(&self, ray: &Ray, intersection: &RayIntersection, mn: UnitVector) -> Ray {
-        let dir = ray.direction();
-        let dir_next = dir - Val(2.0) * dir.dot(mn) * mn;
-        intersection.spawn(dir_next.normalize().unwrap())
-    }
 }
 
 impl Material for Glossy {
@@ -231,7 +226,7 @@ impl BsdfSampling for Glossy {
         let normal = intersection.normal();
 
         let mn = self.generate_microfacet_normal(dir, normal, rng);
-        let ray_next = self.calc_next_ray(ray, intersection, mn);
+        let ray_next = ray_util::reflect_microfacet(ray, intersection, mn);
         let dir_next = ray_next.direction();
 
         let reflectance = self.calc_reflectance(dir.dot(mn), intersection.side());

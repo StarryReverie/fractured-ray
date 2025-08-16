@@ -22,6 +22,7 @@ pub struct Scattering {
     albedo: Albedo,
     scattering_distance: Spectrum,
     refractive_index: Val,
+    mean_free_path: Val,
 }
 
 impl Scattering {
@@ -46,6 +47,7 @@ impl Scattering {
             albedo,
             scattering_distance,
             refractive_index,
+            mean_free_path,
         })
     }
 
