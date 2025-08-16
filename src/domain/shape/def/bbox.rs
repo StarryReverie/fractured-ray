@@ -5,75 +5,61 @@ use getset::CopyGetters;
 use crate::domain::math::geometry::{AllTransformation, Point, Transform};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
+use crate::domain::shape::primitive::Aabb;
+
+use super::Shape;
 
 #[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
-#[getset(get_copy = "pub")]
-pub struct BoundingBox {
-    min: Point,
-    max: Point,
-}
+pub struct BoundingBox(Aabb);
 
 impl BoundingBox {
+    #[inline]
     pub fn new(corner1: Point, corner2: Point) -> Self {
-        Self {
-            min: corner1.component_min(&corner2),
-            max: corner1.component_max(&corner2),
-        }
+        Self(Aabb::new(corner1, corner2))
+    }
+
+    #[inline]
+    pub fn min(&self) -> Point {
+        self.0.min()
+    }
+
+    #[inline]
+    pub fn max(&self) -> Point {
+        self.0.max()
     }
 
     pub fn merge(&self, other: &Self) -> Self {
-        Self {
-            min: self.min.component_min(&other.min),
-            max: self.max.component_max(&other.max),
-        }
+        Self::new(
+            self.min().component_min(&other.min()),
+            self.max().component_max(&other.max()),
+        )
     }
 
     pub fn centroid(&self) -> Point {
         Point::new(
-            (self.min.x()).midpoint(self.max.x()),
-            (self.min.y()).midpoint(self.max.y()),
-            (self.min.z()).midpoint(self.max.z()),
+            (self.min().x()).midpoint(self.max().x()),
+            (self.min().y()).midpoint(self.max().y()),
+            (self.min().z()).midpoint(self.max().z()),
         )
     }
 
+    #[inline]
     pub fn surface_area(&self) -> Val {
-        let a = self.max.x() - self.min.x();
-        let b = self.max.y() - self.min.y();
-        let c = self.max.z() - self.min.z();
-        Val(2.0) * (a * b + a * c + b * c)
+        self.0.area()
     }
 
-    pub fn hit(&self, ray: &Ray, range: DisRange) -> Option<Val> {
-        let (s, d) = (ray.start(), ray.direction());
-        let xr = Self::calc_axis_range(s.x(), d.x(), self.min.x(), self.max.x());
-        let yr = Self::calc_axis_range(s.y(), d.y(), self.min.y(), self.max.y());
-        let zr = Self::calc_axis_range(s.z(), d.z(), self.min.z(), self.max.z());
-        let range = range.intersect(xr).intersect(yr).intersect(zr);
-
-        if range.not_empty() {
-            match range.start_bound() {
-                Bound::Included(distance) => Some(*distance),
-                Bound::Excluded(distance) => Some(*distance),
-                Bound::Unbounded => unreachable!("start_bound should be at least 0.0"),
+    pub fn try_hit(&self, ray: &Ray, range: DisRange) -> Option<Val> {
+        if let Some((left, right)) = self.0.hit_range(ray) {
+            let range = range.intersect(DisRange::inclusive(left, right));
+            if range.not_empty() {
+                return match range.start_bound() {
+                    Bound::Included(distance) => Some(*distance),
+                    Bound::Excluded(distance) => Some(*distance),
+                    Bound::Unbounded => unreachable!("start_bound should be at least 0.0"),
+                };
             }
-        } else {
-            None
         }
-    }
-
-    fn calc_axis_range(start: Val, direction: Val, min: Val, max: Val) -> DisRange {
-        if direction != Val(0.0) {
-            let mut dis1 = (min - start) / direction;
-            let mut dis2 = (max - start) / direction;
-            if dis1 > dis2 {
-                std::mem::swap(&mut dis1, &mut dis2);
-            }
-            DisRange::inclusive(dis1, dis2)
-        } else if (min..=max).contains(&start) {
-            DisRange::unbounded()
-        } else {
-            DisRange::empty()
-        }
+        None
     }
 }
 

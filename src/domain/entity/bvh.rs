@@ -180,7 +180,7 @@ where
         SC: ShapeContainer,
     {
         if !self.nodes.is_empty() {
-            if self.nodes[0].bounding_box().hit(ray, range).is_some() {
+            if self.nodes[0].bounding_box().try_hit(ray, range).is_some() {
                 return self.search_impl(0, ray, range, shapes);
             }
         }
@@ -202,8 +202,8 @@ where
         match &self.nodes[current] {
             BvhNode::Internal { right, .. } => {
                 let (left, right) = (current + 1, *right);
-                let hit_left = self.nodes[left].bounding_box().hit(ray, range);
-                let hit_right = self.nodes[right].bounding_box().hit(ray, range);
+                let hit_left = self.nodes[left].bounding_box().try_hit(ray, range);
+                let hit_right = self.nodes[right].bounding_box().try_hit(ray, range);
 
                 match (hit_left, hit_right) {
                     (Some(_), None) => self.search_impl(left, ray, range, shapes),
