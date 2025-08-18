@@ -22,7 +22,9 @@ pub trait Medium: Send + Sync {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum MediumKind {}
+pub enum MediumKind {
+    Isotropic,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, CopyGetters)]
 #[getset(get_copy = "pub")]
