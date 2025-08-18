@@ -27,6 +27,14 @@ impl Albedo {
         Ok(Self(Spectrum::new(red, green, blue)))
     }
 
+    pub fn clamp(spectrum: Spectrum) -> Self {
+        Self(Spectrum::new(
+            spectrum.red().clamp(Val(0.0), Val(1.0)),
+            spectrum.green().clamp(Val(0.0), Val(1.0)),
+            spectrum.blue().clamp(Val(0.0), Val(1.0)),
+        ))
+    }
+
     #[inline]
     pub fn broadcast(val: Val) -> Result<Self, TryNewAlbedoError> {
         Self::new(val, val, val)
@@ -62,11 +70,7 @@ impl From<Albedo> for Spectrum {
 
 impl From<Spectrum> for Albedo {
     fn from(value: Spectrum) -> Self {
-        Self(Spectrum::new(
-            value.red().clamp(Val(0.0), Val(1.0)),
-            value.green().clamp(Val(0.0), Val(1.0)),
-            value.blue().clamp(Val(0.0), Val(1.0)),
-        ))
+        Self::clamp(value)
     }
 }
 
