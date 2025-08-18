@@ -1,7 +1,8 @@
 use crate::domain::material::def::{Material, MaterialContainer, MaterialKind};
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::numeric::DisRange;
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::light::{AggregateLightSampler, EmptyLightSampler, LightSampling};
 use crate::domain::sampling::photon::{AggregatePhotonSampler, EmptyPhotonSampler, PhotonSampling};
 use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer, ShapeId};

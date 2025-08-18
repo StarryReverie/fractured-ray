@@ -12,9 +12,10 @@ use crate::domain::material::primitive::Specular;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{Point, PositionedFrame};
 use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::{RayIntersection, SurfaceSide};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::util as ray_util;
-use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::{
     Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
 };

@@ -3,7 +3,8 @@ use rand::prelude::*;
 
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 
 #[inline]
 pub fn reflect(ray: &Ray, intersection: &RayIntersection) -> Ray {
@@ -99,7 +100,7 @@ impl ScatterKind {
 mod tests {
     use crate::domain::math::algebra::Vector;
     use crate::domain::math::geometry::Point;
-    use crate::domain::ray::SurfaceSide;
+    use crate::domain::ray::event::SurfaceSide;
 
     use super::*;
 

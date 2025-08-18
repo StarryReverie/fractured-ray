@@ -3,7 +3,8 @@ use rand::prelude::*;
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::Frame;
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 use crate::domain::shape::def::{Shape, ShapeId};
 use crate::domain::shape::primitive::Sphere;
 
@@ -79,7 +80,7 @@ impl LightSampling for SphereLightSampler {
 #[cfg(test)]
 mod tests {
     use crate::domain::math::geometry::Point;
-    use crate::domain::ray::SurfaceSide;
+    use crate::domain::ray::event::SurfaceSide;
     use crate::domain::shape::def::{ShapeId, ShapeKind};
 
     use super::*;

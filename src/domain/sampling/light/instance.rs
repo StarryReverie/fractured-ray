@@ -2,7 +2,8 @@ use rand::prelude::*;
 
 use crate::domain::math::geometry::{AllTransformation, Transform, Transformation};
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 use crate::domain::shape::def::{Shape, ShapeId};
 use crate::domain::shape::instance::Instance;
 

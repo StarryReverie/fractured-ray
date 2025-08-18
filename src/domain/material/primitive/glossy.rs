@@ -8,9 +8,10 @@ use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, Mate
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::Frame;
 use crate::domain::math::numeric::Val;
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::{RayIntersection, SurfaceSide};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::util as ray_util;
-use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::{
     Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
 };

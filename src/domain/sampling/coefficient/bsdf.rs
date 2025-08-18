@@ -5,7 +5,8 @@ use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 
 pub trait BsdfSampling: Debug + Send + Sync {
     fn sample_bsdf(

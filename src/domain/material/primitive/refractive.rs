@@ -7,9 +7,10 @@ use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::numeric::Val;
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::{RayIntersection, SurfaceSide};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::util as ray_util;
-use crate::domain::ray::{Ray, RayIntersection, SurfaceSide};
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
 

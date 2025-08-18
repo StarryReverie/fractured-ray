@@ -3,8 +3,7 @@ use getset::CopyGetters;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::{AllTransformation, Point, Transform};
 use crate::domain::math::numeric::Val;
-
-use super::Ray;
+use crate::domain::ray::Ray;
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
 #[getset(get_copy = "pub")]

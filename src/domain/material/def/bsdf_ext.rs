@@ -6,8 +6,9 @@ use rand::prelude::*;
 use crate::domain::color::Spectrum;
 use crate::domain::math::algebra::Product;
 use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 use crate::domain::ray::photon::{Photon, PhotonRay, SearchPolicy};
-use crate::domain::ray::{Ray, RayIntersection};
 use crate::domain::renderer::{Contribution, PhotonInfo, PmContext, PmState, RtContext, RtState};
 
 use super::{BsdfMaterial, MaterialKind};

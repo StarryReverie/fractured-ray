@@ -6,7 +6,8 @@ use rand::prelude::*;
 use crate::domain::color::Spectrum;
 use crate::domain::entity::Scene;
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 
 pub trait BssrdfSampling: Debug + Send + Sync {
     fn sample_bssrdf_diffusion(

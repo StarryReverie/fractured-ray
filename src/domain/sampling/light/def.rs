@@ -5,7 +5,8 @@ use rand::prelude::*;
 
 use crate::domain::math::geometry::{AllTransformation, Transform};
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 use crate::domain::shape::def::{Shape, ShapeId};
 
 pub trait LightSampling: Debug + Send + Sync {

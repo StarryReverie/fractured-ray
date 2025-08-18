@@ -6,7 +6,8 @@ use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{Point, Rotation, Transform, Transformation};
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
 use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
@@ -290,7 +291,7 @@ pub enum TryNewPolygonError {
 #[cfg(test)]
 mod tests {
     use crate::domain::math::algebra::Vector;
-    use crate::domain::ray::SurfaceSide;
+    use crate::domain::ray::event::SurfaceSide;
 
     use super::*;
 

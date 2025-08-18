@@ -5,7 +5,8 @@ use getset::CopyGetters;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::Sampleable;
 
 use super::BoundingBox;

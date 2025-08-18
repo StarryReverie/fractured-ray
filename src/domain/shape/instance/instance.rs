@@ -8,7 +8,8 @@ use crate::domain::math::geometry::{
     AllTransformation, Point, Rotation, Transform, Transformation, Translation,
 };
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::ray::{Ray, RayIntersection};
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{InstanceLightSampler, LightSampling};
 use crate::domain::sampling::photon::{InstancePhotonSampler, PhotonSampling};
@@ -113,7 +114,7 @@ mod tests {
     use crate::domain::math::algebra::{UnitVector, Vector};
     use crate::domain::math::geometry::Point;
     use crate::domain::math::numeric::Val;
-    use crate::domain::ray::SurfaceSide;
+    use crate::domain::ray::event::SurfaceSide;
     use crate::domain::shape::primitive::Polygon;
 
     use super::*;
