@@ -4,15 +4,15 @@ use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
-use crate::domain::entity::Scene;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
+use crate::domain::scene::entity::EntityScene;
 
 pub trait BssrdfSampling: Debug + Send + Sync {
     fn sample_bssrdf_diffusion(
         &self,
-        scene: &dyn Scene,
+        scene: &dyn EntityScene,
         intersection_out: &RayIntersection,
         rng: &mut dyn RngCore,
     ) -> Option<BssrdfDiffusionSample>;

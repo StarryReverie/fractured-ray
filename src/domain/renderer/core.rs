@@ -7,12 +7,12 @@ use snafu::prelude::*;
 
 use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Spectrum;
-use crate::domain::entity::{BvhScene, Scene};
 use crate::domain::image::Image;
 use crate::domain::material::def::FluxEstimation;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::{PhotonMap, PhotonRay, SearchPolicy};
+use crate::domain::scene::entity::{BvhEntityScene, EntityScene};
 
 use super::{
     Contribution, PhotonInfo, PmContext, PmState, Renderer, RtContext, RtState, StoragePolicy,
@@ -21,14 +21,14 @@ use super::{
 #[derive(Debug)]
 pub struct CoreRenderer {
     camera: Camera,
-    scene: BvhScene,
+    scene: BvhEntityScene,
     config: Configuration,
 }
 
 impl CoreRenderer {
     pub fn new(
         camera: Camera,
-        scene: BvhScene,
+        scene: BvhEntityScene,
         config: Configuration,
     ) -> Result<Self, ConfigurationError> {
         ensure!(config.iterations > 0, InvalidIterationsSnafu);

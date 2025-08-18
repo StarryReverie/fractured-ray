@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use rand::prelude::*;
 use rand_distr::Uniform;
 
-use crate::domain::entity::Bvh;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
+use crate::domain::scene::bvh::Bvh;
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
 
 use super::{LightSample, LightSampling};

@@ -3,12 +3,12 @@ use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::{Albedo, Spectrum};
-use fractured_ray::domain::entity::BvhSceneBuilder;
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
 use fractured_ray::domain::math::geometry::{Point, Rotation, SpreadAngle, Translation};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
+use fractured_ray::domain::scene::entity::BvhEntitySceneBuilder;
 use fractured_ray::domain::shape::instance::MeshConstructorInstance;
 use fractured_ray::domain::shape::mesh::MeshConstructor;
 use fractured_ray::domain::shape::primitive::{Plane, Polygon, Sphere};
@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         Val(5.0),
     )?;
 
-    let mut builder = BvhSceneBuilder::new();
+    let mut builder = BvhEntitySceneBuilder::new();
 
     builder.add(
         Plane::new(

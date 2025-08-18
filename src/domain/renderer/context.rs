@@ -1,8 +1,8 @@
 use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
-use crate::domain::entity::Scene;
 use crate::domain::ray::photon::{Photon, PhotonMap, SearchPolicy};
+use crate::domain::scene::entity::EntityScene;
 
 use super::{Configuration, Renderer};
 
@@ -11,7 +11,7 @@ pub struct RtContext<'a> {
     #[getset(get_copy = "pub")]
     renderer: &'a dyn Renderer,
     #[getset(get_copy = "pub")]
-    scene: &'a dyn Scene,
+    scene: &'a dyn EntityScene,
     rng: &'a mut dyn RngCore,
     #[getset(get_copy = "pub")]
     config: &'a Configuration,
@@ -24,7 +24,7 @@ pub struct RtContext<'a> {
 impl<'a> RtContext<'a> {
     pub fn new(
         renderer: &'a dyn Renderer,
-        scene: &'a dyn Scene,
+        scene: &'a dyn EntityScene,
         rng: &'a mut dyn RngCore,
         config: &'a Configuration,
         photon_global: PhotonInfo<'a>,
@@ -68,7 +68,7 @@ pub struct PmContext<'a> {
     #[getset(get_copy = "pub")]
     renderer: &'a dyn Renderer,
     #[getset(get_copy = "pub")]
-    scene: &'a dyn Scene,
+    scene: &'a dyn EntityScene,
     rng: &'a mut dyn RngCore,
     photons: &'a mut Vec<Photon>,
 }
@@ -76,7 +76,7 @@ pub struct PmContext<'a> {
 impl<'a> PmContext<'a> {
     pub fn new(
         renderer: &'a dyn Renderer,
-        scene: &'a dyn Scene,
+        scene: &'a dyn EntityScene,
         rng: &'a mut dyn RngCore,
         photons: &'a mut Vec<Photon>,
     ) -> Self {

@@ -5,46 +5,21 @@ use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::light::{AggregateLightSampler, EmptyLightSampler, LightSampling};
 use crate::domain::sampling::photon::{AggregatePhotonSampler, EmptyPhotonSampler, PhotonSampling};
-use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer, ShapeId};
+use crate::domain::scene::bvh::Bvh;
+use crate::domain::scene::pool::EntityPool;
+use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer};
 
-use super::{Bvh, EntityContainer, EntityId, EntityPool};
-
-pub trait Scene: Send + Sync + 'static {
-    fn get_entities(&self) -> &dyn EntityContainer;
-
-    fn get_lights(&self) -> &dyn LightSampling;
-
-    fn get_emitters(&self) -> &dyn PhotonSampling;
-
-    fn find_intersection(&self, ray: &Ray, range: DisRange) -> Option<(RayIntersection, EntityId)>;
-
-    fn test_intersection(
-        &self,
-        ray: &Ray,
-        range: DisRange,
-        shape_id: ShapeId,
-    ) -> Option<(RayIntersection, EntityId)> {
-        if let Some((intersection, id)) = self.find_intersection(ray, range) {
-            if id.shape_id() == shape_id {
-                Some((intersection, id))
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
-}
+use super::{EntityContainer, EntityId, EntityScene};
 
 #[derive(Debug)]
-pub struct BvhSceneBuilder {
+pub struct BvhEntitySceneBuilder {
     entities: Box<EntityPool>,
     ids: Vec<EntityId>,
     lights: Vec<Box<dyn LightSampling>>,
     emitters: Vec<Box<dyn PhotonSampling>>,
 }
 
-impl BvhSceneBuilder {
+impl BvhEntitySceneBuilder {
     pub fn new() -> Self {
         Self {
             entities: Box::new(EntityPool::new()),
@@ -115,7 +90,7 @@ impl BvhSceneBuilder {
         }
     }
 
-    pub fn build(self) -> BvhScene {
+    pub fn build(self) -> BvhEntityScene {
         let mut bboxes = Vec::with_capacity(self.ids.len());
         let mut unboundeds = Vec::new();
 
@@ -143,7 +118,7 @@ impl BvhSceneBuilder {
                 .unwrap_or(Box::new(EmptyPhotonSampler::new()))
         };
 
-        BvhScene {
+        BvhEntityScene {
             entities: self.entities,
             bvh: Bvh::new(bboxes),
             unboundeds,
@@ -154,7 +129,7 @@ impl BvhSceneBuilder {
 }
 
 #[derive(Debug)]
-pub struct BvhScene {
+pub struct BvhEntityScene {
     entities: Box<EntityPool>,
     bvh: Bvh<EntityId>,
     unboundeds: Vec<EntityId>,
@@ -162,7 +137,7 @@ pub struct BvhScene {
     emitters: Box<dyn PhotonSampling>,
 }
 
-impl BvhScene {
+impl BvhEntityScene {
     fn find_intersection_with_unboundeds(
         &self,
         ray: &Ray,
@@ -184,7 +159,7 @@ impl BvhScene {
     }
 }
 
-impl Scene for BvhScene {
+impl EntityScene for BvhEntityScene {
     fn get_entities(&self) -> &dyn EntityContainer {
         &*self.entities
     }
@@ -223,7 +198,7 @@ mod tests {
 
     #[test]
     fn scene_build_bvh_succeeds() {
-        let mut builder = BvhSceneBuilder::new();
+        let mut builder = BvhEntitySceneBuilder::new();
         builder.add(
             Sphere::new(Point::new(Val(1.0), Val(0.0), Val(2.0)), Val(1.0)).unwrap(),
             Diffuse::new(Albedo::WHITE),

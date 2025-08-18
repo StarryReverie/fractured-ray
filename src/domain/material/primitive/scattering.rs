@@ -4,7 +4,6 @@ use rand::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
-use crate::domain::entity::Scene;
 use crate::domain::material::def::{
     BsdfMaterial, BsdfMaterialExt, BssrdfMaterial, BssrdfMaterialExt, Material, MaterialKind,
 };
@@ -22,6 +21,7 @@ use crate::domain::renderer::{
 use crate::domain::sampling::coefficient::{
     BsdfSample, BsdfSampling, BssrdfDiffusionSample, BssrdfDirectionSample, BssrdfSampling,
 };
+use crate::domain::scene::entity::EntityScene;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scattering {
@@ -114,7 +114,7 @@ impl Scattering {
     }
 
     fn project_normalized_diffusion_point(
-        scene: &dyn Scene,
+        scene: &dyn EntityScene,
         frame: &PositionedFrame,
         (radius, phi): (Val, Val),
         radius_max: Val,
@@ -225,7 +225,7 @@ impl Scattering {
 
     fn determine_back_face(
         &self,
-        scene: &dyn Scene,
+        scene: &dyn EntityScene,
         ray: &Ray,
         intersection: &RayIntersection,
         rng: &mut dyn RngCore,
@@ -317,7 +317,7 @@ impl BssrdfMaterial for Scattering {
 impl BssrdfSampling for Scattering {
     fn sample_bssrdf_diffusion(
         &self,
-        scene: &dyn Scene,
+        scene: &dyn EntityScene,
         intersection_out: &RayIntersection,
         rng: &mut dyn RngCore,
     ) -> Option<BssrdfDiffusionSample> {
