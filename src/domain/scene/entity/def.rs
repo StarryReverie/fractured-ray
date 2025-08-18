@@ -8,7 +8,7 @@ use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
 use crate::domain::shape::def::{ShapeContainer, ShapeId, ShapeKind};
 
-pub trait EntityScene: Send + Sync + 'static {
+pub trait EntityScene: Send + Sync {
     fn get_entities(&self) -> &dyn EntityContainer;
 
     fn get_lights(&self) -> &dyn LightSampling;

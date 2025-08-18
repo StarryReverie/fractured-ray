@@ -50,7 +50,7 @@ pub fn fresnel_refract(
     intersection: &RayIntersection,
     ri: Val,
     rng: &mut dyn RngCore,
-) -> (Ray, ScatterKind) {
+) -> (Ray, ScatteringKind) {
     fresnel_refract_microfacet(ray, intersection, intersection.normal(), ri, rng)
 }
 
@@ -60,16 +60,16 @@ pub fn fresnel_refract_microfacet(
     mn: UnitVector,
     ri: Val,
     rng: &mut dyn RngCore,
-) -> (Ray, ScatterKind) {
+) -> (Ray, ScatteringKind) {
     let reflectance = calc_reflectance(mn.dot(-ray.direction()), ri);
     if Val(rng.random()) < reflectance {
         let ray = reflect_microfacet(ray, intersection, mn);
-        (ray, ScatterKind::new(true, reflectance))
+        (ray, ScatteringKind::new(true, reflectance))
     } else if let Some(ray) = pure_refract_microfacet(ray, intersection, mn, ri) {
-        (ray, ScatterKind::new(false, reflectance))
+        (ray, ScatteringKind::new(false, reflectance))
     } else {
         let ray = reflect_microfacet(ray, intersection, mn);
-        (ray, ScatterKind::new(true, reflectance))
+        (ray, ScatteringKind::new(true, reflectance))
     }
 }
 
@@ -82,12 +82,12 @@ fn calc_reflectance(cos: Val, ri: Val) -> Val {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, CopyGetters)]
 #[getset(get_copy = "pub")]
-pub struct ScatterKind {
+pub struct ScatteringKind {
     is_reflective: bool,
     reflectance: Val,
 }
 
-impl ScatterKind {
+impl ScatteringKind {
     fn new(is_reflective: bool, reflectance: Val) -> Self {
         Self {
             is_reflective,
