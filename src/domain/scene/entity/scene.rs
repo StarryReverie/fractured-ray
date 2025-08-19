@@ -120,8 +120,7 @@ impl BvhEntitySceneBuilder {
 
         BvhEntityScene {
             entities: self.entities,
-            bvh: Bvh::new(bboxes),
-            unboundeds,
+            bvh: Bvh::new(bboxes, unboundeds),
             lights,
             emitters,
         }
@@ -132,31 +131,8 @@ impl BvhEntitySceneBuilder {
 pub struct BvhEntityScene {
     entities: Box<EntityPool>,
     bvh: Bvh<EntityId>,
-    unboundeds: Vec<EntityId>,
     lights: Box<dyn LightSampling>,
     emitters: Box<dyn PhotonSampling>,
-}
-
-impl BvhEntityScene {
-    fn find_intersection_with_unboundeds(
-        &self,
-        ray: &Ray,
-        mut range: DisRange,
-    ) -> Option<(RayIntersection, EntityId)> {
-        let mut closet: Option<(RayIntersection, EntityId)> = None;
-
-        for id in &self.unboundeds {
-            let shape = self.entities.get_shape(id.shape_id()).unwrap();
-            if let Some((closet, _)) = &closet {
-                range = range.shrink_end(closet.distance());
-            }
-            if let Some(intersection) = shape.hit(ray, range) {
-                closet = Some((intersection, *id));
-            };
-        }
-
-        closet
-    }
 }
 
 impl EntityScene for BvhEntityScene {
@@ -173,15 +149,7 @@ impl EntityScene for BvhEntityScene {
     }
 
     fn find_intersection(&self, ray: &Ray, range: DisRange) -> Option<(RayIntersection, EntityId)> {
-        if let Some(mut res) = self.find_intersection_with_unboundeds(ray, range) {
-            let range = range.shrink_end(res.0.distance());
-            if let Some(bvh_res) = self.bvh.search(ray, range, &*self.entities) {
-                res = bvh_res
-            }
-            Some(res)
-        } else {
-            self.bvh.search(ray, range, &*self.entities)
-        }
+        self.bvh.search(ray, range, &*self.entities)
     }
 }
 

@@ -33,7 +33,7 @@ impl AggregateLightSampler {
                 })
             })
             .collect();
-        let bvh = Bvh::new(bboxes);
+        let bvh = Bvh::new(bboxes, Vec::new());
         let weight = Val::from(ids.len()).recip();
         Self {
             lights,

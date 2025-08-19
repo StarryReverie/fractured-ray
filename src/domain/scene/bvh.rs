@@ -11,20 +11,25 @@ where
     SI: Eq + Copy + Into<ShapeId>,
 {
     nodes: Vec<BvhNode<SI>>,
+    unboundeds: Vec<SI>,
 }
 
 impl<SI> Bvh<SI>
 where
     SI: Eq + Copy + Into<ShapeId>,
 {
-    pub fn new(bboxes: Vec<(SI, BoundingBox)>) -> Self {
+    const SAH_PARTITION: usize = 12;
+    const TRAVERSAL_COST: Val = Val(1.0);
+    const INTERSECTION_COST: Val = Val(8.0);
+
+    pub fn new(bboxes: Vec<(SI, BoundingBox)>, unboundeds: Vec<SI>) -> Self {
         let mut nodes = Vec::with_capacity(bboxes.len() * 2);
 
         if !bboxes.is_empty() {
             Self::build(&mut nodes, bboxes);
         }
 
-        Self { nodes }
+        Self { nodes, unboundeds }
     }
 
     fn build(nodes: &mut Vec<BvhNode<SI>>, bboxes: Vec<(SI, BoundingBox)>) -> usize {
@@ -83,13 +88,13 @@ where
         bboxes: Vec<(SI, BoundingBox)>,
     ) -> Vec<PartitionBucket<SI>> {
         let mut buckets = Vec::new();
-        buckets.resize(BvhNode::<SI>::SAH_PARTITION, PartitionBucket::new());
+        buckets.resize(Self::SAH_PARTITION, PartitionBucket::new());
         let range = (node_bbox.min().axis(axis), node_bbox.max().axis(axis));
-        let bucket_span = (range.1 - range.0) / BvhNode::<SI>::SAH_PARTITION.into();
+        let bucket_span = (range.1 - range.0) / Self::SAH_PARTITION.into();
 
         for (id, bbox) in bboxes {
             let fraction = (bbox.centroid().axis(axis) - range.0) / bucket_span;
-            let index = usize::from(fraction).clamp(0, BvhNode::<SI>::SAH_PARTITION - 1);
+            let index = usize::from(fraction).clamp(0, Self::SAH_PARTITION - 1);
             buckets[index].items.push((id, bbox));
         }
 
@@ -105,13 +110,13 @@ where
         bbox_num: usize,
         total_surface_area: Val,
     ) -> Option<usize> {
-        assert_eq!(partition.len(), BvhNode::<SI>::SAH_PARTITION);
-        let mut cost = [BvhNode::<SI>::TRAVERSAL_COST; BvhNode::<ShapeId>::SAH_PARTITION - 1];
+        assert_eq!(partition.len(), Self::SAH_PARTITION);
+        let mut cost = [Self::TRAVERSAL_COST; Bvh::<ShapeId>::SAH_PARTITION - 1];
 
         let mut merged_bbox: Option<BoundingBox> = None;
         let mut num = 0;
-        let mut num_pre = [0; BvhNode::<ShapeId>::SAH_PARTITION - 1];
-        for i in 0..BvhNode::<SI>::SAH_PARTITION - 1 {
+        let mut num_pre = [0; Bvh::<ShapeId>::SAH_PARTITION - 1];
+        for i in 0..Self::SAH_PARTITION - 1 {
             num += partition[i].items.len();
             num_pre[i] = num;
             merged_bbox = merged_bbox
@@ -120,14 +125,13 @@ where
             let surface_area = merged_bbox
                 .as_ref()
                 .map_or(Val(0.0), BoundingBox::surface_area);
-            cost[i] += BvhNode::<ShapeId>::INTERSECTION_COST * Val::from(num) * surface_area
-                / total_surface_area;
+            cost[i] += Self::INTERSECTION_COST * Val::from(num) * surface_area / total_surface_area;
         }
 
         num = 0;
         merged_bbox = None;
-        let mut num_suf = [0; BvhNode::<ShapeId>::SAH_PARTITION - 1];
-        for i in (0..BvhNode::<SI>::SAH_PARTITION - 1).rev() {
+        let mut num_suf = [0; Bvh::<ShapeId>::SAH_PARTITION - 1];
+        for i in (0..Self::SAH_PARTITION - 1).rev() {
             num += partition[i + 1].items.len();
             num_suf[i] = num;
             merged_bbox = merged_bbox
@@ -136,12 +140,11 @@ where
             let surface_area = merged_bbox
                 .as_ref()
                 .map_or(Val(0.0), BoundingBox::surface_area);
-            cost[i] += BvhNode::<SI>::INTERSECTION_COST * Val::from(num) * surface_area
-                / total_surface_area;
+            cost[i] += Self::INTERSECTION_COST * Val::from(num) * surface_area / total_surface_area;
         }
 
         let mut res = 0;
-        for i in 1..BvhNode::<SI>::SAH_PARTITION - 1 {
+        for i in 1..Self::SAH_PARTITION - 1 {
             if cost[i] < cost[res] {
                 res = i
             } else if cost[i] == cost[res] {
@@ -154,7 +157,7 @@ where
             }
         }
 
-        let leaf_cost = Val::from(bbox_num) * BvhNode::<SI>::TRAVERSAL_COST;
+        let leaf_cost = Val::from(bbox_num) * Self::TRAVERSAL_COST;
         if num_pre[res] != 0 && num_suf[res] != 0 && cost[res] < leaf_cost {
             Some(res + 1)
         } else {
@@ -172,6 +175,23 @@ where
     }
 
     pub fn search<SC>(
+        &self,
+        ray: &Ray,
+        range: DisRange,
+        shapes: &SC,
+    ) -> Option<(RayIntersection, SI)>
+    where
+        SC: ShapeContainer,
+    {
+        self.search_unboundeds(ray, range, shapes)
+            .map(|res| {
+                let range = range.shrink_end(res.0.distance());
+                self.search_boundeds(ray, range, shapes).unwrap_or(res)
+            })
+            .or_else(|| self.search_boundeds(ray, range, shapes))
+    }
+
+    fn search_boundeds<SC>(
         &self,
         ray: &Ray,
         range: DisRange,
@@ -238,6 +258,18 @@ where
                 self.intersect_for_each(ray, range, ids, shapes)
             }
         }
+    }
+
+    fn search_unboundeds<SC>(
+        &self,
+        ray: &Ray,
+        range: DisRange,
+        shapes: &SC,
+    ) -> Option<(RayIntersection, SI)>
+    where
+        SC: ShapeContainer,
+    {
+        self.intersect_for_each(ray, range, self.unboundeds.iter(), shapes)
     }
 
     fn intersect_for_each<'a, SC, I>(
@@ -318,9 +350,6 @@ where
     SI: Eq + Copy + Into<ShapeId>,
 {
     const INDEX_PLACEHOLDER: usize = usize::MAX;
-    const SAH_PARTITION: usize = 12;
-    const TRAVERSAL_COST: Val = Val(1.0);
-    const INTERSECTION_COST: Val = Val(8.0);
 
     fn internal(bounding_box: BoundingBox) -> Self {
         Self::Internal {
