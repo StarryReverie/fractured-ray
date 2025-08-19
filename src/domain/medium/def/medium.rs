@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::fmt::Debug;
 
 use getset::CopyGetters;
@@ -40,9 +41,10 @@ impl MediumId {
 }
 
 pub trait MediumContainer: Debug + Send + Sync + 'static {
-    fn add_medium<M: Medium>(&mut self, medium: M) -> MediumId
+    fn add_medium<M>(&mut self, medium: M) -> MediumId
     where
-        Self: Sized;
+        Self: Sized,
+        M: Medium + Any;
 
     fn get_medium(&self, id: MediumId) -> Option<&dyn Medium>;
 }

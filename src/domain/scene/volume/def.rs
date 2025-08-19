@@ -4,10 +4,10 @@ use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::medium::def::medium::{MediumContainer, MediumId, MediumKind};
 use crate::domain::ray::Ray;
-use crate::domain::shape::def::{ShapeConstructor, ShapeId, ShapeKind};
+use crate::domain::shape::def::{ShapeContainer, ShapeId, ShapeKind};
 
 pub trait VolumeScene: Send + Sync {
-    fn find_intersection(&self, ray: &Ray, range: DisRange) -> Vec<MediumSegment>;
+    fn find_segments(&self, ray: &Ray, range: DisRange) -> Vec<MediumSegment>;
 }
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
@@ -51,4 +51,4 @@ impl From<BoundaryId> for ShapeId {
     }
 }
 
-pub trait BoundaryContainer: ShapeConstructor + MediumContainer {}
+pub trait BoundaryContainer: ShapeContainer + MediumContainer {}

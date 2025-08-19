@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::fmt::Debug;
 
 use crate::domain::material::def::{Material, MaterialContainer, MaterialId};
@@ -35,7 +36,7 @@ impl MaterialContainer for EntityPool {
     fn add_material<M>(&mut self, material: M) -> MaterialId
     where
         Self: Sized,
-        M: Material + 'static,
+        M: Material + Any,
     {
         self.materials.add_material(material)
     }

@@ -32,7 +32,7 @@ impl MaterialPool {
         collection.len() as u32 - 1
     }
 
-    fn upcast<S: Material>(material: &S) -> &dyn Material {
+    fn upcast<M: Material>(material: &M) -> &dyn Material {
         material
     }
 }
