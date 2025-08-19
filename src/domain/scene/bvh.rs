@@ -296,6 +296,83 @@ where
         }
         closet
     }
+
+    pub fn search_all<SC>(
+        &self,
+        ray: &Ray,
+        range: DisRange,
+        shapes: &SC,
+    ) -> Vec<(RayIntersection, SI)>
+    where
+        SC: ShapeContainer,
+    {
+        let mut res = Vec::new();
+        if !self.nodes.is_empty() {
+            if self.nodes[0].bounding_box().try_hit(ray, range).is_some() {
+                self.search_all_impl(0, ray, range, shapes, &mut res);
+            }
+        }
+        self.intersect_all_for_each(ray, range, self.unboundeds.iter(), shapes, &mut res);
+        res
+    }
+
+    fn search_all_impl<SC>(
+        &self,
+        current: usize,
+        ray: &Ray,
+        range: DisRange,
+        shapes: &SC,
+        res: &mut Vec<(RayIntersection, SI)>,
+    ) where
+        SC: ShapeContainer,
+    {
+        assert!(current < self.nodes.len());
+
+        match &self.nodes[current] {
+            BvhNode::Internal { right, .. } => {
+                let (left, right) = (current + 1, *right);
+
+                let bbox_left = self.nodes[left].bounding_box();
+                if bbox_left.try_hit(ray, range).is_some() {
+                    self.search_all_impl(left, ray, range, shapes, res);
+                }
+
+                let bbox_right = self.nodes[right].bounding_box();
+                if bbox_right.try_hit(ray, range).is_some() {
+                    self.search_all_impl(right, ray, range, shapes, res);
+                }
+            }
+            BvhNode::Leaf { id, .. } => {
+                let shape = shapes.get_shape((*id).into()).unwrap();
+                if let Some(intersection) = shape.hit(ray, range) {
+                    res.push((intersection, *id));
+                }
+            }
+            BvhNode::ClusterLeaf { ids, .. } => {
+                self.intersect_all_for_each(ray, range, ids.iter(), shapes, res);
+            }
+        }
+    }
+
+    fn intersect_all_for_each<'a, SC, I>(
+        &self,
+        ray: &Ray,
+        range: DisRange,
+        ids: I,
+        shapes: &SC,
+        res: &mut Vec<(RayIntersection, SI)>,
+    ) where
+        I: Iterator<Item = &'a SI>,
+        SC: ShapeContainer,
+        SI: 'a,
+    {
+        for id in ids {
+            let shape = shapes.get_shape((*id).into()).unwrap();
+            if let Some(intersection) = shape.hit(ray, range) {
+                res.push((intersection, *id));
+            }
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -378,5 +455,86 @@ where
             BvhNode::Leaf { bounding_box, .. } => bounding_box,
             BvhNode::ClusterLeaf { bounding_box, .. } => bounding_box,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::domain::math::algebra::Vector;
+    use crate::domain::math::geometry::Point;
+    use crate::domain::math::numeric::Val;
+    use crate::domain::scene::pool::ShapePool;
+    use crate::domain::shape::def::Shape;
+    use crate::domain::shape::primitive::{Polygon, Sphere, Triangle};
+
+    use super::*;
+
+    #[test]
+    fn bvh_search_succeeds() {
+        let (shapes, bvh) = get_test_bvh();
+
+        let ray = Ray::new(
+            Point::new(Val(-1.0), Val(0.0), Val(0.0)),
+            Vector::new(Val(2.0), Val(1.0), Val(2.0))
+                .normalize()
+                .unwrap(),
+        );
+        let (intersection, _) = bvh.search(&ray, DisRange::positive(), &shapes).unwrap();
+        assert_eq!(
+            intersection.position(),
+            Point::new(Val(-0.5), Val(0.25), Val(0.5))
+        );
+    }
+
+    #[test]
+    fn bvh_search_all_succeeds() {
+        let (shapes, bvh) = get_test_bvh();
+
+        let ray = Ray::new(
+            Point::new(Val(-1.0), Val(0.0), Val(0.0)),
+            Vector::new(Val(2.0), Val(1.0), Val(2.0))
+                .normalize()
+                .unwrap(),
+        );
+        let mut intersections = (bvh.search_all(&ray, DisRange::positive(), &shapes))
+            .into_iter()
+            .map(|res| res.0)
+            .collect::<Vec<_>>();
+        intersections.sort_by_key(|i| i.distance());
+
+        assert_eq!(intersections.len(), 2);
+        assert_eq!(intersections[0].distance(), Val(0.75));
+        assert_eq!(intersections[1].distance(), Val(2.333333333));
+    }
+
+    fn get_test_bvh() -> (ShapePool, Bvh<ShapeId>) {
+        let mut shapes = ShapePool::default();
+        let mut nodes = Vec::new();
+
+        let sphere = Sphere::new(Point::new(Val(1.0), Val(0.0), Val(2.0)), Val(1.0)).unwrap();
+        let bbox_sphere = sphere.bounding_box().unwrap();
+        nodes.push((shapes.add_shape(sphere), bbox_sphere));
+
+        let triangle = Triangle::new(
+            Point::new(Val(-2.0), Val(0.0), Val(0.0)),
+            Point::new(Val(0.0), Val(1.0), Val(0.0)),
+            Point::new(Val(0.0), Val(0.0), Val(1.0)),
+        )
+        .unwrap();
+        let bbox_triangle = triangle.bounding_box().unwrap();
+        nodes.push((shapes.add_shape(triangle), bbox_triangle));
+
+        let polygon = Polygon::new([
+            Point::new(Val(0.0), Val(-1.0), Val(0.0)),
+            Point::new(Val(0.0), Val(-2.0), Val(0.0)),
+            Point::new(Val(0.0), Val(0.0), Val(-2.0)),
+            Point::new(Val(0.0), Val(0.0), Val(-1.0)),
+        ])
+        .unwrap();
+        let bbox_polygon = polygon.bounding_box().unwrap();
+        nodes.push((shapes.add_shape(polygon), bbox_polygon));
+
+        let bvh = Bvh::new(nodes, Vec::new());
+        (shapes, bvh)
     }
 }
