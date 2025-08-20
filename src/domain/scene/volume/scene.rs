@@ -5,14 +5,57 @@ use rand::prelude::*;
 
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::medium::def::medium::MediumId;
+use crate::domain::medium::def::medium::{Medium, MediumContainer, MediumId};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, SurfaceSide};
 use crate::domain::scene::bvh::Bvh;
 use crate::domain::scene::pool::BoundaryPool;
-use crate::domain::shape::def::ShapeContainer;
+use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer};
 
 use super::{BoundaryContainer, BoundaryId, MediumSegment, VolumeScene};
+
+#[derive(Debug)]
+pub struct BvhVolumeSceneBuilder {
+    boundaries: Box<BoundaryPool>,
+}
+
+impl BvhVolumeSceneBuilder {
+    pub fn new() -> Self {
+        Self {
+            boundaries: Box::new(BoundaryPool::new()),
+        }
+    }
+
+    pub fn add<S, M>(&mut self, shape: S, medium: M) -> &mut Self
+    where
+        S: Shape,
+        M: Medium + 'static,
+    {
+        let shape_id = self.boundaries.add_shape(shape);
+        let medium_id = self.boundaries.add_medium(medium);
+        let boundary_id = BoundaryId::new(shape_id, medium_id);
+        self.boundaries.register_id(boundary_id);
+        self
+    }
+
+    pub fn add_constructor<C, M>(&mut self, constructor: C, medium: M) -> &mut Self
+    where
+        C: ShapeConstructor,
+        M: Medium + 'static,
+    {
+        let shape_ids = constructor.construct(self.boundaries.as_mut());
+        let medium_id = self.boundaries.add_medium(medium);
+        for shape_id in shape_ids {
+            let boundary_id = BoundaryId::new(shape_id, medium_id);
+            self.boundaries.register_id(boundary_id);
+        }
+        self
+    }
+
+    pub fn build(self) -> BvhVolumeScene {
+        BvhVolumeScene::new(self.boundaries)
+    }
+}
 
 #[derive(Debug)]
 pub struct BvhVolumeScene {
@@ -24,7 +67,7 @@ pub struct BvhVolumeScene {
 impl BvhVolumeScene {
     const OUTER_MEDIUM_MAX_DETECTION_COUNT: usize = 16;
 
-    pub fn new(boundaries: Box<BoundaryPool>) -> Self {
+    fn new(boundaries: Box<BoundaryPool>) -> Self {
         let ids = boundaries.get_ids();
         let mut bboxes = Vec::with_capacity(ids.len());
 

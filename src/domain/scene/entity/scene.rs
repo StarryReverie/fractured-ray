@@ -89,18 +89,6 @@ impl BvhEntitySceneBuilder {
     }
 
     pub fn build(self) -> BvhEntityScene {
-        let ids = self.entities.get_ids();
-        let mut bboxes = Vec::with_capacity(ids.len());
-        let mut unboundeds = Vec::new();
-
-        for id in ids {
-            let sid = id.shape_id();
-            match self.entities.get_shape(sid).unwrap().bounding_box() {
-                Some(bbox) => bboxes.push((*id, bbox)),
-                None => unboundeds.push(*id),
-            }
-        }
-
         let lights: Box<dyn LightSampling> = if self.lights.len() > 1 {
             Box::new(AggregateLightSampler::new(self.lights))
         } else {
@@ -117,12 +105,7 @@ impl BvhEntitySceneBuilder {
                 .unwrap_or(Box::new(EmptyPhotonSampler::new()))
         };
 
-        BvhEntityScene {
-            entities: self.entities,
-            bvh: Bvh::new(bboxes, unboundeds),
-            lights,
-            emitters,
-        }
+        BvhEntityScene::new(self.entities, lights, emitters)
     }
 }
 
@@ -132,6 +115,34 @@ pub struct BvhEntityScene {
     bvh: Bvh<EntityId>,
     lights: Box<dyn LightSampling>,
     emitters: Box<dyn PhotonSampling>,
+}
+
+impl BvhEntityScene {
+    fn new(
+        entities: Box<EntityPool>,
+        lights: Box<dyn LightSampling>,
+        emitters: Box<dyn PhotonSampling>,
+    ) -> Self {
+        let ids = entities.get_ids();
+        let mut bboxes = Vec::with_capacity(ids.len());
+        let mut unboundeds = Vec::new();
+
+        for id in ids {
+            let sid = id.shape_id();
+            match entities.get_shape(sid).unwrap().bounding_box() {
+                Some(bbox) => bboxes.push((*id, bbox)),
+                None => unboundeds.push(*id),
+            }
+        }
+        let bvh = Bvh::new(bboxes, unboundeds);
+
+        Self {
+            entities,
+            bvh,
+            lights,
+            emitters,
+        }
+    }
 }
 
 impl EntityScene for BvhEntityScene {
