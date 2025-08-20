@@ -61,4 +61,8 @@ impl From<BoundaryId> for ShapeId {
     }
 }
 
-pub trait BoundaryContainer: ShapeContainer + MediumContainer {}
+pub trait BoundaryContainer: ShapeContainer + MediumContainer {
+    fn register_id(&mut self, id: BoundaryId);
+
+    fn get_ids(&self) -> &[BoundaryId];
+}

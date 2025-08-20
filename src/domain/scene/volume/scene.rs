@@ -12,7 +12,7 @@ use crate::domain::scene::bvh::Bvh;
 use crate::domain::scene::pool::BoundaryPool;
 use crate::domain::shape::def::ShapeContainer;
 
-use super::{BoundaryId, MediumSegment, VolumeScene};
+use super::{BoundaryContainer, BoundaryId, MediumSegment, VolumeScene};
 
 #[derive(Debug)]
 pub struct BvhVolumeScene {
@@ -24,7 +24,8 @@ pub struct BvhVolumeScene {
 impl BvhVolumeScene {
     const OUTER_MEDIUM_MAX_DETECTION_COUNT: usize = 16;
 
-    fn new(boundaries: Box<BoundaryPool>, ids: &[BoundaryId]) -> Self {
+    pub fn new(boundaries: Box<BoundaryPool>) -> Self {
+        let ids = boundaries.get_ids();
         let mut bboxes = Vec::with_capacity(ids.len());
 
         for id in ids {
@@ -238,7 +239,6 @@ mod tests {
 
     fn get_test_bvh_volume_scene() -> (BvhVolumeScene, Vec<BoundaryId>) {
         let mut boundaries = Box::new(BoundaryPool::new());
-        let mut ids = Vec::new();
 
         let shape_id = boundaries.add_shape(Aabb::new(
             Point::new(Val(0.0), Val(-1.0), Val(-1.0)),
@@ -246,7 +246,7 @@ mod tests {
         ));
         let medium_id = boundaries
             .add_medium(Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0))).unwrap());
-        ids.push(BoundaryId::new(shape_id, medium_id));
+        boundaries.register_id(BoundaryId::new(shape_id, medium_id));
 
         let shape_id = boundaries.add_shape(Aabb::new(
             Point::new(Val(1.0), Val(0.0), Val(0.0)),
@@ -254,7 +254,7 @@ mod tests {
         ));
         let medium_id = boundaries
             .add_medium(Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0))).unwrap());
-        ids.push(BoundaryId::new(shape_id, medium_id));
+        boundaries.register_id(BoundaryId::new(shape_id, medium_id));
 
         let shape_id = boundaries.add_shape(Aabb::new(
             Point::new(Val(5.0), Val(0.0), Val(0.0)),
@@ -262,9 +262,10 @@ mod tests {
         ));
         let medium_id = boundaries
             .add_medium(Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0))).unwrap());
-        ids.push(BoundaryId::new(shape_id, medium_id));
+        boundaries.register_id(BoundaryId::new(shape_id, medium_id));
 
-        let scene = BvhVolumeScene::new(boundaries, &ids);
+        let ids = boundaries.get_ids().to_owned();
+        let scene = BvhVolumeScene::new(boundaries);
         (scene, ids)
     }
 }

@@ -74,4 +74,8 @@ impl From<EntityId> for MaterialId {
     }
 }
 
-pub trait EntityContainer: ShapeContainer + MaterialContainer {}
+pub trait EntityContainer: ShapeContainer + MaterialContainer {
+    fn register_id(&mut self, id: EntityId);
+
+    fn get_ids(&self) -> &[EntityId];
+}

@@ -14,7 +14,6 @@ use super::{EntityContainer, EntityId, EntityScene};
 #[derive(Debug)]
 pub struct BvhEntitySceneBuilder {
     entities: Box<EntityPool>,
-    ids: Vec<EntityId>,
     lights: Vec<Box<dyn LightSampling>>,
     emitters: Vec<Box<dyn PhotonSampling>>,
 }
@@ -23,7 +22,6 @@ impl BvhEntitySceneBuilder {
     pub fn new() -> Self {
         Self {
             entities: Box::new(EntityPool::new()),
-            ids: Vec::new(),
             lights: Vec::new(),
             emitters: Vec::new(),
         }
@@ -37,7 +35,7 @@ impl BvhEntitySceneBuilder {
         let shape_id = self.entities.add_shape(shape);
         let material_id = self.entities.add_material(material);
         let entity_id = EntityId::new(shape_id, material_id);
-        self.ids.push(entity_id);
+        self.entities.register_id(entity_id);
         self.post_add_entity(entity_id);
         self
     }
@@ -52,7 +50,7 @@ impl BvhEntitySceneBuilder {
 
         for shape_id in shape_ids {
             let entity_id = EntityId::new(shape_id, material_id);
-            self.ids.push(entity_id);
+            self.entities.register_id(entity_id);
             self.post_add_entity(entity_id);
         }
 
@@ -91,14 +89,15 @@ impl BvhEntitySceneBuilder {
     }
 
     pub fn build(self) -> BvhEntityScene {
-        let mut bboxes = Vec::with_capacity(self.ids.len());
+        let ids = self.entities.get_ids();
+        let mut bboxes = Vec::with_capacity(ids.len());
         let mut unboundeds = Vec::new();
 
-        for id in self.ids {
+        for id in ids {
             let sid = id.shape_id();
             match self.entities.get_shape(sid).unwrap().bounding_box() {
-                Some(bbox) => bboxes.push((id, bbox)),
-                None => unboundeds.push(id),
+                Some(bbox) => bboxes.push((*id, bbox)),
+                None => unboundeds.push(*id),
             }
         }
 

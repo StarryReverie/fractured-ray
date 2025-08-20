@@ -1,13 +1,14 @@
 use std::any::Any;
 
 use crate::domain::medium::def::medium::{Medium, MediumContainer, MediumId};
-use crate::domain::scene::volume::BoundaryContainer;
+use crate::domain::scene::volume::{BoundaryContainer, BoundaryId};
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
 
 use super::{MediumPool, ShapePool};
 
 #[derive(Debug, Default)]
 pub struct BoundaryPool {
+    ids: Vec<BoundaryId>,
     shapes: ShapePool,
     media: MediumPool,
 }
@@ -45,4 +46,12 @@ impl MediumContainer for BoundaryPool {
     }
 }
 
-impl BoundaryContainer for BoundaryPool {}
+impl BoundaryContainer for BoundaryPool {
+    fn register_id(&mut self, id: BoundaryId) {
+        self.ids.push(id);
+    }
+
+    fn get_ids(&self) -> &[BoundaryId] {
+        &self.ids
+    }
+}

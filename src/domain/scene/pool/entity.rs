@@ -2,13 +2,14 @@ use std::any::Any;
 use std::fmt::Debug;
 
 use crate::domain::material::def::{Material, MaterialContainer, MaterialId};
-use crate::domain::scene::entity::EntityContainer;
+use crate::domain::scene::entity::{EntityContainer, EntityId};
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
 
 use super::{MaterialPool, ShapePool};
 
 #[derive(Debug, Default)]
 pub struct EntityPool {
+    ids: Vec<EntityId>,
     shapes: ShapePool,
     materials: MaterialPool,
 }
@@ -46,7 +47,15 @@ impl MaterialContainer for EntityPool {
     }
 }
 
-impl EntityContainer for EntityPool {}
+impl EntityContainer for EntityPool {
+    fn register_id(&mut self, id: EntityId) {
+        self.ids.push(id);
+    }
+
+    fn get_ids(&self) -> &[EntityId] {
+        &self.ids
+    }
+}
 
 #[cfg(test)]
 mod tests {
