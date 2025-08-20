@@ -13,7 +13,7 @@ use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{InstanceLightSampler, LightSampling};
 use crate::domain::sampling::photon::{InstancePhotonSampler, PhotonSampling};
-use crate::domain::sampling::point::PointSampling;
+use crate::domain::sampling::point::{InstancePointSampler, PointSampling};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone, Getters)]
@@ -93,8 +93,8 @@ impl Shape for Instance {
 }
 
 impl Sampleable for Instance {
-    fn get_point_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn PointSampling>> {
-        todo!()
+    fn get_point_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn PointSampling>> {
+        Some(Box::new(InstancePointSampler::new(shape_id, self.clone())))
     }
 
     fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
