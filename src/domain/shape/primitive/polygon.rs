@@ -11,7 +11,7 @@ use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
 use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
-use crate::domain::sampling::point::PolygonPointSampler;
+use crate::domain::sampling::point::{PointSampling, PolygonPointSampler};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 use super::{Plane, Triangle, TryNewTriangleError};
@@ -248,6 +248,10 @@ impl Shape for Polygon {
 }
 
 impl Sampleable for Polygon {
+    fn get_point_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn PointSampling>> {
+        Some(Box::new(PolygonPointSampler::new(shape_id, self.clone())))
+    }
+
     fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         match &self.0 {
             PolygonInner::Triangle(triangle) => triangle.get_light_sampler(shape_id),

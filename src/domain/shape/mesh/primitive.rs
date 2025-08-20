@@ -11,6 +11,7 @@ use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
+use crate::domain::sampling::point::PointSampling;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 use crate::domain::shape::primitive::{Polygon, Triangle};
 
@@ -88,6 +89,10 @@ impl Shape for MeshTriangle {
 }
 
 impl Sampleable for MeshTriangle {
+    fn get_point_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn PointSampling>> {
+        self.to_triangle().get_point_sampler(shape_id)
+    }
+
     fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         self.to_triangle().get_light_sampler(shape_id)
     }
@@ -197,6 +202,10 @@ impl Shape for MeshPolygon {
 }
 
 impl Sampleable for MeshPolygon {
+    fn get_point_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn PointSampling>> {
+        self.to_polygon().get_point_sampler(shape_id)
+    }
+
     fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         self.to_polygon().get_light_sampler(shape_id)
     }

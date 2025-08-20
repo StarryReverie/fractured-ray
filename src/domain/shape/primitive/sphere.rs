@@ -8,10 +8,11 @@ use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::{RayIntersection, SurfaceSide};use crate::domain::sampling::Sampleable;
+use crate::domain::ray::event::{RayIntersection, SurfaceSide};
+use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSampling, SphereLightSampler};
 use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
-use crate::domain::sampling::point::SpherePointSampler;
+use crate::domain::sampling::point::{PointSampling, SpherePointSampler};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
@@ -97,6 +98,10 @@ impl Shape for Sphere {
 }
 
 impl Sampleable for Sphere {
+    fn get_point_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn PointSampling>> {
+        Some(Box::new(SpherePointSampler::new(shape_id, self.clone())))
+    }
+
     fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         Some(Box::new(SphereLightSampler::new(shape_id, self.clone())))
     }

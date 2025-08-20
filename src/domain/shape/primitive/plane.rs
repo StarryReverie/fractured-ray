@@ -11,6 +11,7 @@ use crate::domain::ray::event::{RayIntersection, SurfaceSide};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
+use crate::domain::sampling::point::PointSampling;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
@@ -75,6 +76,10 @@ impl Shape for Plane {
 }
 
 impl Sampleable for Plane {
+    fn get_point_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn PointSampling>> {
+        None
+    }
+
     fn get_light_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
         None
     }
