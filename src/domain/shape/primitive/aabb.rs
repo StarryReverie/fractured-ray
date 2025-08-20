@@ -9,8 +9,9 @@ use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, SurfaceSide};
 use crate::domain::sampling::Sampleable;
-use crate::domain::sampling::light::LightSampling;
-use crate::domain::sampling::photon::PhotonSampling;
+use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
+use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
+use crate::domain::sampling::point::AabbPointSampler;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
 
 #[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
@@ -117,16 +118,20 @@ impl Shape for Aabb {
 }
 
 impl Sampleable for Aabb {
-    fn get_light_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        todo!()
+    fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
+        let inner = AabbPointSampler::new(shape_id, self.clone());
+        let sampler = LightSamplerAdapter::new(inner);
+        Some(Box::new(sampler))
     }
 
     fn get_photon_sampler(
         &self,
-        _shape_id: ShapeId,
-        _emissive: Emissive,
+        shape_id: ShapeId,
+        emissive: Emissive,
     ) -> Option<Box<dyn PhotonSampling>> {
-        todo!()
+        let inner = AabbPointSampler::new(shape_id, self.clone());
+        let sampler = PhotonSamplerAdapter::new(inner, emissive);
+        Some(Box::new(sampler))
     }
 }
 
