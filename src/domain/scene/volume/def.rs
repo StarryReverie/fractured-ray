@@ -18,6 +18,16 @@ pub struct MediumSegment {
     medium: MediumId,
 }
 
+impl MediumSegment {
+    pub fn new(start: Point, length: Val, medium: MediumId) -> Self {
+        Self {
+            start,
+            length,
+            medium,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BoundaryId {
     shape_kind: ShapeKind,
