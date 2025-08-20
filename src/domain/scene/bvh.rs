@@ -344,9 +344,8 @@ where
             }
             BvhNode::Leaf { id, .. } => {
                 let shape = shapes.get_shape((*id).into()).unwrap();
-                if let Some(intersection) = shape.hit(ray, range) {
-                    res.push((intersection, *id));
-                }
+                let intersections = shape.hit_all(ray, range).into_iter().map(|i| (i, *id));
+                res.extend(intersections);
             }
             BvhNode::ClusterLeaf { ids, .. } => {
                 self.intersect_all_for_each(ray, range, ids.iter(), shapes, res);
@@ -368,9 +367,8 @@ where
     {
         for id in ids {
             let shape = shapes.get_shape((*id).into()).unwrap();
-            if let Some(intersection) = shape.hit(ray, range) {
-                res.push((intersection, *id));
-            }
+            let intersections = shape.hit_all(ray, range).into_iter().map(|i| (i, *id));
+            res.extend(intersections);
         }
     }
 }
@@ -502,9 +500,10 @@ mod tests {
             .collect::<Vec<_>>();
         intersections.sort_by_key(|i| i.distance());
 
-        assert_eq!(intersections.len(), 2);
+        assert_eq!(intersections.len(), 3);
         assert_eq!(intersections[0].distance(), Val(0.75));
         assert_eq!(intersections[1].distance(), Val(2.333333333));
+        assert_eq!(intersections[2].distance(), Val(3.0));
     }
 
     fn get_test_bvh() -> (ShapePool, Bvh<ShapeId>) {

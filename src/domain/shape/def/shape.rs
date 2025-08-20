@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::ops::{Bound, RangeBounds};
 
 use getset::CopyGetters;
 
@@ -15,6 +16,21 @@ pub trait Shape: Sampleable + Debug + Send + Sync + 'static {
     fn kind(&self) -> ShapeKind;
 
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection>;
+
+    fn hit_all(&self, ray: &Ray, mut range: DisRange) -> Vec<RayIntersection> {
+        let mut res = Vec::new();
+        let mut last_distance = match range.start_bound() {
+            Bound::Included(v) | Bound::Excluded(v) => *v,
+            Bound::Unbounded => unreachable!("range's start bound should not be unbounded"),
+        };
+        while let Some(intersection) = self.hit(ray, range) {
+            let offset = intersection.distance() - last_distance;
+            last_distance = intersection.distance();
+            range = range.advance_start(offset);
+            res.push(intersection);
+        }
+        res
+    }
 
     fn area(&self) -> Val;
 
