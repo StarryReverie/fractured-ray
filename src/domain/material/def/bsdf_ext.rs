@@ -36,7 +36,7 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         ray: &Ray,
         intersection: &RayIntersection,
     ) -> Contribution {
-        let scene = context.scene();
+        let scene = context.entity_scene();
         let lights = scene.get_lights();
 
         let res = lights.sample_light_surface(intersection, *context.rng());
@@ -81,7 +81,7 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         ray: &Ray,
         intersection: &RayIntersection,
     ) -> Contribution {
-        let scene = context.scene();
+        let scene = context.entity_scene();
         let lights = scene.get_lights();
 
         let sample = self.sample_bsdf(ray, intersection, *context.rng());

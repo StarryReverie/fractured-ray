@@ -12,9 +12,9 @@ pub struct RtContext<'a> {
     #[getset(get_copy = "pub")]
     renderer: &'a dyn Renderer,
     #[getset(get_copy = "pub")]
-    scene: &'a dyn EntityScene,
+    entity_scene: &'a dyn EntityScene,
     #[getset(get_copy = "pub")]
-    vol_scene: &'a dyn VolumeScene,
+    volume_scene: &'a dyn VolumeScene,
     rng: &'a mut dyn RngCore,
     #[getset(get_copy = "pub")]
     config: &'a Configuration,
@@ -27,8 +27,8 @@ pub struct RtContext<'a> {
 impl<'a> RtContext<'a> {
     pub fn new(
         renderer: &'a dyn Renderer,
-        scene: &'a dyn EntityScene,
-        vol_scene: &'a dyn VolumeScene,
+        entity_scene: &'a dyn EntityScene,
+        volume_scene: &'a dyn VolumeScene,
         rng: &'a mut dyn RngCore,
         config: &'a Configuration,
         photon_global: PhotonInfo<'a>,
@@ -36,8 +36,8 @@ impl<'a> RtContext<'a> {
     ) -> Self {
         Self {
             renderer,
-            scene,
-            vol_scene,
+            entity_scene,
+            volume_scene,
             rng,
             config,
             photon_global,

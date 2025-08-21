@@ -21,7 +21,7 @@ pub trait BssrdfMaterialExt: BssrdfMaterial + Sized {
         ray: Ray,
         intersection: RayIntersection,
     ) -> Contribution {
-        let scene = context.scene();
+        let scene = context.entity_scene();
         let sample = self.sample_bssrdf_diffusion(scene, &intersection, *context.rng());
         if let Some(diffusion) = sample {
             let adapter = BsdfMaterialAdapter::new(self, &diffusion);

@@ -158,7 +158,7 @@ impl Scattering {
         if Val(context.rng().random()) < self.calc_transmittance(cos) {
             let state_next = state.mark_invisible();
 
-            let scene = context.scene();
+            let scene = context.entity_scene();
             let back = self.determine_back_face(scene, &ray, &intersection, *context.rng());
 
             if let Some((ray_back, intersection_back)) = back {

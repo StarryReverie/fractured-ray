@@ -194,7 +194,7 @@ impl Renderer for CoreRenderer {
             return Contribution::new();
         }
 
-        let res = context.scene().find_intersection(&ray, range);
+        let res = context.entity_scene().find_intersection(&ray, range);
         if let Some((intersection, id)) = res {
             let segments = self
                 .volume_scene
@@ -212,7 +212,7 @@ impl Renderer for CoreRenderer {
                 (Contribution::new(), Spectrum::broadcast(Val(1.0)))
             };
 
-            let entities = context.scene().get_entities();
+            let entities = context.entity_scene().get_entities();
             let material = entities.get_material(id.material_id()).unwrap();
 
             let mut res = material.shade(context, state, ray, intersection) * tr;
