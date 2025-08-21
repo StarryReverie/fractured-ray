@@ -3,6 +3,7 @@ use rand::prelude::*;
 
 use crate::domain::ray::photon::{Photon, PhotonMap, SearchPolicy};
 use crate::domain::scene::entity::EntityScene;
+use crate::domain::scene::volume::VolumeScene;
 
 use super::{Configuration, Renderer};
 
@@ -12,6 +13,8 @@ pub struct RtContext<'a> {
     renderer: &'a dyn Renderer,
     #[getset(get_copy = "pub")]
     scene: &'a dyn EntityScene,
+    #[getset(get_copy = "pub")]
+    vol_scene: &'a dyn VolumeScene,
     rng: &'a mut dyn RngCore,
     #[getset(get_copy = "pub")]
     config: &'a Configuration,
@@ -25,6 +28,7 @@ impl<'a> RtContext<'a> {
     pub fn new(
         renderer: &'a dyn Renderer,
         scene: &'a dyn EntityScene,
+        vol_scene: &'a dyn VolumeScene,
         rng: &'a mut dyn RngCore,
         config: &'a Configuration,
         photon_global: PhotonInfo<'a>,
@@ -33,6 +37,7 @@ impl<'a> RtContext<'a> {
         Self {
             renderer,
             scene,
+            vol_scene,
             rng,
             config,
             photon_global,

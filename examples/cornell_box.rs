@@ -9,6 +9,7 @@ use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::scene::entity::BvhEntitySceneBuilder;
+use fractured_ray::domain::scene::volume::{BvhVolumeScene, BvhVolumeSceneBuilder};
 use fractured_ray::domain::shape::mesh::MeshConstructor;
 use fractured_ray::domain::shape::primitive::{Polygon, Sphere};
 use fractured_ray::infrastructure::image::PngWriter;
@@ -160,6 +161,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let renderer = CoreRenderer::new(
         camera,
         scene,
+        BvhVolumeSceneBuilder::new().build(),
         Configuration {
             iterations: 16,
             ..Configuration::default()

@@ -154,6 +154,10 @@ impl BvhVolumeScene {
             Some(id.medium_id())
         }
     }
+
+    pub fn get_boundaries(&self) -> &dyn BoundaryContainer {
+        &*self.boundaries
+    }
 }
 
 impl VolumeScene for BvhVolumeScene {

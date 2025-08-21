@@ -13,6 +13,7 @@ use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::{PhotonMap, PhotonRay, SearchPolicy};
 use crate::domain::scene::entity::{BvhEntityScene, EntityScene};
+use crate::domain::scene::volume::{BvhVolumeScene, VolumeScene};
 
 use super::{
     Contribution, PhotonInfo, PmContext, PmState, Renderer, RtContext, RtState, StoragePolicy,
@@ -21,14 +22,16 @@ use super::{
 #[derive(Debug)]
 pub struct CoreRenderer {
     camera: Camera,
-    scene: BvhEntityScene,
+    entity_scene: BvhEntityScene,
+    volume_scene: BvhVolumeScene,
     config: Configuration,
 }
 
 impl CoreRenderer {
     pub fn new(
         camera: Camera,
-        scene: BvhEntityScene,
+        entity_scene: BvhEntityScene,
+        volume_scene: BvhVolumeScene,
         config: Configuration,
     ) -> Result<Self, ConfigurationError> {
         ensure!(config.iterations > 0, InvalidIterationsSnafu);
@@ -45,7 +48,8 @@ impl CoreRenderer {
 
         Ok(Self {
             camera,
-            scene,
+            entity_scene,
+            volume_scene,
             config,
         })
     }
@@ -60,7 +64,8 @@ impl CoreRenderer {
         let mut rng = rand::rng();
         let mut context = RtContext::new(
             self,
-            &self.scene,
+            &self.entity_scene,
+            &self.volume_scene,
             &mut rng,
             &self.config,
             photon_global,
@@ -120,8 +125,9 @@ impl CoreRenderer {
             .map(|_| {
                 let mut photons = Vec::new();
                 let mut rng = rand::rng();
-                if let Some(photon) = self.scene.get_emitters().sample_photon(&mut rng) {
-                    let mut context = PmContext::new(self, &self.scene, &mut rng, &mut photons);
+                if let Some(photon) = self.entity_scene.get_emitters().sample_photon(&mut rng) {
+                    let mut context =
+                        PmContext::new(self, &self.entity_scene, &mut rng, &mut photons);
                     let state = PmState::new(false, policy);
                     self.emit(
                         &mut context,
@@ -190,11 +196,45 @@ impl Renderer for CoreRenderer {
 
         let res = context.scene().find_intersection(&ray, range);
         if let Some((intersection, id)) = res {
+            let segments = self
+                .volume_scene
+                .find_segments(&ray, range.shrink_end(intersection.distance()));
+            let (vol_contribution, tr) = if state.depth() <= 1
+                && let Some((segment, medium_id)) = segments.first()
+            {
+                let boundaries = self.volume_scene.get_boundaries();
+                let medium = boundaries.get_medium(*medium_id).unwrap();
+                let cont = medium.shade(context, state.clone(), ray.clone(), segment.clone());
+
+                let tr = medium.transmittance(&ray, segment);
+                (cont, tr)
+            } else {
+                (Contribution::new(), Spectrum::broadcast(Val(1.0)))
+            };
+
             let entities = context.scene().get_entities();
             let material = entities.get_material(id.material_id()).unwrap();
-            material.shade(context, state, ray, intersection)
+
+            let mut res = material.shade(context, state, ray, intersection) * tr;
+            res.add_light(vol_contribution.light());
+            res
         } else {
-            Contribution::from(self.config.background_color)
+            let segments = self.volume_scene.find_segments(&ray, range);
+            let (vol_contribution, tr) = if state.depth() <= 1
+                && let Some((segment, medium_id)) = segments.first()
+            {
+                let boundaries = self.volume_scene.get_boundaries();
+                let medium = boundaries.get_medium(*medium_id).unwrap();
+                let cont = medium.shade(context, state.clone(), ray.clone(), segment.clone());
+
+                let tr = medium.transmittance(&ray, segment);
+                (cont, tr)
+            } else {
+                (Contribution::new(), Spectrum::broadcast(Val(1.0)))
+            };
+            let mut res = Contribution::from(self.config.background_color) * tr;
+            res.add_light(vol_contribution.light());
+            res
         }
     }
 

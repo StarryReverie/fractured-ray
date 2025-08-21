@@ -1,11 +1,16 @@
+use std::ops::Bound;
+
+use rand::Rng;
 use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
+use crate::domain::material::def::MaterialKind;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::numeric::Val;
 use crate::domain::medium::def::medium::{Medium, MediumKind};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
+use crate::domain::renderer::{Contribution, RtContext, RtState};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Isotropic {
@@ -50,6 +55,80 @@ impl Medium for Isotropic {
     ) -> Spectrum {
         const PHASE: Spectrum = Spectrum::broadcast(Val(0.25 / Val::FRAC_1_PI.0));
         PHASE
+    }
+
+    fn shade(
+        &self,
+        context: &mut RtContext<'_>,
+        _state: RtState,
+        ray: Ray,
+        segment: RaySegment,
+    ) -> Contribution {
+        let avg_sigma_t = self.sigma_t.norm() / Val(3.0).sqrt();
+        let u = Val(context.rng().random());
+        let distance = segment.start()
+            - avg_sigma_t.recip()
+                * (-avg_sigma_t * segment.length())
+                    .exp_m1()
+                    .mul_add(u, Val(1.0))
+                    .ln();
+        // println!("start = {:?}", segment.start());
+        // println!("avg_sigma_t = {avg_sigma_t:?}");
+        // println!("{:?}", (-avg_sigma_t * segment.length()).exp_m1());
+        // println!(
+        //     "{:?}",
+        //     (-avg_sigma_t * segment.length())
+        //         .exp_m1()
+        //         .mul_add(u, Val(1.0))
+        //         .ln()
+        // );
+
+        let scattering = RayScattering::new(distance, ray.at(distance));
+        let pdf_scattering = -avg_sigma_t * (-avg_sigma_t * (distance - segment.start())).exp()
+            / (-avg_sigma_t * segment.length()).exp_m1();
+        let tr = self.transmittance(
+            &ray,
+            &RaySegment::new(segment.start(), distance - segment.start()),
+        );
+
+        let scene = context.scene();
+        let lights = scene.get_lights();
+        let Some(sample) = lights.sample_light_volume(&scattering, None, *context.rng()) else {
+            return Contribution::new();
+        };
+
+        let (ray_next, distance) = (sample.ray_next(), sample.distance());
+        let range = (Bound::Excluded(Val(0.0)), Bound::Included(distance));
+        let res = scene.test_intersection(ray_next, range.into(), sample.shape_id());
+
+        // println!("scattering = {scattering:?}");
+        // println!("sample = {sample:?}");
+        // println!("res = {res:#?}");
+        let (intersection_next, light) = if let Some((intersection_next, id)) = res {
+            let id = id.material_id();
+            let material = scene.get_entities().get_material(id).unwrap();
+            if material.kind() == MaterialKind::Emissive {
+                (intersection_next, material)
+            } else {
+                return Contribution::new();
+            }
+        } else {
+            return Contribution::new();
+        };
+
+        let pdf_light = sample.pdf();
+        let phase = self.phase(-ray.direction(), &scattering, sample.ray_next().direction());
+        let ray_next = sample.into_ray_next();
+        let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
+        // println!("self.sigma_s = {:?}", self.sigma_s);
+        // println!("tr = {tr:?}");
+        // println!("phase = {phase:?}");
+        // println!("radiance = {radiance:?}");
+        // println!("pdf_scattering = {pdf_scattering:?}");
+        // println!("pdf_light = {pdf_light:?}");
+        let res = self.sigma_s * tr * phase * radiance * (pdf_scattering * pdf_light).recip();
+        // println!("res = {res:?}");
+        res
     }
 }
 

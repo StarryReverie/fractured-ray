@@ -7,6 +7,7 @@ use crate::domain::color::Spectrum;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
+use crate::domain::renderer::{Contribution, RtContext, RtState};
 
 pub trait Medium: Send + Sync {
     fn kind(&self) -> MediumKind;
@@ -19,6 +20,14 @@ pub trait Medium: Send + Sync {
         scattering: &RayScattering,
         dir_in: UnitVector,
     ) -> Spectrum;
+
+    fn shade(
+        &self,
+        context: &mut RtContext<'_>,
+        state: RtState,
+        ray: Ray,
+        segment: RaySegment,
+    ) -> Contribution;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
