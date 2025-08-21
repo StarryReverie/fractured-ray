@@ -1,31 +1,11 @@
-use getset::CopyGetters;
-
-use crate::domain::math::geometry::Point;
-use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::math::numeric::DisRange;
 use crate::domain::medium::def::medium::{MediumContainer, MediumId, MediumKind};
 use crate::domain::ray::Ray;
+use crate::domain::ray::event::RaySegment;
 use crate::domain::shape::def::{ShapeContainer, ShapeId, ShapeKind};
 
 pub trait VolumeScene: Send + Sync {
-    fn find_segments(&self, ray: &Ray, range: DisRange) -> Vec<MediumSegment>;
-}
-
-#[derive(Debug, Clone, PartialEq, CopyGetters)]
-#[getset(get_copy = "pub")]
-pub struct MediumSegment {
-    start: Point,
-    length: Val,
-    medium: MediumId,
-}
-
-impl MediumSegment {
-    pub fn new(start: Point, length: Val, medium: MediumId) -> Self {
-        Self {
-            start,
-            length,
-            medium,
-        }
-    }
+    fn find_segments(&self, ray: &Ray, range: DisRange) -> Vec<(RaySegment, MediumId)>;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

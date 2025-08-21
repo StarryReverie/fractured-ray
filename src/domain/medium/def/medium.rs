@@ -5,14 +5,13 @@ use getset::CopyGetters;
 
 use crate::domain::color::Spectrum;
 use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::Point;
-use crate::domain::math::numeric::Val;
-use crate::domain::ray::event::RayScattering;
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::{RayScattering, RaySegment};
 
 pub trait Medium: Send + Sync {
     fn kind(&self) -> MediumKind;
 
-    fn transmittance(&self, start: Point, length: Val) -> Spectrum;
+    fn transmittance(&self, ray: &Ray, segment: &RaySegment) -> Spectrum;
 
     fn phase(
         &self,

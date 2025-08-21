@@ -7,12 +7,12 @@ use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::medium::def::medium::{Medium, MediumContainer, MediumId};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::{RayIntersection, SurfaceSide};
+use crate::domain::ray::event::{RayIntersection, RaySegment, SurfaceSide};
 use crate::domain::scene::bvh::Bvh;
 use crate::domain::scene::pool::BoundaryPool;
 use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer};
 
-use super::{BoundaryContainer, BoundaryId, MediumSegment, VolumeScene};
+use super::{BoundaryContainer, BoundaryId, VolumeScene};
 
 #[derive(Debug)]
 pub struct BvhVolumeSceneBuilder {
@@ -157,7 +157,7 @@ impl BvhVolumeScene {
 }
 
 impl VolumeScene for BvhVolumeScene {
-    fn find_segments(&self, ray: &Ray, range: DisRange) -> Vec<MediumSegment> {
+    fn find_segments(&self, ray: &Ray, range: DisRange) -> Vec<(RaySegment, MediumId)> {
         let mut isects = self.bvh.search_all(ray, range, &*self.boundaries);
         isects.sort_by_key(|i| i.0.distance());
 
@@ -167,14 +167,12 @@ impl VolumeScene for BvhVolumeScene {
             Bound::Included(v) | Bound::Excluded(v) => *v,
             Bound::Unbounded => unreachable!("range's start bound should not be unbounded"),
         };
-        let mut last_endpoint = ray.at(last_distance);
-        println!("{}", isects.len());
 
         for (isect, id) in &isects {
             if let Some(current_medium) = current_medium {
                 let length = isect.distance() - last_distance;
                 if length > Val(0.0) {
-                    res.push(MediumSegment::new(last_endpoint, length, current_medium));
+                    res.push((RaySegment::new(last_distance, length), current_medium));
                 }
             }
 
@@ -183,7 +181,6 @@ impl VolumeScene for BvhVolumeScene {
             } else {
                 self.outer_media.get(&id.medium_id()).cloned().unwrap()
             };
-            last_endpoint = isect.position();
             last_distance = isect.distance();
         }
 
@@ -194,7 +191,7 @@ impl VolumeScene for BvhVolumeScene {
             };
             let length = max_distance - last_distance;
             if length > Val(0.0) {
-                res.push(MediumSegment::new(last_endpoint, length, current_medium));
+                res.push((RaySegment::new(last_distance, length), current_medium));
             }
         }
 
@@ -221,29 +218,29 @@ mod tests {
             UnitVector::x_direction(),
         );
 
-        let segments = dbg!(scene.find_segments(&ray, DisRange::positive()));
+        let segments = scene.find_segments(&ray, DisRange::positive());
         let mut iter = segments.iter();
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.start(), Point::new(Val(0.0), Val(0.5), Val(0.5)));
-        assert_eq!(segment.length(), Val(1.0));
-        assert_eq!(segment.medium(), ids[0].medium_id());
+        assert_eq!(segment.0.start(), Val(0.5));
+        assert_eq!(segment.0.length(), Val(1.0));
+        assert_eq!(segment.1, ids[0].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.length(), Val(3.0));
-        assert_eq!(segment.medium(), ids[1].medium_id());
+        assert_eq!(segment.0.length(), Val(3.0));
+        assert_eq!(segment.1, ids[1].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.length(), Val(1.0));
-        assert_eq!(segment.medium(), ids[0].medium_id());
+        assert_eq!(segment.0.length(), Val(1.0));
+        assert_eq!(segment.1, ids[0].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.length(), Val(4.0));
-        assert_eq!(segment.medium(), ids[2].medium_id());
+        assert_eq!(segment.0.length(), Val(4.0));
+        assert_eq!(segment.1, ids[2].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.length(), Val(1.0));
-        assert_eq!(segment.medium(), ids[0].medium_id());
+        assert_eq!(segment.0.length(), Val(1.0));
+        assert_eq!(segment.1, ids[0].medium_id());
     }
 
     #[test]
@@ -255,29 +252,29 @@ mod tests {
             UnitVector::x_direction(),
         );
 
-        let segments = dbg!(scene.find_segments(&ray, DisRange::positive()));
+        let segments = scene.find_segments(&ray, DisRange::positive());
         let mut iter = segments.iter();
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.start(), Point::new(Val(0.1), Val(0.5), Val(0.5)));
-        assert_eq!(segment.length(), Val(0.9));
-        assert_eq!(segment.medium(), ids[0].medium_id());
+        assert_eq!(segment.0.start(), Val(0.0));
+        assert_eq!(segment.0.length(), Val(0.9));
+        assert_eq!(segment.1, ids[0].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.length(), Val(3.0));
-        assert_eq!(segment.medium(), ids[1].medium_id());
+        assert_eq!(segment.0.length(), Val(3.0));
+        assert_eq!(segment.1, ids[1].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.length(), Val(1.0));
-        assert_eq!(segment.medium(), ids[0].medium_id());
+        assert_eq!(segment.0.length(), Val(1.0));
+        assert_eq!(segment.1, ids[0].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.length(), Val(4.0));
-        assert_eq!(segment.medium(), ids[2].medium_id());
+        assert_eq!(segment.0.length(), Val(4.0));
+        assert_eq!(segment.1, ids[2].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.length(), Val(1.0));
-        assert_eq!(segment.medium(), ids[0].medium_id());
+        assert_eq!(segment.0.length(), Val(1.0));
+        assert_eq!(segment.1, ids[0].medium_id());
     }
 
     fn get_test_bvh_volume_scene() -> (BvhVolumeScene, Vec<BoundaryId>) {

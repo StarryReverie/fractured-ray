@@ -2,10 +2,10 @@ use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
 use crate::domain::medium::def::medium::{Medium, MediumKind};
-use crate::domain::ray::event::RayScattering;
+use crate::domain::ray::Ray;
+use crate::domain::ray::event::{RayScattering, RaySegment};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Isotropic {
@@ -34,11 +34,11 @@ impl Medium for Isotropic {
         MediumKind::Isotropic
     }
 
-    fn transmittance(&self, _start: Point, length: Val) -> Spectrum {
+    fn transmittance(&self, _ray: &Ray, segment: &RaySegment) -> Spectrum {
         Spectrum::new(
-            (-self.sigma_t.red() * length).exp(),
-            (-self.sigma_t.green() * length).exp(),
-            (-self.sigma_t.blue() * length).exp(),
+            (-self.sigma_t.red() * segment.length()).exp(),
+            (-self.sigma_t.green() * segment.length()).exp(),
+            (-self.sigma_t.blue() * segment.length()).exp(),
         )
     }
 
