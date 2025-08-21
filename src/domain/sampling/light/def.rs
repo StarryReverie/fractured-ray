@@ -3,10 +3,12 @@ use std::fmt::Debug;
 use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
-use crate::domain::math::geometry::{AllTransformation, Transform};
-use crate::domain::math::numeric::Val;
+use crate::domain::math::algebra::{Product, UnitVector};
+use crate::domain::math::geometry::{AllTransformation, Point, Transform};
+use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
+use crate::domain::sampling::point::{PointSample, PointSampling};
 use crate::domain::shape::def::{Shape, ShapeId};
 
 pub trait LightSampling: Debug + Send + Sync {
@@ -14,13 +16,13 @@ pub trait LightSampling: Debug + Send + Sync {
 
     fn shape(&self) -> Option<&dyn Shape>;
 
-    fn sample_light(
+    fn sample_light_surface(
         &self,
         intersection: &RayIntersection,
         rng: &mut dyn RngCore,
     ) -> Option<LightSample>;
 
-    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val;
+    fn pdf_light_surface(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val;
 }
 
 #[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]
@@ -54,6 +56,60 @@ impl LightSample {
             pdf: self.pdf * multiplier,
             ..self
         }
+    }
+
+    pub fn convert_point_sample<RS>(
+        position: Point,
+        sample: &PointSample,
+        ray_spawner: RS,
+    ) -> Option<Self>
+    where
+        RS: Fn(UnitVector) -> Ray,
+    {
+        let Ok(direction) = (sample.point() - position).normalize() else {
+            return None;
+        };
+        let ray_next = ray_spawner(direction);
+
+        let cos = sample.normal().dot(direction).abs();
+        let dis_squared = (sample.point() - position).norm_squared();
+        let pdf = sample.pdf() * dis_squared / cos;
+        let distance = (sample.point() - position).norm();
+        Some(LightSample::new(ray_next, pdf, distance, sample.shape_id()))
+    }
+
+    pub fn convert_point_pdf<PS>(position: Point, ray_next: &Ray, point_sampler: &PS) -> Val
+    where
+        PS: PointSampling,
+    {
+        let Some(shape) = &point_sampler.shape() else {
+            return Val(0.0);
+        };
+        if let Some(intersection_next) = shape.hit(ray_next, DisRange::positive()) {
+            let position_next = intersection_next.position();
+            Self::point_pdf_to_solid_angle_pdf(
+                position,
+                ray_next.direction(),
+                position_next,
+                shape.normal(position_next),
+                point_sampler.pdf_point(position_next, true),
+            )
+        } else {
+            Val(0.0)
+        }
+    }
+
+    #[inline]
+    pub fn point_pdf_to_solid_angle_pdf(
+        position: Point,
+        direction_next: UnitVector,
+        position_next: Point,
+        normal_next: UnitVector,
+        pdf_point: Val,
+    ) -> Val {
+        let cos = normal_next.dot(direction_next).abs();
+        let dis_squared = (position_next - position).norm_squared();
+        pdf_point * dis_squared / cos
     }
 }
 

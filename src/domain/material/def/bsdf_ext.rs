@@ -39,7 +39,7 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         let scene = context.scene();
         let lights = scene.get_lights();
 
-        let res = lights.sample_light(intersection, *context.rng());
+        let res = lights.sample_light_surface(intersection, *context.rng());
         let Some(sample) = res else {
             return Contribution::new();
         };
@@ -104,7 +104,7 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         };
 
         let pdf_bsdf = sample.pdf();
-        let pdf_light = lights.pdf_light(intersection, ray_next);
+        let pdf_light = lights.pdf_light_surface(intersection, ray_next);
         let weight = pdf_bsdf / (pdf_light + pdf_bsdf);
 
         let coefficient = sample.coefficient();

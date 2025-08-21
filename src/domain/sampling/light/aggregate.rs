@@ -53,7 +53,7 @@ impl LightSampling for AggregateLightSampler {
         unreachable!("AggregateLightSampler doesn't have a unique inner shape")
     }
 
-    fn sample_light(
+    fn sample_light_surface(
         &self,
         intersection: &RayIntersection,
         rng: &mut dyn RngCore,
@@ -61,15 +61,15 @@ impl LightSampling for AggregateLightSampler {
         let which = rng.sample(Uniform::new(0, self.ids.len()).unwrap());
         let id = self.ids[which];
         (self.lights.lights.get(&id))
-            .and_then(|light| light.sample_light(intersection, rng))
+            .and_then(|light| light.sample_light_surface(intersection, rng))
             .map(|sample| sample.scale_pdf(self.weight))
     }
 
-    fn pdf_light(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
+    fn pdf_light_surface(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         let res = (self.bvh).search(ray_next, DisRange::positive(), &self.lights);
         if let Some((_, id)) = res {
             let light = self.lights.lights.get(&id).unwrap();
-            light.pdf_light(intersection, ray_next) * self.weight
+            light.pdf_light_surface(intersection, ray_next) * self.weight
         } else {
             Val(0.0)
         }
