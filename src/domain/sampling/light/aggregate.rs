@@ -5,7 +5,8 @@ use rand_distr::Uniform;
 
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RayScattering};
+use crate::domain::sampling::point::PointSample;
 use crate::domain::scene::bvh::Bvh;
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
 
@@ -72,6 +73,47 @@ impl LightSampling for AggregateLightSampler {
             light.pdf_light_surface(intersection, ray_next) * self.weight
         } else {
             Val(0.0)
+        }
+    }
+
+    fn sample_light_volume(
+        &self,
+        scattering: &RayScattering,
+        preselected_light: Option<&PointSample>,
+        rng: &mut dyn RngCore,
+    ) -> Option<LightSample> {
+        if let Some(sample) = preselected_light {
+            (self.lights.lights.get(&sample.shape_id()))
+                .and_then(|light| light.sample_light_volume(scattering, preselected_light, rng))
+                .map(|sample| sample.scale_pdf(self.weight))
+        } else {
+            let which = rng.sample(Uniform::new(0, self.ids.len()).unwrap());
+            let id = self.ids[which];
+            (self.lights.lights.get(&id))
+                .and_then(|light| light.sample_light_volume(scattering, None, rng))
+                .map(|sample| sample.scale_pdf(self.weight))
+        }
+    }
+
+    fn pdf_light_volume(
+        &self,
+        scattering: &RayScattering,
+        ray_next: &Ray,
+        preselected_light: Option<&PointSample>,
+    ) -> Val {
+        if let Some(sample) = preselected_light {
+            (self.lights.lights.get(&sample.shape_id()))
+                .map(|light| light.pdf_light_volume(scattering, ray_next, preselected_light))
+                .map(|pdf| pdf * self.weight)
+                .unwrap_or(Val(0.0))
+        } else {
+            let res = (self.bvh).search(ray_next, DisRange::positive(), &self.lights);
+            if let Some((_, id)) = res {
+                let light = self.lights.lights.get(&id).unwrap();
+                light.pdf_light_volume(scattering, ray_next, None) * self.weight
+            } else {
+                Val(0.0)
+            }
         }
     }
 }

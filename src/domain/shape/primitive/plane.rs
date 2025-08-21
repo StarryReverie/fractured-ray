@@ -76,7 +76,7 @@ impl Shape for Plane {
 }
 
 impl Sampleable for Plane {
-    fn get_point_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn PointSampling>> {
+    fn get_point_sampler(&self, _shape_id: ShapeId) -> Option<Box<dyn PointSampling>> {
         None
     }
 

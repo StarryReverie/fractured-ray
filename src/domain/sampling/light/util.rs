@@ -2,8 +2,8 @@ use rand::prelude::*;
 
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
-use crate::domain::sampling::point::PointSampling;
+use crate::domain::ray::event::{RayIntersection, RayScattering};
+use crate::domain::sampling::point::{PointSample, PointSampling};
 use crate::domain::shape::def::{Shape, ShapeId};
 
 use super::{LightSample, LightSampling};
@@ -35,6 +35,24 @@ impl LightSampling for EmptyLightSampler {
     }
 
     fn pdf_light_surface(&self, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
+        Val(0.0)
+    }
+
+    fn sample_light_volume(
+        &self,
+        _scattering: &RayScattering,
+        _preselected_light: Option<&PointSample>,
+        _rng: &mut dyn RngCore,
+    ) -> Option<LightSample> {
+        None
+    }
+
+    fn pdf_light_volume(
+        &self,
+        _scattering: &RayScattering,
+        _ray_next: &Ray,
+        _preselected_light: Option<&PointSample>,
+    ) -> Val {
         Val(0.0)
     }
 }
@@ -80,6 +98,49 @@ where
 
     fn pdf_light_surface(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         LightSample::convert_point_pdf(intersection.position(), ray_next, &self.inner)
+    }
+
+    fn sample_light_volume(
+        &self,
+        scattering: &RayScattering,
+        preselected_light: Option<&PointSample>,
+        rng: &mut dyn RngCore,
+    ) -> Option<LightSample> {
+        let ray_spawner = |dir| scattering.spawn(dir);
+        if let Some(sample) = preselected_light {
+            if self.id().is_none_or(|id| id != sample.shape_id()) {
+                return None;
+            }
+            let position = scattering.position();
+            LightSample::convert_point_sample(position, sample, ray_spawner)
+                .map(|s| s.scale_pdf(sample.pdf().recip()))
+        } else {
+            let sample = self.inner.sample_point(rng)?;
+            LightSample::convert_point_sample(scattering.position(), &sample, ray_spawner)
+        }
+    }
+
+    fn pdf_light_volume(
+        &self,
+        scattering: &RayScattering,
+        ray_next: &Ray,
+        preselected_light: Option<&PointSample>,
+    ) -> Val {
+        if let Some(sample) = preselected_light {
+            if self.has_nonzero_prob_given_preselected_light(ray_next, sample) {
+                LightSample::point_pdf_to_solid_angle_pdf(
+                    scattering.position(),
+                    ray_next.direction(),
+                    sample.point(),
+                    sample.normal(),
+                    Val(1.0),
+                )
+            } else {
+                Val(0.0)
+            }
+        } else {
+            LightSample::convert_point_pdf(scattering.position(), ray_next, &self.inner)
+        }
     }
 }
 

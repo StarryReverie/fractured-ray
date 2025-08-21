@@ -7,7 +7,7 @@ use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::{AllTransformation, Point, Transform};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RayScattering};
 use crate::domain::sampling::point::{PointSample, PointSampling};
 use crate::domain::shape::def::{Shape, ShapeId};
 
@@ -23,6 +23,34 @@ pub trait LightSampling: Debug + Send + Sync {
     ) -> Option<LightSample>;
 
     fn pdf_light_surface(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val;
+
+    fn sample_light_volume(
+        &self,
+        scattering: &RayScattering,
+        preselected_light: Option<&PointSample>,
+        rng: &mut dyn RngCore,
+    ) -> Option<LightSample>;
+
+    fn pdf_light_volume(
+        &self,
+        scattering: &RayScattering,
+        ray_next: &Ray,
+        preselected_light: Option<&PointSample>,
+    ) -> Val;
+
+    fn has_nonzero_prob_given_preselected_light(
+        &self,
+        ray_next: &Ray,
+        light: &PointSample,
+    ) -> bool {
+        if self.id().is_none_or(|id| id != light.shape_id()) {
+            return false;
+        }
+        let is_parallel = (light.point() - ray_next.start())
+            .normalize()
+            .is_ok_and(|dir| dir == ray_next.direction());
+        is_parallel
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]

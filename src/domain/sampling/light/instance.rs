@@ -3,7 +3,8 @@ use rand::prelude::*;
 use crate::domain::math::geometry::{AllTransformation, Transform, Transformation};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RayScattering};
+use crate::domain::sampling::point::PointSample;
 use crate::domain::shape::def::{Shape, ShapeId};
 use crate::domain::shape::instance::Instance;
 
@@ -59,6 +60,41 @@ impl LightSampling for InstanceLightSampler {
             let intersection = intersection.transform(&self.inv_transformation);
             let ray_next = ray_next.transform(&self.inv_transformation);
             sampler.pdf_light_surface(&intersection, &ray_next)
+        } else {
+            Val(0.0)
+        }
+    }
+
+    fn sample_light_volume(
+        &self,
+        scattering: &RayScattering,
+        preselected_light: Option<&PointSample>,
+        rng: &mut dyn RngCore,
+    ) -> Option<LightSample> {
+        if let Some(sampler) = &self.sampler {
+            let scattering = scattering.transform(&self.inv_transformation);
+            let preselected_light =
+                preselected_light.map(|l| l.transform(&self.inv_transformation));
+            sampler
+                .sample_light_volume(&scattering, preselected_light.as_ref(), rng)
+                .map(|sample| sample.transform(self.instance.transformation()))
+        } else {
+            None
+        }
+    }
+
+    fn pdf_light_volume(
+        &self,
+        scattering: &RayScattering,
+        ray_next: &Ray,
+        preselected_light: Option<&PointSample>,
+    ) -> Val {
+        if let Some(sampler) = &self.sampler {
+            let scattering = scattering.transform(&self.inv_transformation);
+            let ray_next = ray_next.transform(&self.inv_transformation);
+            let preselected_light =
+                preselected_light.map(|l| l.transform(&self.inv_transformation));
+            sampler.pdf_light_volume(&scattering, &ray_next, preselected_light.as_ref())
         } else {
             Val(0.0)
         }
