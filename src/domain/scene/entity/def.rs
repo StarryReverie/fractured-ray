@@ -6,10 +6,13 @@ use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
+use crate::domain::sampling::point::PointSampling;
 use crate::domain::shape::def::{ShapeContainer, ShapeId, ShapeKind};
 
 pub trait EntityScene: Send + Sync {
     fn get_entities(&self) -> &dyn EntityContainer;
+
+    fn get_light_surfaces(&self) -> &dyn PointSampling;
 
     fn get_lights(&self) -> &dyn LightSampling;
 

@@ -1,10 +1,11 @@
 use crate::domain::material::def::{Material, MaterialContainer, MaterialKind};
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::numeric::DisRange;
+use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::light::{AggregateLightSampler, EmptyLightSampler, LightSampling};
 use crate::domain::sampling::photon::{AggregatePhotonSampler, EmptyPhotonSampler, PhotonSampling};
+use crate::domain::sampling::point::{AggregatePointSampler, EmptyPointSampler, PointSampling};
 use crate::domain::scene::bvh::Bvh;
 use crate::domain::scene::pool::EntityPool;
 use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer};
@@ -14,6 +15,7 @@ use super::{EntityContainer, EntityId, EntityScene};
 #[derive(Debug)]
 pub struct BvhEntitySceneBuilder {
     entities: Box<EntityPool>,
+    light_surfaces: Vec<Box<dyn PointSampling>>,
     lights: Vec<Box<dyn LightSampling>>,
     emitters: Vec<Box<dyn PhotonSampling>>,
 }
@@ -22,6 +24,7 @@ impl BvhEntitySceneBuilder {
     pub fn new() -> Self {
         Self {
             entities: Box::new(EntityPool::new()),
+            light_surfaces: Vec::new(),
             lights: Vec::new(),
             emitters: Vec::new(),
         }
@@ -58,8 +61,19 @@ impl BvhEntitySceneBuilder {
     }
 
     fn post_add_entity(&mut self, entity_id: EntityId) {
+        self.register_light_surface(entity_id);
         self.register_light(entity_id);
         self.register_emitter(entity_id);
+    }
+
+    fn register_light_surface(&mut self, entity_id: EntityId) {
+        if entity_id.material_id().kind() == MaterialKind::Emissive {
+            let shape_id = entity_id.shape_id();
+            let shape = self.entities.get_shape(shape_id).unwrap();
+            if let Some(sampler) = shape.get_point_sampler(shape_id) {
+                self.light_surfaces.push(sampler);
+            }
+        }
     }
 
     fn register_light(&mut self, entity_id: EntityId) {
@@ -89,6 +103,17 @@ impl BvhEntitySceneBuilder {
     }
 
     pub fn build(self) -> BvhEntityScene {
+        let light_surfaces: Box<dyn PointSampling> = if self.light_surfaces.len() > 1 {
+            let samplers = (self.light_surfaces.into_iter())
+                .map(|s| (s, Val(1.0)))
+                .collect();
+            Box::new(AggregatePointSampler::new(samplers))
+        } else {
+            (self.light_surfaces.into_iter())
+                .next()
+                .unwrap_or(Box::new(EmptyPointSampler::new()))
+        };
+
         let lights: Box<dyn LightSampling> = if self.lights.len() > 1 {
             Box::new(AggregateLightSampler::new(self.lights))
         } else {
@@ -105,7 +130,7 @@ impl BvhEntitySceneBuilder {
                 .unwrap_or(Box::new(EmptyPhotonSampler::new()))
         };
 
-        BvhEntityScene::new(self.entities, lights, emitters)
+        BvhEntityScene::new(self.entities, light_surfaces, lights, emitters)
     }
 }
 
@@ -113,6 +138,7 @@ impl BvhEntitySceneBuilder {
 pub struct BvhEntityScene {
     entities: Box<EntityPool>,
     bvh: Bvh<EntityId>,
+    light_surfaces: Box<dyn PointSampling>,
     lights: Box<dyn LightSampling>,
     emitters: Box<dyn PhotonSampling>,
 }
@@ -120,6 +146,7 @@ pub struct BvhEntityScene {
 impl BvhEntityScene {
     fn new(
         entities: Box<EntityPool>,
+        light_surfaces: Box<dyn PointSampling>,
         lights: Box<dyn LightSampling>,
         emitters: Box<dyn PhotonSampling>,
     ) -> Self {
@@ -139,6 +166,7 @@ impl BvhEntityScene {
         Self {
             entities,
             bvh,
+            light_surfaces,
             lights,
             emitters,
         }
@@ -148,6 +176,10 @@ impl BvhEntityScene {
 impl EntityScene for BvhEntityScene {
     fn get_entities(&self) -> &dyn EntityContainer {
         &*self.entities
+    }
+
+    fn get_light_surfaces(&self) -> &dyn PointSampling {
+        &*self.light_surfaces
     }
 
     fn get_lights(&self) -> &dyn LightSampling {

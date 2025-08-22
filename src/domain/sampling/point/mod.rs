@@ -5,6 +5,7 @@ mod instance;
 mod polygon;
 mod sphere;
 mod triangle;
+mod util;
 
 pub use aabb::AabbPointSampler;
 pub use aggregate::AggregatePointSampler;
@@ -13,3 +14,4 @@ pub use instance::InstancePointSampler;
 pub use polygon::PolygonPointSampler;
 pub use sphere::SpherePointSampler;
 pub use triangle::TrianglePointSampler;
+pub use util::EmptyPointSampler;
