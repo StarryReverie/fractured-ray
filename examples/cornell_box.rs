@@ -7,11 +7,12 @@ use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, 
 use fractured_ray::domain::math::algebra::UnitVector;
 use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
+use fractured_ray::domain::medium::primitive::Isotropic;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::scene::entity::BvhEntitySceneBuilder;
-use fractured_ray::domain::scene::volume::{BvhVolumeScene, BvhVolumeSceneBuilder};
+use fractured_ray::domain::scene::volume::BvhVolumeSceneBuilder;
 use fractured_ray::domain::shape::mesh::MeshConstructor;
-use fractured_ray::domain::shape::primitive::{Polygon, Sphere};
+use fractured_ray::domain::shape::primitive::{Aabb, Polygon, Sphere};
 use fractured_ray::infrastructure::image::PngWriter;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -158,10 +159,25 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let scene = builder.build();
 
+    let mut vol_builder = BvhVolumeSceneBuilder::new();
+
+    vol_builder.add(
+        Aabb::new(
+            Point::new(Val(0.0), Val(0.0), Val(0.0)),
+            Point::new(Val(600.0), Val(600.0), Val(800.0)),
+        ),
+        Isotropic::new(
+            (Albedo::WHITE * Val(0.5)).into(),
+            Spectrum::broadcast(Val(1000.0)),
+        )?,
+    );
+
+    let volume_scene = vol_builder.build();
+
     let renderer = CoreRenderer::new(
         camera,
         scene,
-        BvhVolumeSceneBuilder::new().build(),
+        volume_scene,
         Configuration {
             iterations: 16,
             ..Configuration::default()

@@ -10,7 +10,10 @@ use crate::domain::medium::def::medium::{Medium, MediumKind};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
 use crate::domain::renderer::{Contribution, RtContext, RtState};
-use crate::domain::sampling::distance::{DistanceSampling, ExponentialDistanceSampler};
+use crate::domain::sampling::distance::{
+    DistanceSample, DistanceSampling, EquiAngularDistanceSampler, ExponentialDistanceSampler,
+};
+use crate::domain::sampling::point::PointSample;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Isotropic {
@@ -31,6 +34,85 @@ impl Isotropic {
         );
         let sigma_s = albedo * sigma_t;
         Ok(Self { sigma_s, sigma_t })
+    }
+
+    fn calc_exp_dis_weight(
+        ray: &Ray,
+        segment: &RaySegment,
+        distance: Val,
+        exp_sampler: &ExponentialDistanceSampler,
+        ea_sampler: &EquiAngularDistanceSampler,
+    ) -> Val {
+        let pdf2_exp = exp_sampler.pdf_distance(ray, segment, distance).powi(2);
+        let pdf2_ea = ea_sampler.pdf_distance(ray, segment, distance).powi(2);
+        pdf2_exp / (pdf2_exp + pdf2_ea)
+    }
+
+    fn calc_ea_dis_weight(
+        ray: &Ray,
+        segment: &RaySegment,
+        distance: Val,
+        exp_sampler: &ExponentialDistanceSampler,
+        ea_sampler: &EquiAngularDistanceSampler,
+    ) -> Val {
+        let pdf2_exp = exp_sampler.pdf_distance(ray, segment, distance).powi(2);
+        let pdf2_ea = ea_sampler.pdf_distance(ray, segment, distance).powi(2);
+        pdf2_ea / (pdf2_exp + pdf2_ea)
+    }
+
+    fn shade_impl(
+        &self,
+        context: &mut RtContext<'_>,
+        ray: &Ray,
+        segment: &RaySegment,
+        distance_sample: &DistanceSample,
+        preselected_light: &PointSample,
+    ) -> Contribution {
+        let pdf_distance = distance_sample.pdf();
+        let scattering = distance_sample.scattering().clone();
+
+        let pdf_point = preselected_light.pdf();
+
+        let tr = self.transmittance(
+            &ray,
+            &RaySegment::new(segment.start(), scattering.distance() - segment.start()),
+        );
+
+        let scene = context.entity_scene();
+        let lights = scene.get_lights();
+        let Some(light_sample) =
+            lights.sample_light_volume(&scattering, Some(preselected_light), *context.rng())
+        else {
+            return Contribution::new();
+        };
+
+        let (ray_next, distance) = (light_sample.ray_next(), light_sample.distance());
+        let range = (Bound::Excluded(Val(0.0)), Bound::Included(distance));
+        let res = scene.test_intersection(ray_next, range.into(), light_sample.shape_id());
+
+        let (intersection_next, light) = if let Some((intersection_next, id)) = res {
+            let id = id.material_id();
+            let material = scene.get_entities().get_material(id).unwrap();
+            if material.kind() == MaterialKind::Emissive {
+                (intersection_next, material)
+            } else {
+                return Contribution::new();
+            }
+        } else {
+            return Contribution::new();
+        };
+
+        let pdf_light = light_sample.pdf();
+        let phase = self.phase(
+            -ray.direction(),
+            &scattering,
+            light_sample.ray_next().direction(),
+        );
+        let ray_next = light_sample.into_ray_next();
+        let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
+        let pdf_recip = (pdf_point * pdf_distance * pdf_light).recip();
+        let res = self.sigma_s * tr * phase * radiance * pdf_recip;
+        res
     }
 }
 
@@ -65,43 +147,42 @@ impl Medium for Isotropic {
         segment: RaySegment,
     ) -> Contribution {
         let avg_sigma_t = self.sigma_t.norm() / Val(3.0).sqrt();
-        let sampler = ExponentialDistanceSampler::new(avg_sigma_t);
-        let distance_sample = sampler.sample_distance(&ray, &segment, *context.rng());
-        let pdf_distance = distance_sample.pdf();
-        let scattering = distance_sample.into_scattering();
+        let exp_sampler = ExponentialDistanceSampler::new(avg_sigma_t);
 
-        let tr = self.transmittance(
+        let light_surfaces = context.entity_scene().get_light_surfaces();
+        let Some(preselected_light) = light_surfaces.sample_point(*context.rng()) else {
+            return Contribution::new();
+        };
+        let ea_sampler = EquiAngularDistanceSampler::new(preselected_light.point());
+
+        let exp_dis_sample = exp_sampler.sample_distance(&ray, &segment, *context.rng());
+        let ea_dis_sample = ea_sampler.sample_distance(&ray, &segment, *context.rng());
+
+        let exp_radiance =
+            self.shade_impl(context, &ray, &segment, &exp_dis_sample, &preselected_light);
+        let exp_dis_weight = Self::calc_exp_dis_weight(
             &ray,
-            &RaySegment::new(segment.start(), scattering.distance() - segment.start()),
+            &segment,
+            exp_dis_sample.distance(),
+            &exp_sampler,
+            &ea_sampler,
         );
+        let exp_contribution = exp_radiance * exp_dis_weight;
 
-        let scene = context.entity_scene();
-        let lights = scene.get_lights();
-        let Some(sample) = lights.sample_light_volume(&scattering, None, *context.rng()) else {
-            return Contribution::new();
-        };
+        let ea_radiance =
+            self.shade_impl(context, &ray, &segment, &ea_dis_sample, &preselected_light);
+        let ea_dis_weight = Self::calc_ea_dis_weight(
+            &ray,
+            &segment,
+            ea_dis_sample.distance(),
+            &exp_sampler,
+            &ea_sampler,
+        );
+        let ea_contribution = ea_radiance * ea_dis_weight;
 
-        let (ray_next, distance) = (sample.ray_next(), sample.distance());
-        let range = (Bound::Excluded(Val(0.0)), Bound::Included(distance));
-        let res = scene.test_intersection(ray_next, range.into(), sample.shape_id());
-
-        let (intersection_next, light) = if let Some((intersection_next, id)) = res {
-            let id = id.material_id();
-            let material = scene.get_entities().get_material(id).unwrap();
-            if material.kind() == MaterialKind::Emissive {
-                (intersection_next, material)
-            } else {
-                return Contribution::new();
-            }
-        } else {
-            return Contribution::new();
-        };
-
-        let pdf_light = sample.pdf();
-        let phase = self.phase(-ray.direction(), &scattering, sample.ray_next().direction());
-        let ray_next = sample.into_ray_next();
-        let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
-        let res = self.sigma_s * tr * phase * radiance * (pdf_distance * pdf_light).recip();
+        let mut res = Contribution::new();
+        res.add_light(exp_contribution.light());
+        res.add_light(ea_contribution.light());
         res
     }
 }
