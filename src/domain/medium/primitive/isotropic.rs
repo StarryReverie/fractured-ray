@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
@@ -11,6 +12,7 @@ use crate::domain::renderer::{Contribution, RtContext, RtState};
 use crate::domain::sampling::distance::{
     DistanceSample, DistanceSampling, EquiAngularDistanceSampler, ExponentialDistanceSampler,
 };
+use crate::domain::sampling::phase::{PhaseSample, PhaseSampling};
 use crate::domain::sampling::point::PointSample;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -99,8 +101,7 @@ impl Isotropic {
         let ray_next = light_sample.into_ray_next();
         let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
         let pdf_recip = (pdf_point * pdf_distance * pdf_light).recip();
-        let res = self.sigma_s * tr * phase * radiance * pdf_recip;
-        res
+        self.sigma_s * tr * phase * radiance * pdf_recip
     }
 }
 
@@ -123,7 +124,7 @@ impl Medium for Isotropic {
         _scattering: &RayScattering,
         _dir_in: UnitVector,
     ) -> Spectrum {
-        const PHASE: Spectrum = Spectrum::broadcast(Val(0.25 / Val::FRAC_1_PI.0));
+        const PHASE: Spectrum = Spectrum::broadcast(Val(0.25 * Val::FRAC_1_PI.0));
         PHASE
     }
 
@@ -169,6 +170,29 @@ impl Medium for Isotropic {
         let ea_contribution = ea_radiance * ea_dis_weight;
 
         exp_contribution + ea_contribution
+    }
+}
+
+impl PhaseSampling for Isotropic {
+    fn sample_phase(
+        &self,
+        ray: &Ray,
+        scattering: &RayScattering,
+        rng: &mut dyn RngCore,
+    ) -> PhaseSample {
+        let ray_next = scattering.spawn(UnitVector::random(rng));
+        let phase = self.phase(-ray.direction(), scattering, ray_next.direction());
+        let pdf = self.pdf_phase(-ray.direction(), scattering, ray_next.direction());
+        PhaseSample::new(ray_next, phase, pdf)
+    }
+
+    fn pdf_phase(
+        &self,
+        _direction_out: UnitVector,
+        _scattering: &RayScattering,
+        _direction_in: UnitVector,
+    ) -> Val {
+        Val(0.25) * Val::FRAC_1_PI
     }
 }
 

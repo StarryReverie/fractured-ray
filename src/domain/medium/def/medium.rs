@@ -8,8 +8,9 @@ use crate::domain::math::algebra::UnitVector;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
 use crate::domain::renderer::{Contribution, RtContext, RtState};
+use crate::domain::sampling::phase::PhaseSampling;
 
-pub trait Medium: Send + Sync {
+pub trait Medium: PhaseSampling + Send + Sync {
     fn kind(&self) -> MediumKind;
 
     fn transmittance(&self, ray: &Ray, segment: &RaySegment) -> Spectrum;

@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(213.0), Val(548.799), Val(227.0)),
         ])?,
         Emissive::new(
-            Spectrum::new(Val(0.9), Val(0.85), Val(0.4)) * Val(5.0),
+            Spectrum::new(Val(0.9), Val(0.85), Val(0.4)) * Val(10.0),
             SpreadAngle::hemisphere(),
         ),
     );
@@ -167,8 +167,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(600.0), Val(600.0), Val(800.0)),
         ),
         Isotropic::new(
-            (Albedo::WHITE * Val(0.5)).into(),
-            Spectrum::broadcast(Val(1000.0)),
+            (Albedo::WHITE * Val(1.0)).into(),
+            Spectrum::broadcast(Val(200.0)),
         )?,
     );
 
@@ -179,7 +179,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         scene,
         volume_scene,
         Configuration {
-            iterations: 16,
+            iterations: 4,
             ..Configuration::default()
         },
     )?;
