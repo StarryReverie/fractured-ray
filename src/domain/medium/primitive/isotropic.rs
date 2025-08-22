@@ -1,14 +1,12 @@
-use std::ops::Bound;
-
 use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
-use crate::domain::material::def::MaterialKind;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::numeric::Val;
 use crate::domain::medium::def::medium::{Medium, MediumKind};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
+use crate::domain::ray::util::VisibilityTester;
 use crate::domain::renderer::{Contribution, RtContext, RtState};
 use crate::domain::sampling::distance::{
     DistanceSample, DistanceSampling, EquiAngularDistanceSampler, ExponentialDistanceSampler,
@@ -86,21 +84,11 @@ impl Isotropic {
             return Contribution::new();
         };
 
-        let (ray_next, distance) = (light_sample.ray_next(), light_sample.distance());
-        let range = (Bound::Excluded(Val(0.0)), Bound::Included(distance));
-        let res = scene.test_intersection(ray_next, range.into(), light_sample.shape_id());
-
-        let (intersection_next, light) = if let Some((intersection_next, id)) = res {
-            let id = id.material_id();
-            let material = scene.get_entities().get_material(id).unwrap();
-            if material.kind() == MaterialKind::Emissive {
-                (intersection_next, material)
-            } else {
-                return Contribution::new();
-            }
-        } else {
+        let vtester = VisibilityTester::new(scene, light_sample.ray_next());
+        let Some(target) = vtester.test(light_sample.distance(), light_sample.shape_id()) else {
             return Contribution::new();
         };
+        let (intersection_next, light) = target.into();
 
         let pdf_light = light_sample.pdf();
         let phase = self.phase(

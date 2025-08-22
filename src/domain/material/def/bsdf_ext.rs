@@ -1,4 +1,4 @@
-use std::ops::{Bound, Mul};
+use std::ops::Mul;
 
 use getset::CopyGetters;
 use rand::prelude::*;
@@ -9,9 +9,10 @@ use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::ray::photon::{Photon, PhotonRay, SearchPolicy};
+use crate::domain::ray::util::VisibilityTester;
 use crate::domain::renderer::{Contribution, PhotonInfo, PmContext, PmState, RtContext, RtState};
 
-use super::{BsdfMaterial, MaterialKind};
+use super::BsdfMaterial;
 
 pub trait BsdfMaterialExt: BsdfMaterial {
     fn shade_light(
@@ -47,20 +48,12 @@ pub trait BsdfMaterialExt: BsdfMaterial {
             return Contribution::new();
         }
 
-        let (ray_next, distance) = (sample.ray_next(), sample.distance());
-        let range = (Bound::Excluded(Val(0.0)), Bound::Included(distance));
-        let res = scene.test_intersection(ray_next, range.into(), sample.shape_id());
-        let (intersection_next, light) = if let Some((intersection_next, id)) = res {
-            let id = id.material_id();
-            let material = scene.get_entities().get_material(id).unwrap();
-            if material.kind() == MaterialKind::Emissive {
-                (intersection_next, material)
-            } else {
-                return Contribution::new();
-            }
-        } else {
+        let ray_next = sample.ray_next();
+        let vtester = VisibilityTester::new(scene, ray_next);
+        let Some(target) = vtester.test(sample.distance(), sample.shape_id()) else {
             return Contribution::new();
         };
+        let (intersection_next, light) = target.into();
 
         let pdf_light = sample.pdf();
         let pdf_bsdf = self.pdf_bsdf(ray, intersection, ray_next);
@@ -90,18 +83,11 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         }
 
         let ray_next = sample.ray_next();
-        let res = scene.find_intersection(ray_next, DisRange::positive());
-        let (intersection_next, light) = if let Some((intersection_next, id)) = res {
-            let id = id.material_id();
-            let material = scene.get_entities().get_material(id).unwrap();
-            if material.kind() == MaterialKind::Emissive {
-                (intersection_next, material)
-            } else {
-                return Contribution::new();
-            }
-        } else {
+        let vtester = VisibilityTester::new(scene, ray_next);
+        let Some(target) = vtester.cast() else {
             return Contribution::new();
         };
+        let (intersection_next, light) = target.into();
 
         let pdf_bsdf = sample.pdf();
         let pdf_light = lights.pdf_light_surface(intersection, ray_next);
