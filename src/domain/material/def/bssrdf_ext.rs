@@ -84,9 +84,8 @@ where
     ) -> Contribution {
         let light = self.shade_light(context, &ray, &intersection);
         let state_next = state.with_skip_emissive(true);
-        let mut res = self.shade_scattering(context, state_next, &ray, &intersection);
-        res.add_light(light.light());
-        res * (self.diffusion.bssrdf_diffusion() / self.diffusion.pdf())
+        let scattering = self.shade_scattering(context, state_next, &ray, &intersection);
+        (light + scattering) * (self.diffusion.bssrdf_diffusion() / self.diffusion.pdf())
     }
 
     fn receive(

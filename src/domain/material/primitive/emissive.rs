@@ -42,11 +42,11 @@ impl Material for Emissive {
         if state.skip_emissive() || intersection.side() == SurfaceSide::Back {
             Contribution::new()
         } else if self.beam_angle.is_hemisphere() {
-            self.radiance.into()
+            Contribution::from_light(self.radiance)
         } else {
             let cos = intersection.normal().dot(-ray.direction());
             if cos >= self.beam_angle.cos_half() {
-                self.radiance.into()
+                Contribution::from_light(self.radiance)
             } else {
                 Contribution::new()
             }

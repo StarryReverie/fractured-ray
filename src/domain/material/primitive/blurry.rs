@@ -66,9 +66,8 @@ impl Material for Blurry {
     ) -> Contribution {
         let light = self.shade_light(context, &ray, &intersection);
         let state_next = state.with_skip_emissive(true);
-        let mut res = self.shade_scattering(context, state_next, &ray, &intersection);
-        res.add_light(light.light());
-        res
+        let scattering = self.shade_scattering(context, state_next, &ray, &intersection);
+        light + scattering
     }
 
     fn receive(

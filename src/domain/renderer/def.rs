@@ -1,4 +1,4 @@
-use std::ops::Mul;
+use std::ops::{Add, Mul};
 
 use crate::domain::color::Spectrum;
 use crate::domain::image::Image;
@@ -33,17 +33,35 @@ pub trait Renderer: Send + Sync + 'static {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Contribution {
     Light(Spectrum),
+    Global(FluxEstimation),
+    Caustic(FluxEstimation),
     All(Box<ContributionInner>),
 }
 
 impl Contribution {
+    #[inline]
     pub fn new() -> Self {
-        Spectrum::zero().into()
+        Self::Light(Spectrum::zero())
+    }
+
+    #[inline]
+    pub fn from_light(light: Spectrum) -> Self {
+        Self::Light(light)
+    }
+
+    #[inline]
+    pub fn from_global(global: FluxEstimation) -> Self {
+        Self::Global(global)
+    }
+
+    #[inline]
+    pub fn from_caustic(caustic: FluxEstimation) -> Self {
+        Self::Caustic(caustic)
     }
 
     pub fn average(estimations: Vec<Contribution>) -> Contribution {
         if estimations.is_empty() {
-            return Contribution::new();
+            return Self::new();
         }
 
         let light_sum = (estimations.iter()).map(|e| e.light()).sum::<Spectrum>();
@@ -55,84 +73,80 @@ impl Contribution {
         let iter_caustic = estimations.iter().flat_map(|e| e.caustic());
         let caustic_avg = FluxEstimation::average(iter_caustic);
 
-        if global_avg.is_empty() && caustic_avg.is_empty() {
-            light_avg.into()
-        } else {
-            let mut res = Contribution::from(light_avg);
-            res.set_global(global_avg);
-            res.set_caustic(caustic_avg);
-            res
-        }
-    }
-
-    pub fn add_light(&mut self, light: Spectrum) {
-        match self {
-            Contribution::Light(color) => *color += light,
-            Contribution::All(s) => s.light += light,
-        }
-    }
-
-    pub fn set_global(&mut self, global: FluxEstimation) {
-        if global.is_empty() {
-            return;
-        }
-        match self {
-            Contribution::Light(light) => {
-                *self = Self::All(Box::new(ContributionInner {
-                    light: *light,
-                    global,
-                    caustic: FluxEstimation::empty(),
-                }))
-            }
-            Contribution::All(s) => {
-                s.global = global;
-            }
-        }
-    }
-
-    pub fn set_caustic(&mut self, caustic: FluxEstimation) {
-        if caustic.is_empty() {
-            return;
-        }
-        match self {
-            Contribution::Light(light) => {
-                *self = Self::All(Box::new(ContributionInner {
-                    light: *light,
-                    caustic,
-                    global: FluxEstimation::empty(),
-                }))
-            }
-            Contribution::All(s) => {
-                s.caustic = caustic;
-            }
-        }
+        Self::from_light(light_avg)
+            + Self::from_global(global_avg)
+            + Self::from_caustic(caustic_avg)
     }
 
     pub fn light(&self) -> Spectrum {
         match self {
-            Contribution::Light(light) => *light,
-            Contribution::All(s) => s.light,
+            Self::Light(light) => *light,
+            Self::All(s) => s.light,
+            _ => Spectrum::zero(),
         }
     }
 
     pub fn global(&self) -> Option<&FluxEstimation> {
         match self {
-            Contribution::Light(_) => None,
-            Contribution::All(s) => Some(&s.global),
+            Self::Global(global) => Some(global),
+            Self::All(s) => Some(&s.global),
+            _ => None,
         }
     }
 
     pub fn caustic(&self) -> Option<&FluxEstimation> {
         match self {
-            Contribution::Light(_) => None,
-            Contribution::All(s) => Some(&s.caustic),
+            Self::Caustic(caustic) => Some(caustic),
+            Self::All(s) => Some(&s.caustic),
+            _ => None,
+        }
+    }
+
+    fn to_all(self) -> Self {
+        match self {
+            Self::Light(light) => Self::All(Box::new(ContributionInner {
+                light,
+                ..ContributionInner::zero()
+            })),
+            Self::Global(global) => Self::All(Box::new(ContributionInner {
+                global,
+                ..ContributionInner::zero()
+            })),
+            Self::Caustic(caustic) => Self::All(Box::new(ContributionInner {
+                caustic,
+                ..ContributionInner::zero()
+            })),
+            s => s,
         }
     }
 }
 
-impl From<Spectrum> for Contribution {
-    fn from(value: Spectrum) -> Self {
-        Self::Light(value)
+impl Add for Contribution {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let (res, rhs) = match (&self, &rhs) {
+            (Self::All(_), _) => (self, rhs),
+            (_, Self::All(_)) => (rhs, self),
+            (_, _) => (self.to_all(), rhs),
+        };
+
+        let Self::All(mut res) = res else {
+            unreachable!("lhs should match Self::All(_) now");
+        };
+
+        match rhs {
+            Self::Light(light) => res.light += light,
+            Self::Global(global) => res.global += global,
+            Self::Caustic(caustic) => res.caustic += caustic,
+            Self::All(rhs) => {
+                res.light += rhs.light;
+                res.global += rhs.global;
+                res.caustic += rhs.caustic;
+            }
+        }
+
+        Self::All(res)
     }
 }
 
@@ -141,19 +155,21 @@ impl Mul<Val> for Contribution {
 
     fn mul(self, rhs: Val) -> Self::Output {
         match self {
-            Contribution::Light(light) => (light * rhs).into(),
-            Contribution::All(mut s) => {
+            Self::Light(light) => Self::Light(light * rhs),
+            Self::Global(global) => Self::Global(global * rhs),
+            Self::Caustic(caustic) => Self::Caustic(caustic * rhs),
+            Self::All(mut s) => {
                 s.light *= rhs;
-                s.global = s.global * rhs;
-                s.caustic = s.caustic * rhs;
-                Contribution::All(s)
+                s.global *= rhs;
+                s.caustic *= rhs;
+                Self::All(s)
             }
         }
     }
 }
 
 impl Mul<Contribution> for Val {
-    type Output = Contribution;
+    type Output = <Contribution as Mul<Self>>::Output;
 
     #[inline]
     fn mul(self, rhs: Contribution) -> Self::Output {
@@ -166,12 +182,14 @@ impl Mul<Spectrum> for Contribution {
 
     fn mul(self, rhs: Spectrum) -> Self::Output {
         match self {
-            Contribution::Light(light) => (light * rhs).into(),
-            Contribution::All(mut s) => {
+            Self::Light(light) => Self::Light(light * rhs),
+            Self::Global(global) => Self::Global(global * rhs),
+            Self::Caustic(caustic) => Self::Caustic(caustic * rhs),
+            Self::All(mut s) => {
                 s.light *= rhs;
-                s.global = s.global * rhs;
-                s.caustic = s.caustic * rhs;
-                Contribution::All(s)
+                s.global *= rhs;
+                s.caustic *= rhs;
+                Self::All(s)
             }
         }
     }
@@ -191,4 +209,15 @@ pub struct ContributionInner {
     light: Spectrum,
     global: FluxEstimation,
     caustic: FluxEstimation,
+}
+
+impl ContributionInner {
+    #[inline]
+    fn zero() -> Self {
+        Self {
+            light: Spectrum::zero(),
+            global: FluxEstimation::empty(),
+            caustic: FluxEstimation::empty(),
+        }
+    }
 }

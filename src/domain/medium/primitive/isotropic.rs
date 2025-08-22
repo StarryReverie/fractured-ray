@@ -168,10 +168,7 @@ impl Medium for Isotropic {
         );
         let ea_contribution = ea_radiance * ea_dis_weight;
 
-        let mut res = Contribution::new();
-        res.add_light(exp_contribution.light());
-        res.add_light(ea_contribution.light());
-        res
+        exp_contribution + ea_contribution
     }
 }
 

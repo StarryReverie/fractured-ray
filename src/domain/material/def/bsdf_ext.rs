@@ -1,4 +1,4 @@
-use std::ops::Mul;
+use std::ops::{Add, AddAssign, Mul, MulAssign};
 
 use getset::CopyGetters;
 use rand::prelude::*;
@@ -235,6 +235,27 @@ impl FluxEstimation {
     }
 }
 
+impl Add for FluxEstimation {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        if self.is_empty() {
+            rhs
+        } else if rhs.is_empty() {
+            self
+        } else {
+            Self::average([self, rhs].iter()) * Val(2.0)
+        }
+    }
+}
+
+impl AddAssign for FluxEstimation {
+    #[inline]
+    fn add_assign(&mut self, rhs: Self) {
+        *self = std::mem::replace(self, FluxEstimation::empty()) + rhs;
+    }
+}
+
 impl Mul<Val> for FluxEstimation {
     type Output = Self;
 
@@ -255,6 +276,13 @@ impl Mul<FluxEstimation> for Val {
     }
 }
 
+impl MulAssign<Val> for FluxEstimation {
+    #[inline]
+    fn mul_assign(&mut self, rhs: Val) {
+        self.flux *= rhs;
+    }
+}
+
 impl Mul<Spectrum> for FluxEstimation {
     type Output = Self;
 
@@ -272,6 +300,13 @@ impl Mul<FluxEstimation> for Spectrum {
     #[inline]
     fn mul(self, rhs: FluxEstimation) -> Self::Output {
         rhs * self
+    }
+}
+
+impl MulAssign<Spectrum> for FluxEstimation {
+    #[inline]
+    fn mul_assign(&mut self, rhs: Spectrum) {
+        self.flux *= rhs;
     }
 }
 

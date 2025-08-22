@@ -40,20 +40,16 @@ impl Material for Diffuse {
         if state.visible() {
             let light = self.shade_light(context, &ray, &intersection);
             let caustic = self.estimate_flux(&ray, &intersection, context.photon_casutic());
-            let mut res = self.shade_scattering(
+            let scattering = self.shade_scattering(
                 context,
                 state.mark_invisible().with_skip_emissive(true),
                 &ray,
                 &intersection,
             );
-            res.add_light(light.light());
-            res.set_caustic(caustic);
-            res
+            light + scattering + Contribution::from_caustic(caustic)
         } else {
             let global = self.estimate_flux(&ray, &intersection, context.photon_global());
-            let mut res = Contribution::new();
-            res.set_global(global);
-            res
+            Contribution::from_global(global)
         }
     }
 

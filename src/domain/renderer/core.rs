@@ -215,9 +215,8 @@ impl Renderer for CoreRenderer {
             let entities = context.entity_scene().get_entities();
             let material = entities.get_material(id.material_id()).unwrap();
 
-            let mut res = material.shade(context, state, ray, intersection) * tr;
-            res.add_light(vol_contribution.light());
-            res
+            let surface_contribution = material.shade(context, state, ray, intersection);
+            tr * surface_contribution + vol_contribution
         } else {
             let segments = self.volume_scene.find_segments(&ray, range);
             let (vol_contribution, tr) = if state.depth() <= 1
@@ -232,9 +231,9 @@ impl Renderer for CoreRenderer {
             } else {
                 (Contribution::new(), Spectrum::broadcast(Val(1.0)))
             };
-            let mut res = Contribution::from(self.config.background_color) * tr;
-            res.add_light(vol_contribution.light());
-            res
+
+            let background_contribution = Contribution::from_light(self.config.background_color);
+            tr * background_contribution + vol_contribution
         }
     }
 
