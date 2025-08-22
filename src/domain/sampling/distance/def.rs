@@ -14,7 +14,7 @@ pub trait DistanceSampling: Send + Sync {
         rng: &mut dyn RngCore,
     ) -> DistanceSample;
 
-    fn pdf_distance(&self, segment: &RaySegment, distance: Val) -> Val;
+    fn pdf_distance(&self, ray: &Ray, segment: &RaySegment, distance: Val) -> Val;
 }
 
 #[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]

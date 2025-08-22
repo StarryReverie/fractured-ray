@@ -13,4 +13,12 @@ impl RaySegment {
     pub fn new(start: Val, length: Val) -> Self {
         Self { start, length }
     }
+
+    pub fn end(&self) -> Val {
+        self.start + self.length
+    }
+
+    pub fn contains(&self, distance: Val) -> bool {
+        (self.start..=(self.start + self.length)).contains(&distance)
+    }
 }

@@ -32,15 +32,15 @@ impl DistanceSampling for ExponentialDistanceSampler {
         let position = ray.at(distance);
 
         let scattering = RayScattering::new(distance, position);
-        let pdf = self.pdf_distance(segment, distance);
+        let pdf = self.pdf_distance(ray, segment, distance);
         DistanceSample::new(scattering, pdf)
     }
 
-    fn pdf_distance(&self, segment: &RaySegment, distance: Val) -> Val {
+    fn pdf_distance(&self, _ray: &Ray, segment: &RaySegment, distance: Val) -> Val {
         let sigma = self.sigma;
         let (start, length) = (segment.start(), segment.length());
 
-        if (start..=(start + length)).contains(&distance) {
+        if segment.contains(distance) {
             if length != Val(0.0) {
                 let num = -sigma * (-sigma * (distance - start)).exp();
                 let den = (-sigma * length).exp_m1();
@@ -56,18 +56,27 @@ impl DistanceSampling for ExponentialDistanceSampler {
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::math::{algebra::UnitVector, geometry::Point};
+
     use super::*;
 
     #[test]
     fn exponential_distance_sampler_pdf_distance_succeeds() {
         let sampler = ExponentialDistanceSampler::new(Val(0.1));
+        let ray = Ray::new(
+            Point::new(Val(0.0), Val(0.0), Val(0.0)),
+            UnitVector::x_direction(),
+        );
 
         let segment = RaySegment::new(Val(1.0), Val(4.0));
-        assert_eq!(sampler.pdf_distance(&segment, Val(2.0)), Val(0.27445933));
-        assert_eq!(sampler.pdf_distance(&segment, Val(6.0)), Val(0.0));
+        assert_eq!(
+            sampler.pdf_distance(&ray, &segment, Val(2.0)),
+            Val(0.27445933)
+        );
+        assert_eq!(sampler.pdf_distance(&ray, &segment, Val(6.0)), Val(0.0));
 
         let segment = RaySegment::new(Val(1.0), Val(0.0));
-        assert_eq!(sampler.pdf_distance(&segment, Val(1.0)), Val(1.0));
-        assert_eq!(sampler.pdf_distance(&segment, Val(2.0)), Val(0.0));
+        assert_eq!(sampler.pdf_distance(&ray, &segment, Val(1.0)), Val(1.0));
+        assert_eq!(sampler.pdf_distance(&ray, &segment, Val(2.0)), Val(0.0));
     }
 }
