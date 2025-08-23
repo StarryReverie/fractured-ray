@@ -41,10 +41,9 @@ pub trait LightSampling: Debug + Send + Sync {
         if self.id().is_none_or(|id| id != light.shape_id()) {
             return false;
         }
-        let is_parallel = (light.point() - ray_next.start())
+        (light.point() - ray_next.start())
             .normalize()
-            .is_ok_and(|dir| dir == ray_next.direction());
-        is_parallel
+            .is_ok_and(|dir| dir == ray_next.direction())
     }
 }
 

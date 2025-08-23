@@ -102,7 +102,7 @@ impl Contribution {
         }
     }
 
-    fn to_all(self) -> Self {
+    fn into_all(self) -> Self {
         match self {
             Self::Light(light) => Self::All(Box::new(ContributionInner {
                 light,
@@ -128,7 +128,7 @@ impl Add for Contribution {
         let (res, rhs) = match (&self, &rhs) {
             (Self::All(_), _) => (self, rhs),
             (_, Self::All(_)) => (rhs, self),
-            (_, _) => (self.to_all(), rhs),
+            (_, _) => (self.into_all(), rhs),
         };
 
         let Self::All(mut res) = res else {

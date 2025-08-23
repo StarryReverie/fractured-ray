@@ -235,6 +235,7 @@ impl FluxEstimation {
 impl Add for FluxEstimation {
     type Output = Self;
 
+    #[allow(clippy::suspicious_arithmetic_impl)]
     fn add(self, rhs: Self) -> Self::Output {
         if self.is_empty() {
             rhs
@@ -249,7 +250,7 @@ impl Add for FluxEstimation {
 impl AddAssign for FluxEstimation {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
-        *self = std::mem::replace(self, FluxEstimation::empty()) + rhs;
+        *self = std::mem::take(self) + rhs;
     }
 }
 
