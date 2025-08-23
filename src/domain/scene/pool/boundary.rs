@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use crate::domain::medium::def::medium::{Medium, MediumContainer, MediumId};
+use crate::domain::medium::def::{Medium, MediumContainer, MediumId};
 use crate::domain::scene::volume::{BoundaryContainer, BoundaryId};
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
 

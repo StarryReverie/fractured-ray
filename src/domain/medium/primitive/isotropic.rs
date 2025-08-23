@@ -4,7 +4,7 @@ use snafu::prelude::*;
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::numeric::Val;
-use crate::domain::medium::def::medium::{Medium, MediumKind};
+use crate::domain::medium::def::{Medium, MediumExt, MediumKind};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
 use crate::domain::ray::util::VisibilityTester;
@@ -34,74 +34,6 @@ impl Isotropic {
         );
         let sigma_s = albedo * sigma_t;
         Ok(Self { sigma_s, sigma_t })
-    }
-
-    fn calc_exp_dis_weight(
-        ray: &Ray,
-        segment: &RaySegment,
-        distance: Val,
-        exp_sampler: &ExponentialDistanceSampler,
-        ea_sampler: &EquiAngularDistanceSampler,
-    ) -> Val {
-        let pdf2_exp = exp_sampler.pdf_distance(ray, segment, distance).powi(2);
-        let pdf2_ea = ea_sampler.pdf_distance(ray, segment, distance).powi(2);
-        pdf2_exp / (pdf2_exp + pdf2_ea)
-    }
-
-    fn calc_ea_dis_weight(
-        ray: &Ray,
-        segment: &RaySegment,
-        distance: Val,
-        exp_sampler: &ExponentialDistanceSampler,
-        ea_sampler: &EquiAngularDistanceSampler,
-    ) -> Val {
-        let pdf2_exp = exp_sampler.pdf_distance(ray, segment, distance).powi(2);
-        let pdf2_ea = ea_sampler.pdf_distance(ray, segment, distance).powi(2);
-        pdf2_ea / (pdf2_exp + pdf2_ea)
-    }
-
-    fn shade_impl(
-        &self,
-        context: &mut RtContext<'_>,
-        ray: &Ray,
-        segment: &RaySegment,
-        distance_sample: &DistanceSample,
-        preselected_light: &PointSample,
-    ) -> Contribution {
-        let pdf_distance = distance_sample.pdf();
-        let scattering = distance_sample.scattering().clone();
-
-        let pdf_point = preselected_light.pdf();
-
-        let tr = self.transmittance(
-            &ray,
-            &RaySegment::new(segment.start(), scattering.distance() - segment.start()),
-        );
-
-        let scene = context.entity_scene();
-        let lights = scene.get_lights();
-        let Some(light_sample) =
-            lights.sample_light_volume(&scattering, Some(preselected_light), *context.rng())
-        else {
-            return Contribution::new();
-        };
-
-        let vtester = VisibilityTester::new(scene, light_sample.ray_next());
-        let Some(target) = vtester.test(light_sample.distance(), light_sample.shape_id()) else {
-            return Contribution::new();
-        };
-        let (intersection_next, light) = target.into();
-
-        let pdf_light = light_sample.pdf();
-        let phase = self.phase(
-            -ray.direction(),
-            &scattering,
-            light_sample.ray_next().direction(),
-        );
-        let ray_next = light_sample.into_ray_next();
-        let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
-        let pdf_recip = (pdf_point * pdf_distance * pdf_light).recip();
-        self.sigma_s * tr * phase * radiance * pdf_recip
     }
 }
 
@@ -147,8 +79,14 @@ impl Medium for Isotropic {
         let exp_dis_sample = exp_sampler.sample_distance(&ray, &segment, *context.rng());
         let ea_dis_sample = ea_sampler.sample_distance(&ray, &segment, *context.rng());
 
-        let exp_radiance =
-            self.shade_impl(context, &ray, &segment, &exp_dis_sample, &preselected_light);
+        let exp_radiance = self.shade_source_using_light_sampling(
+            context,
+            &ray,
+            &segment,
+            self.sigma_s,
+            &exp_dis_sample,
+            &preselected_light,
+        );
         let exp_dis_weight = Self::calc_exp_dis_weight(
             &ray,
             &segment,
@@ -158,8 +96,14 @@ impl Medium for Isotropic {
         );
         let exp_contribution = exp_radiance * exp_dis_weight;
 
-        let ea_radiance =
-            self.shade_impl(context, &ray, &segment, &ea_dis_sample, &preselected_light);
+        let ea_radiance = self.shade_source_using_light_sampling(
+            context,
+            &ray,
+            &segment,
+            self.sigma_s,
+            &ea_dis_sample,
+            &preselected_light,
+        );
         let ea_dis_weight = Self::calc_ea_dis_weight(
             &ray,
             &segment,

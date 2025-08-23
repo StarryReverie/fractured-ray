@@ -1,5 +1,5 @@
 use crate::domain::math::numeric::DisRange;
-use crate::domain::medium::def::medium::{MediumContainer, MediumId, MediumKind};
+use crate::domain::medium::def::{MediumContainer, MediumId, MediumKind};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RaySegment;
 use crate::domain::shape::def::{ShapeContainer, ShapeId, ShapeKind};

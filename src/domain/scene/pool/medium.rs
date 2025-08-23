@@ -2,7 +2,7 @@ use std::any::{Any, TypeId};
 use std::fmt::Debug;
 use std::mem::ManuallyDrop;
 
-use crate::domain::medium::def::medium::{Medium, MediumContainer, MediumId, MediumKind};
+use crate::domain::medium::def::{Medium, MediumContainer, MediumId, MediumKind};
 use crate::domain::medium::primitive::Isotropic;
 
 #[derive(Debug, Default)]

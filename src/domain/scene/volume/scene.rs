@@ -5,7 +5,7 @@ use rand::prelude::*;
 
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::medium::def::medium::{Medium, MediumContainer, MediumId};
+use crate::domain::medium::def::{Medium, MediumContainer, MediumId};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RaySegment, SurfaceSide};
 use crate::domain::scene::bvh::Bvh;
@@ -207,7 +207,7 @@ impl VolumeScene for BvhVolumeScene {
 mod tests {
     use crate::domain::color::{Albedo, Spectrum};
     use crate::domain::math::geometry::Point;
-    use crate::domain::medium::def::medium::MediumContainer;
+    use crate::domain::medium::def::MediumContainer;
     use crate::domain::medium::primitive::Isotropic;
     use crate::domain::shape::primitive::Aabb;
 
