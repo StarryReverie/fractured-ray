@@ -156,7 +156,7 @@ impl Scattering {
     ) -> Contribution {
         let cos = intersection.normal().dot(-ray.direction());
         if Val(context.rng().random()) < self.calc_transmittance(cos) {
-            let state_next = state.mark_invisible();
+            let state_next = state.with_visible(false);
 
             let scene = context.entity_scene();
             let back = self.determine_back_face(scene, &ray, &intersection, *context.rng());
@@ -180,7 +180,7 @@ impl Scattering {
         intersection: RayIntersection,
     ) -> Contribution {
         let adapter = BackFaceTransmissionAdapter::new(self);
-        let state_next = state.mark_invisible();
+        let state_next = state.with_visible(false);
         adapter.shade(context, state_next, ray, intersection)
     }
 

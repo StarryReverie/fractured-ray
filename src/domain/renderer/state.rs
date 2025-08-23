@@ -2,12 +2,14 @@ use getset::{CopyGetters, WithSetters};
 
 #[derive(Debug, Clone, PartialEq, Eq, CopyGetters, WithSetters)]
 pub struct RtState {
-    #[getset(get_copy = "pub")]
+    #[getset(get_copy = "pub", set_with = "pub")]
     visible: bool,
     depth: u8,
     invisible_depth: u8,
     #[getset(get_copy = "pub", set_with = "pub")]
     skip_emissive: bool,
+    #[getset(get_copy = "pub", set_with = "pub")]
+    skip_medium_inscattering: bool,
 }
 
 impl RtState {
@@ -17,13 +19,7 @@ impl RtState {
             depth: 0,
             invisible_depth: 0,
             skip_emissive: false,
-        }
-    }
-
-    pub fn mark_invisible(self) -> Self {
-        Self {
-            visible: false,
-            ..self
+            skip_medium_inscattering: false,
         }
     }
 

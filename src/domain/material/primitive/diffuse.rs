@@ -42,7 +42,7 @@ impl Material for Diffuse {
             let caustic = self.estimate_flux(&ray, &intersection, context.photon_casutic());
             let scattering = self.shade_scattering(
                 context,
-                state.mark_invisible().with_skip_emissive(true),
+                state.with_visible(false).with_skip_emissive(true),
                 &ray,
                 &intersection,
             );

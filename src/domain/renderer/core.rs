@@ -189,52 +189,46 @@ impl Renderer for CoreRenderer {
         ray: Ray,
         range: DisRange,
     ) -> Contribution {
+        let entity_scene = &self.entity_scene;
+        let volume_scene = &self.volume_scene;
+
         let state = state.increment_depth();
         if state.depth() > self.config.max_depth {
             return Contribution::new();
         }
 
-        let res = context.entity_scene().find_intersection(&ray, range);
-        if let Some((intersection, id)) = res {
-            let segments = self
-                .volume_scene
-                .find_segments(&ray, range.shrink_end(intersection.distance()));
-            let (vol_contribution, tr) = if state.depth() <= 1
-                && let Some((segment, medium_id)) = segments.first()
-            {
-                let boundaries = self.volume_scene.get_boundaries();
-                let medium = boundaries.get_medium(*medium_id).unwrap();
-                let cont = medium.shade(context, state.clone(), ray.clone(), segment.clone());
-
-                let tr = medium.transmittance(&ray, segment);
-                (cont, tr)
-            } else {
-                (Contribution::new(), Spectrum::broadcast(Val(1.0)))
-            };
-
-            let entities = context.entity_scene().get_entities();
+        let res = entity_scene.find_intersection(&ray, range);
+        let (surface_res, vis_range) = if let Some((intersection, id)) = res {
+            let vis_range = range.shrink_end(intersection.distance());
+            let entities = entity_scene.get_entities();
             let material = entities.get_material(id.material_id()).unwrap();
-
-            let surface_contribution = material.shade(context, state, ray, intersection);
-            tr * surface_contribution + vol_contribution
+            let res = material.shade(context, state.clone(), ray.clone(), intersection);
+            (res, vis_range)
         } else {
-            let segments = self.volume_scene.find_segments(&ray, range);
-            let (vol_contribution, tr) = if state.depth() <= 1
-                && let Some((segment, medium_id)) = segments.first()
-            {
-                let boundaries = self.volume_scene.get_boundaries();
-                let medium = boundaries.get_medium(*medium_id).unwrap();
-                let cont = medium.shade(context, state.clone(), ray.clone(), segment.clone());
+            let res = Contribution::from_light(self.config.background_color);
+            (res, range)
+        };
 
-                let tr = medium.transmittance(&ray, segment);
-                (cont, tr)
-            } else {
-                (Contribution::new(), Spectrum::broadcast(Val(1.0)))
-            };
-
-            let background_contribution = Contribution::from_light(self.config.background_color);
-            tr * background_contribution + vol_contribution
+        if !state.visible() {
+            return surface_res;
         }
+        let segments = volume_scene.find_segments(&ray, vis_range);
+        let (volume_res, transmittance) = if let Some((segment, medium_id)) = segments.first() {
+            let boundaries = self.volume_scene.get_boundaries();
+            let medium = boundaries.get_medium(*medium_id).unwrap();
+
+            let transmittance = medium.transmittance(&ray, segment);
+            let res = if !state.skip_medium_inscattering() {
+                medium.shade(context, state, ray, segment.clone())
+            } else {
+                Contribution::new()
+            };
+            (res, transmittance)
+        } else {
+            (Contribution::new(), Spectrum::broadcast(Val(1.0)))
+        };
+
+        transmittance * surface_res + volume_res
     }
 
     fn emit<'a>(
