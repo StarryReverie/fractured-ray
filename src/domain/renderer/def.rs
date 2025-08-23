@@ -25,7 +25,7 @@ pub trait Renderer: Send + Sync + 'static {
         &'a self,
         context: &mut PmContext<'a>,
         state: PmState,
-        photon: PhotonRay,
+        photon: &PhotonRay,
         range: DisRange,
     );
 }

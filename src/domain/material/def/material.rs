@@ -24,8 +24,8 @@ pub trait Material: Debug + Send + Sync {
         &self,
         context: &mut PmContext<'_>,
         state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     );
 
     fn as_any(&self) -> Option<&dyn Any> {

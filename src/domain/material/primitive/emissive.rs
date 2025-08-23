@@ -57,8 +57,8 @@ impl Material for Emissive {
         &self,
         _context: &mut PmContext<'_>,
         _state: PmState,
-        _photon: PhotonRay,
-        _intersection: RayIntersection,
+        _photon: &PhotonRay,
+        _intersection: &RayIntersection,
     ) {
     }
 

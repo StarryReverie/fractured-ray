@@ -129,12 +129,7 @@ impl CoreRenderer {
                     let mut context =
                         PmContext::new(self, &self.entity_scene, &mut rng, &mut photons);
                     let state = PmState::new(false, policy);
-                    self.emit(
-                        &mut context,
-                        state,
-                        photon.into_photon(),
-                        DisRange::positive(),
-                    );
+                    self.emit(&mut context, state, photon.photon(), DisRange::positive());
                 }
                 photons
             })
@@ -235,14 +230,14 @@ impl Renderer for CoreRenderer {
         &'a self,
         context: &mut PmContext<'a>,
         state: PmState,
-        photon: PhotonRay,
+        photon: &PhotonRay,
         range: DisRange,
     ) {
         let res = context.scene().find_intersection(photon.ray(), range);
         if let Some((intersection, id)) = res {
             let entities = context.scene().get_entities();
             let material = entities.get_material(id.material_id()).unwrap();
-            material.receive(context, state, photon, intersection);
+            material.receive(context, state, photon, &intersection);
         }
     }
 }

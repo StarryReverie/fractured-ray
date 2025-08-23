@@ -136,8 +136,8 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         &self,
         context: &mut PmContext<'_>,
         state_next: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     ) {
         let renderer = context.renderer();
         let mut throughput = photon.throughput();
@@ -152,10 +152,10 @@ pub trait BsdfMaterialExt: BsdfMaterial {
             return;
         }
 
-        let sample = self.sample_bsdf(photon.ray(), &intersection, *context.rng());
+        let sample = self.sample_bsdf(photon.ray(), intersection, *context.rng());
         let throughput_next = sample.coefficient() * throughput;
         let photon_next = PhotonRay::new(sample.into_ray_next(), throughput_next);
-        renderer.emit(context, state_next, photon_next, DisRange::positive());
+        renderer.emit(context, state_next, &photon_next, DisRange::positive());
     }
 
     fn estimate_flux(

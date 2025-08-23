@@ -74,8 +74,8 @@ impl Material for Blurry {
         &self,
         context: &mut PmContext<'_>,
         state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     ) {
         match state.policy() {
             StoragePolicy::Global => {

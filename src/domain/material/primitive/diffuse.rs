@@ -57,17 +57,17 @@ impl Material for Diffuse {
         &self,
         context: &mut PmContext<'_>,
         state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     ) {
         match state.policy() {
             StoragePolicy::Global => {
-                self.store_photon(context, &photon, &intersection);
+                self.store_photon(context, photon, intersection);
                 self.maybe_bounce_next_photon(context, state, photon, intersection);
             }
             StoragePolicy::Caustic => {
                 if state.has_specular() {
-                    self.store_photon(context, &photon, &intersection);
+                    self.store_photon(context, photon, intersection);
                 }
             }
         }

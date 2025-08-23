@@ -188,8 +188,8 @@ impl Scattering {
         &self,
         context: &mut PmContext<'_>,
         state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     ) {
         let cos = intersection.normal().dot(-photon.direction());
         if Val(context.rng().random()) < self.calc_transmittance(cos) {
@@ -198,11 +198,11 @@ impl Scattering {
             }
 
             let scene = context.scene();
-            let back = self.determine_back_face(scene, photon.ray(), &intersection, *context.rng());
+            let back = self.determine_back_face(scene, photon.ray(), intersection, *context.rng());
 
             if let Some((ray_back, intersection_back)) = back {
                 let photon_back = PhotonRay::new(ray_back, photon.throughput());
-                self.receive_back_face(context, state, photon_back, intersection_back);
+                self.receive_back_face(context, state, &photon_back, &intersection_back);
             } else {
                 self.receive_impl(context, state, photon, intersection);
             }
@@ -216,8 +216,8 @@ impl Scattering {
         &self,
         context: &mut PmContext<'_>,
         state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     ) {
         let adapter = BackFaceTransmissionAdapter::new(self);
         adapter.receive(context, state, photon, intersection);
@@ -282,8 +282,8 @@ impl Material for Scattering {
         &self,
         context: &mut PmContext<'_>,
         state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     ) {
         if intersection.side() == SurfaceSide::Front {
             self.receive_front_face(context, state, photon, intersection);
@@ -445,8 +445,8 @@ impl<'a> Material for BackFaceTransmissionAdapter<'a> {
         &self,
         context: &mut PmContext<'_>,
         state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     ) {
         match state.policy() {
             StoragePolicy::Global => {

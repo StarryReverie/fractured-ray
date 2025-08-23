@@ -35,11 +35,11 @@ pub trait BssrdfMaterialExt: BssrdfMaterial + Sized {
         &self,
         context: &mut PmContext<'_>,
         state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     ) {
         let scene = context.scene();
-        let sample = self.sample_bssrdf_diffusion(scene, &intersection, *context.rng());
+        let sample = self.sample_bssrdf_diffusion(scene, intersection, *context.rng());
         if let Some(diffusion) = sample {
             let adapter = BsdfMaterialAdapter::new(self, &diffusion);
             adapter.receive(context, state, photon, intersection)
@@ -92,14 +92,14 @@ where
         &self,
         context: &mut PmContext<'_>,
         state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     ) {
         let photon_scaled = PhotonRay::new(
             Ray::new(photon.start(), photon.direction()),
             photon.throughput() * (self.diffusion.bssrdf_diffusion() / self.diffusion.pdf()),
         );
-        self.maybe_bounce_next_photon(context, state, photon_scaled, intersection);
+        self.maybe_bounce_next_photon(context, state, &photon_scaled, intersection);
     }
 
     fn as_any(&self) -> Option<&dyn Any> {

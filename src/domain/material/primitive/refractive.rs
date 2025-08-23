@@ -51,8 +51,8 @@ impl Material for Refractive {
         &self,
         context: &mut PmContext<'_>,
         state: PmState,
-        photon: PhotonRay,
-        intersection: RayIntersection,
+        photon: &PhotonRay,
+        intersection: &RayIntersection,
     ) {
         let state_next = state.with_has_specular(true);
         self.maybe_bounce_next_photon(context, state_next, photon, intersection);
