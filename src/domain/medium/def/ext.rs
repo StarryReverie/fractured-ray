@@ -1,13 +1,14 @@
 use crate::domain::color::Spectrum;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RaySegment;
+use crate::domain::ray::event::{RayScattering, RaySegment};
 use crate::domain::ray::util::VisibilityTester;
 use crate::domain::renderer::{Contribution, RtContext, RtState};
 use crate::domain::sampling::distance::{
     DistanceSample, DistanceSampling, EquiAngularDistanceSampler, ExponentialDistanceSampler,
 };
-use crate::domain::sampling::phase::PhaseSample;
+use crate::domain::sampling::light::LightSampling;
+use crate::domain::sampling::phase::{PhaseSample, PhaseSampling};
 use crate::domain::sampling::point::PointSample;
 
 use super::Medium;
@@ -94,32 +95,62 @@ pub trait MediumExt: Medium {
         sigma_s * tr * phase * radiance * pdf_recip
     }
 
-    fn calc_exp_dis_weight(
+    fn calc_exp_weight(
         ray: &Ray,
         segment: &RaySegment,
-        distance: Val,
-        exp_sampler: &ExponentialDistanceSampler,
+        exp_dis_sample: &DistanceSample,
         ea_sampler: &EquiAngularDistanceSampler,
     ) -> Val {
-        let pdf2_exp = exp_sampler.pdf_distance(ray, segment, distance).powi(2);
+        let distance = exp_dis_sample.distance();
+        let pdf2_exp = exp_dis_sample.pdf().powi(2);
         let pdf2_ea = ea_sampler.pdf_distance(ray, segment, distance).powi(2);
         pdf2_exp / (pdf2_exp + pdf2_ea)
     }
 
-    fn calc_ea_dis_weight(
+    fn calc_ea_weight(
         ray: &Ray,
         segment: &RaySegment,
-        distance: Val,
+        ea_dis_sampler: &DistanceSample,
         exp_sampler: &ExponentialDistanceSampler,
-        ea_sampler: &EquiAngularDistanceSampler,
     ) -> Val {
+        let distance = ea_dis_sampler.distance();
+        let pdf2_ea = ea_dis_sampler.pdf().powi(2);
         let pdf2_exp = exp_sampler.pdf_distance(ray, segment, distance).powi(2);
-        let pdf2_ea = ea_sampler.pdf_distance(ray, segment, distance).powi(2);
         pdf2_ea / (pdf2_exp + pdf2_ea)
     }
 
-    fn calc_light_dir_weight(ray: &Ray) -> Val {
-        todo!()
+    fn calc_light_weight(
+        ray: &Ray,
+        scattering: &RayScattering,
+        preselected_light: &PointSample,
+        light_sampler: &dyn LightSampling,
+        phase_sampler: &dyn PhaseSampling,
+    ) -> Val {
+        let light_point = preselected_light.point();
+        let Ok(direction) = (light_point - scattering.position()).normalize() else {
+            return Val(0.0);
+        };
+        let ray_next = scattering.spawn(direction);
+        let pdf2_light = light_sampler
+            .pdf_light_volume(&ray_next, Some(preselected_light))
+            .powi(2);
+        let pdf2_phase = phase_sampler
+            .pdf_phase(-ray.direction(), scattering, ray_next.direction())
+            .powi(2);
+        pdf2_light / (pdf2_light + pdf2_phase)
+    }
+
+    fn calc_phase_weight(
+        phase_sample: &PhaseSample,
+        preselected_light: &PointSample,
+        light_sampler: &dyn LightSampling,
+    ) -> Val {
+        let ray_next = phase_sample.ray_next();
+        let pdf2_phase = phase_sample.pdf().powi(2);
+        let pdf2_light = light_sampler
+            .pdf_light_volume(ray_next, Some(preselected_light))
+            .powi(2);
+        pdf2_phase / (pdf2_light + pdf2_phase)
     }
 }
 

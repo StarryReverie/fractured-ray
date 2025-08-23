@@ -31,12 +31,7 @@ pub trait LightSampling: Debug + Send + Sync {
         rng: &mut dyn RngCore,
     ) -> Option<LightSample>;
 
-    fn pdf_light_volume(
-        &self,
-        scattering: &RayScattering,
-        ray_next: &Ray,
-        preselected_light: Option<&PointSample>,
-    ) -> Val;
+    fn pdf_light_volume(&self, ray_next: &Ray, preselected_light: Option<&PointSample>) -> Val;
 
     fn has_nonzero_prob_given_preselected_light(
         &self,

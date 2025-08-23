@@ -83,18 +83,12 @@ impl LightSampling for InstanceLightSampler {
         }
     }
 
-    fn pdf_light_volume(
-        &self,
-        scattering: &RayScattering,
-        ray_next: &Ray,
-        preselected_light: Option<&PointSample>,
-    ) -> Val {
+    fn pdf_light_volume(&self, ray_next: &Ray, preselected_light: Option<&PointSample>) -> Val {
         if let Some(sampler) = &self.sampler {
-            let scattering = scattering.transform(&self.inv_transformation);
             let ray_next = ray_next.transform(&self.inv_transformation);
             let preselected_light =
                 preselected_light.map(|l| l.transform(&self.inv_transformation));
-            sampler.pdf_light_volume(&scattering, &ray_next, preselected_light.as_ref())
+            sampler.pdf_light_volume(&ray_next, preselected_light.as_ref())
         } else {
             Val(0.0)
         }

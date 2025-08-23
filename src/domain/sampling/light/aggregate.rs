@@ -95,22 +95,17 @@ impl LightSampling for AggregateLightSampler {
         }
     }
 
-    fn pdf_light_volume(
-        &self,
-        scattering: &RayScattering,
-        ray_next: &Ray,
-        preselected_light: Option<&PointSample>,
-    ) -> Val {
+    fn pdf_light_volume(&self, ray_next: &Ray, preselected_light: Option<&PointSample>) -> Val {
         if let Some(sample) = preselected_light {
             (self.lights.lights.get(&sample.shape_id()))
-                .map(|light| light.pdf_light_volume(scattering, ray_next, preselected_light))
+                .map(|light| light.pdf_light_volume(ray_next, preselected_light))
                 .map(|pdf| pdf * self.weight)
                 .unwrap_or(Val(0.0))
         } else {
             let res = (self.bvh).search(ray_next, DisRange::positive(), &self.lights);
             if let Some((_, id)) = res {
                 let light = self.lights.lights.get(&id).unwrap();
-                light.pdf_light_volume(scattering, ray_next, None) * self.weight
+                light.pdf_light_volume(ray_next, None) * self.weight
             } else {
                 Val(0.0)
             }

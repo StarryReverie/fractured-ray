@@ -47,12 +47,7 @@ impl LightSampling for EmptyLightSampler {
         None
     }
 
-    fn pdf_light_volume(
-        &self,
-        _scattering: &RayScattering,
-        _ray_next: &Ray,
-        _preselected_light: Option<&PointSample>,
-    ) -> Val {
+    fn pdf_light_volume(&self, _ray_next: &Ray, _preselected_light: Option<&PointSample>) -> Val {
         Val(0.0)
     }
 }
@@ -120,16 +115,11 @@ where
         }
     }
 
-    fn pdf_light_volume(
-        &self,
-        scattering: &RayScattering,
-        ray_next: &Ray,
-        preselected_light: Option<&PointSample>,
-    ) -> Val {
+    fn pdf_light_volume(&self, ray_next: &Ray, preselected_light: Option<&PointSample>) -> Val {
         if let Some(sample) = preselected_light {
             if self.has_nonzero_prob_given_preselected_light(ray_next, sample) {
                 LightSample::point_pdf_to_solid_angle_pdf(
-                    scattering.position(),
+                    ray_next.start(),
                     ray_next.direction(),
                     sample.point(),
                     sample.normal(),
@@ -139,7 +129,7 @@ where
                 Val(0.0)
             }
         } else {
-            LightSample::convert_point_pdf(scattering.position(), ray_next, &self.inner)
+            LightSample::convert_point_pdf(ray_next.start(), ray_next, &self.inner)
         }
     }
 }

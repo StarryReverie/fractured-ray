@@ -133,20 +133,16 @@ impl LightSampling for SphereLightSampler {
         }
     }
 
-    fn pdf_light_volume(
-        &self,
-        scattering: &RayScattering,
-        ray_next: &Ray,
-        preselected_light: Option<&PointSample>,
-    ) -> Val {
+    fn pdf_light_volume(&self, ray_next: &Ray, preselected_light: Option<&PointSample>) -> Val {
+        let position = ray_next.start();
         if let Some(sample) = preselected_light {
             if self.has_nonzero_prob_given_preselected_light(ray_next, sample) {
-                self.pdf_light_impl(ray_next, scattering.position()) / sample.pdf()
+                self.pdf_light_impl(ray_next, position) / sample.pdf()
             } else {
                 Val(0.0)
             }
         } else {
-            self.pdf_light_impl(ray_next, scattering.position())
+            self.pdf_light_impl(ray_next, position)
         }
     }
 }
@@ -209,7 +205,7 @@ mod tests {
         let ray_next = scattering.spawn(direction_next);
 
         assert_eq!(
-            sampler.pdf_light_volume(&scattering, &ray_next, Some(&preselected_light)),
+            sampler.pdf_light_volume(&ray_next, Some(&preselected_light)),
             Val(59.71281292110202),
         );
     }
@@ -236,7 +232,7 @@ mod tests {
         let ray_next = scattering.spawn(-UnitVector::x_direction());
 
         assert_eq!(
-            sampler.pdf_light_volume(&scattering, &ray_next, Some(&preselected_light)),
+            sampler.pdf_light_volume(&ray_next, Some(&preselected_light)),
             Val(0.0),
         );
     }
