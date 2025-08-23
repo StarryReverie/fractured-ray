@@ -62,8 +62,8 @@ impl Medium for Isotropic {
         &self,
         context: &mut RtContext<'_>,
         _state: RtState,
-        ray: Ray,
-        segment: RaySegment,
+        ray: &Ray,
+        segment: &RaySegment,
     ) -> Contribution {
         let avg_sigma_t = self.sigma_t.norm() / Val(3.0).sqrt();
         let exp_sampler = ExponentialDistanceSampler::new(avg_sigma_t);
@@ -74,29 +74,29 @@ impl Medium for Isotropic {
         };
         let ea_sampler = EquiAngularDistanceSampler::new(preselected_light.point());
 
-        let exp_sample = exp_sampler.sample_distance(&ray, &segment, *context.rng());
-        let ea_sample = ea_sampler.sample_distance(&ray, &segment, *context.rng());
+        let exp_sample = exp_sampler.sample_distance(ray, segment, *context.rng());
+        let ea_sample = ea_sampler.sample_distance(ray, segment, *context.rng());
 
         let exp_radiance = self.shade_source_using_light_sampling(
             context,
-            &ray,
-            &segment,
+            ray,
+            segment,
             self.sigma_s,
             &exp_sample,
             &preselected_light,
         );
-        let exp_weight = Self::calc_exp_weight(&ray, &segment, &exp_sample, &ea_sampler);
+        let exp_weight = Self::calc_exp_weight(ray, segment, &exp_sample, &ea_sampler);
         let exp_contribution = exp_radiance * exp_weight;
 
         let ea_radiance = self.shade_source_using_light_sampling(
             context,
-            &ray,
-            &segment,
+            ray,
+            segment,
             self.sigma_s,
             &ea_sample,
             &preselected_light,
         );
-        let ea_weight = Self::calc_ea_weight(&ray, &segment, &ea_sample, &exp_sampler);
+        let ea_weight = Self::calc_ea_weight(ray, segment, &ea_sample, &exp_sampler);
         let ea_contribution = ea_radiance * ea_weight;
 
         exp_contribution + ea_contribution

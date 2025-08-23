@@ -88,7 +88,7 @@ impl CoreRenderer {
         (row, column): (usize, usize),
     ) -> Contribution {
         let ray = self.generate_ray(row, column);
-        self.trace(context, RtState::new(), ray, DisRange::positive())
+        self.trace(context, RtState::new(), &ray, DisRange::positive())
     }
 
     fn generate_ray(&self, row: usize, column: usize) -> Ray {
@@ -186,7 +186,7 @@ impl Renderer for CoreRenderer {
         &'a self,
         context: &mut RtContext<'a>,
         state: RtState,
-        ray: Ray,
+        ray: &Ray,
         range: DisRange,
     ) -> Contribution {
         let entity_scene = &self.entity_scene;
@@ -197,12 +197,12 @@ impl Renderer for CoreRenderer {
             return Contribution::new();
         }
 
-        let res = entity_scene.find_intersection(&ray, range);
+        let res = entity_scene.find_intersection(ray, range);
         let (surface_res, vis_range) = if let Some((intersection, id)) = res {
             let vis_range = range.shrink_end(intersection.distance());
             let entities = entity_scene.get_entities();
             let material = entities.get_material(id.material_id()).unwrap();
-            let res = material.shade(context, state.clone(), ray.clone(), intersection);
+            let res = material.shade(context, state.clone(), ray, &intersection);
             (res, vis_range)
         } else {
             let res = Contribution::from_light(self.config.background_color);
@@ -212,14 +212,14 @@ impl Renderer for CoreRenderer {
         if !state.visible() {
             return surface_res;
         }
-        let segments = volume_scene.find_segments(&ray, vis_range);
+        let segments = volume_scene.find_segments(ray, vis_range);
         let (volume_res, transmittance) = if let Some((segment, medium_id)) = segments.first() {
             let boundaries = self.volume_scene.get_boundaries();
             let medium = boundaries.get_medium(*medium_id).unwrap();
 
-            let transmittance = medium.transmittance(&ray, segment);
+            let transmittance = medium.transmittance(ray, segment);
             let res = if !state.skip_medium_inscattering() {
-                medium.shade(context, state, ray, segment.clone())
+                medium.shade(context, state, ray, segment)
             } else {
                 Contribution::new()
             };

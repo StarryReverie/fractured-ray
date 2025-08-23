@@ -26,8 +26,8 @@ pub trait Medium: PhaseSampling + Send + Sync {
         &self,
         context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        segment: RaySegment,
+        ray: &Ray,
+        segment: &RaySegment,
     ) -> Contribution;
 }
 

@@ -16,8 +16,8 @@ pub trait Material: Debug + Send + Sync {
         &self,
         context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution;
 
     fn receive(

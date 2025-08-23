@@ -82,8 +82,8 @@ impl Medium for HenyeyGreenstein {
         &self,
         context: &mut RtContext<'_>,
         _state: RtState,
-        ray: Ray,
-        segment: RaySegment,
+        ray: &Ray,
+        segment: &RaySegment,
     ) -> Contribution {
         let light = context.entity_scene().get_lights();
         let avg_sigma_t = self.sigma_t.norm() / Val(3.0).sqrt();
@@ -95,67 +95,67 @@ impl Medium for HenyeyGreenstein {
         };
         let ea_sampler = EquiAngularDistanceSampler::new(preselected.point());
 
-        let exp_sample = exp_sampler.sample_distance(&ray, &segment, *context.rng());
-        let ea_sample = ea_sampler.sample_distance(&ray, &segment, *context.rng());
+        let exp_sample = exp_sampler.sample_distance(ray, segment, *context.rng());
+        let ea_sample = ea_sampler.sample_distance(ray, segment, *context.rng());
         let exp_scattering = exp_sample.scattering();
         let ea_scattering = ea_sample.scattering();
 
-        let phase_exp_sample = self.sample_phase(&ray, exp_scattering, *context.rng());
-        let phase_ea_sample = self.sample_phase(&ray, ea_scattering, *context.rng());
+        let phase_exp_sample = self.sample_phase(ray, exp_scattering, *context.rng());
+        let phase_ea_sample = self.sample_phase(ray, ea_scattering, *context.rng());
 
         let exp_light_contribution = {
             let radiance = self.shade_source_using_light_sampling(
                 context,
-                &ray,
-                &segment,
+                ray,
+                segment,
                 self.sigma_s,
                 &exp_sample,
                 &preselected,
             );
             radiance
-                * Self::calc_exp_weight(&ray, &segment, &exp_sample, &ea_sampler)
-                * Self::calc_light_weight(&ray, exp_scattering, &preselected, light, self)
+                * Self::calc_exp_weight(ray, segment, &exp_sample, &ea_sampler)
+                * Self::calc_light_weight(ray, exp_scattering, &preselected, light, self)
         };
 
         let ea_light_contribution = {
             let radiance = self.shade_source_using_light_sampling(
                 context,
-                &ray,
-                &segment,
+                ray,
+                segment,
                 self.sigma_s,
                 &ea_sample,
                 &preselected,
             );
             radiance
-                * Self::calc_ea_weight(&ray, &segment, &ea_sample, &exp_sampler)
-                * Self::calc_light_weight(&ray, exp_scattering, &preselected, light, self)
+                * Self::calc_ea_weight(ray, segment, &ea_sample, &exp_sampler)
+                * Self::calc_light_weight(ray, exp_scattering, &preselected, light, self)
         };
 
         let exp_phase_contribution = {
             let radiance = self.shade_source_using_phase_sampling(
                 context,
-                &ray,
-                &segment,
+                ray,
+                segment,
                 self.sigma_s,
                 &exp_sample,
                 &phase_exp_sample,
             );
             radiance
-                * Self::calc_exp_weight(&ray, &segment, &exp_sample, &ea_sampler)
+                * Self::calc_exp_weight(ray, segment, &exp_sample, &ea_sampler)
                 * Self::calc_phase_weight(&phase_exp_sample, light)
         };
 
         let ea_phase_contribution = {
             let radiance = self.shade_source_using_phase_sampling(
                 context,
-                &ray,
-                &segment,
+                ray,
+                segment,
                 self.sigma_s,
                 &ea_sample,
                 &phase_ea_sample,
             );
             radiance
-                * Self::calc_ea_weight(&ray, &segment, &ea_sample, &exp_sampler)
+                * Self::calc_ea_weight(ray, segment, &ea_sample, &exp_sampler)
                 * Self::calc_phase_weight(&phase_ea_sample, light)
         };
 

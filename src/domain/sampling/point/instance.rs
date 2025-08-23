@@ -41,7 +41,7 @@ impl PointSampling for InstancePointSampler {
     fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {
         (self.sampler.as_ref())
             .and_then(|sampler| sampler.sample_point(rng))
-            .map(|sample| sample.transform(&self.instance.transformation()))
+            .map(|sample| sample.transform(self.instance.transformation()))
     }
 
     fn pdf_point(&self, point: Point, checked_inside: bool) -> Val {

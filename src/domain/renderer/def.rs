@@ -17,7 +17,7 @@ pub trait Renderer: Send + Sync + 'static {
         &'a self,
         context: &mut RtContext<'a>,
         state: RtState,
-        ray: Ray,
+        ray: &Ray,
         range: DisRange,
     ) -> Contribution;
 

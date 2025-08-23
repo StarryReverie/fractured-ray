@@ -151,18 +151,18 @@ impl Scattering {
         &self,
         context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution {
         let cos = intersection.normal().dot(-ray.direction());
         if Val(context.rng().random()) < self.calc_transmittance(cos) {
             let state_next = state.with_visible(false);
 
             let scene = context.entity_scene();
-            let back = self.determine_back_face(scene, &ray, &intersection, *context.rng());
+            let back = self.determine_back_face(scene, ray, intersection, *context.rng());
 
             if let Some((ray_back, intersection_back)) = back {
-                self.shade_back_face(context, state_next, ray_back, intersection_back)
+                self.shade_back_face(context, state_next, &ray_back, &intersection_back)
             } else {
                 self.shade_impl(context, state_next, ray, intersection)
             }
@@ -176,8 +176,8 @@ impl Scattering {
         &self,
         context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution {
         let adapter = BackFaceTransmissionAdapter::new(self);
         let state_next = state.with_visible(false);
@@ -268,8 +268,8 @@ impl Material for Scattering {
         &self,
         context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution {
         if intersection.side() == SurfaceSide::Front {
             self.shade_front_face(context, state, ray, intersection)
@@ -432,12 +432,12 @@ impl<'a> Material for BackFaceTransmissionAdapter<'a> {
         &self,
         context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution {
-        let light = self.shade_light(context, &ray, &intersection);
+        let light = self.shade_light(context, ray, intersection);
         let state_next = state.with_skip_emissive(true);
-        let scattering = self.shade_scattering(context, state_next, &ray, &intersection);
+        let scattering = self.shade_scattering(context, state_next, ray, intersection);
         light + scattering
     }
 

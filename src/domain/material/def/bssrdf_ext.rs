@@ -18,11 +18,11 @@ pub trait BssrdfMaterialExt: BssrdfMaterial + Sized {
         &self,
         context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution {
         let scene = context.entity_scene();
-        let sample = self.sample_bssrdf_diffusion(scene, &intersection, *context.rng());
+        let sample = self.sample_bssrdf_diffusion(scene, intersection, *context.rng());
         if let Some(diffusion) = sample {
             let adapter = BsdfMaterialAdapter::new(self, &diffusion);
             adapter.shade(context, state, ray, intersection)
@@ -79,12 +79,12 @@ where
         &self,
         context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution {
-        let light = self.shade_light(context, &ray, &intersection);
+        let light = self.shade_light(context, ray, intersection);
         let state_next = state.with_skip_emissive(true);
-        let scattering = self.shade_scattering(context, state_next, &ray, &intersection);
+        let scattering = self.shade_scattering(context, state_next, ray, intersection);
         (light + scattering) * (self.diffusion.bssrdf_diffusion() / self.diffusion.pdf())
     }
 

@@ -51,8 +51,7 @@ pub trait MediumExt: Medium {
 
         let phase = self.phase(-ray.direction(), scattering, ray_next.direction());
 
-        let ray_next = light_sample.into_ray_next();
-        let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
+        let radiance = light.shade(context, RtState::new(), ray_next, &intersection_next);
 
         let pdf_recip = (pdf_point * pdf_distance * pdf_light).recip();
         sigma_s * tr * phase * radiance * pdf_recip
@@ -88,8 +87,7 @@ pub trait MediumExt: Medium {
         let ray_next = phase_sample.ray_next();
         let phase = self.phase(-ray.direction(), scattering, ray_next.direction());
 
-        let ray_next = phase_sample.ray_next().clone();
-        let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
+        let radiance = light.shade(context, RtState::new(), ray_next, &intersection_next);
 
         let pdf_recip = (pdf_distance * pdf_phase).recip();
         sigma_s * tr * phase * radiance * pdf_recip

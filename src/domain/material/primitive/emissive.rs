@@ -36,8 +36,8 @@ impl Material for Emissive {
         &self,
         _context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution {
         if state.skip_emissive() || intersection.side() == SurfaceSide::Back {
             Contribution::new()

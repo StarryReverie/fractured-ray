@@ -33,11 +33,11 @@ impl Material for Specular {
         &self,
         context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution {
         let state_next = state.with_skip_emissive(false);
-        self.shade_scattering(context, state_next, &ray, &intersection)
+        self.shade_scattering(context, state_next, ray, intersection)
     }
 
     fn receive(

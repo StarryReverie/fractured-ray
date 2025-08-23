@@ -34,21 +34,21 @@ impl Material for Diffuse {
         &self,
         context: &mut RtContext<'_>,
         state: RtState,
-        ray: Ray,
-        intersection: RayIntersection,
+        ray: &Ray,
+        intersection: &RayIntersection,
     ) -> Contribution {
         if state.visible() {
-            let light = self.shade_light(context, &ray, &intersection);
-            let caustic = self.estimate_flux(&ray, &intersection, context.photon_casutic());
+            let light = self.shade_light(context, ray, intersection);
+            let caustic = self.estimate_flux(ray, intersection, context.photon_casutic());
             let scattering = self.shade_scattering(
                 context,
                 state.with_visible(false).with_skip_emissive(true),
-                &ray,
-                &intersection,
+                ray,
+                intersection,
             );
             light + scattering + Contribution::from_caustic(caustic)
         } else {
-            let global = self.estimate_flux(&ray, &intersection, context.photon_global());
+            let global = self.estimate_flux(ray, intersection, context.photon_global());
             Contribution::from_global(global)
         }
     }
