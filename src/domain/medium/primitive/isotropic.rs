@@ -7,13 +7,11 @@ use crate::domain::math::numeric::Val;
 use crate::domain::medium::def::{Medium, MediumExt, MediumKind};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
-use crate::domain::ray::util::VisibilityTester;
 use crate::domain::renderer::{Contribution, RtContext, RtState};
 use crate::domain::sampling::distance::{
-    DistanceSample, DistanceSampling, EquiAngularDistanceSampler, ExponentialDistanceSampler,
+    DistanceSampling, EquiAngularDistanceSampler, ExponentialDistanceSampler,
 };
 use crate::domain::sampling::phase::{PhaseSample, PhaseSampling};
-use crate::domain::sampling::point::PointSample;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Isotropic {

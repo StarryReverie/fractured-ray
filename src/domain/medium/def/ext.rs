@@ -7,6 +7,7 @@ use crate::domain::renderer::{Contribution, RtContext, RtState};
 use crate::domain::sampling::distance::{
     DistanceSample, DistanceSampling, EquiAngularDistanceSampler, ExponentialDistanceSampler,
 };
+use crate::domain::sampling::phase::PhaseSample;
 use crate::domain::sampling::point::PointSample;
 
 use super::Medium;
@@ -22,38 +23,74 @@ pub trait MediumExt: Medium {
         preselected_light: &PointSample,
     ) -> Contribution {
         let pdf_distance = distance_sample.pdf();
-        let scattering = distance_sample.scattering().clone();
-
         let pdf_point = preselected_light.pdf();
-
-        let tr = self.transmittance(
-            &ray,
-            &RaySegment::new(segment.start(), scattering.distance() - segment.start()),
-        );
+        if pdf_distance == Val(0.0) || pdf_point == Val(0.0) {
+            return Contribution::new();
+        }
+        let scattering = distance_sample.scattering();
 
         let scene = context.entity_scene();
         let lights = scene.get_lights();
         let Some(light_sample) =
-            lights.sample_light_volume(&scattering, Some(preselected_light), *context.rng())
+            lights.sample_light_volume(scattering, Some(preselected_light), *context.rng())
         else {
             return Contribution::new();
         };
+        let pdf_light = light_sample.pdf();
 
-        let vtester = VisibilityTester::new(scene, light_sample.ray_next());
+        let ray_next = light_sample.ray_next();
+        let vtester = VisibilityTester::new(scene, ray_next);
         let Some(target) = vtester.test(light_sample.distance(), light_sample.shape_id()) else {
             return Contribution::new();
         };
         let (intersection_next, light) = target.into();
 
-        let pdf_light = light_sample.pdf();
-        let phase = self.phase(
-            -ray.direction(),
-            &scattering,
-            light_sample.ray_next().direction(),
-        );
+        let length = scattering.distance() - segment.start();
+        let tr = self.transmittance(ray, &RaySegment::new(segment.start(), length));
+
+        let phase = self.phase(-ray.direction(), scattering, ray_next.direction());
+
         let ray_next = light_sample.into_ray_next();
         let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
+
         let pdf_recip = (pdf_point * pdf_distance * pdf_light).recip();
+        sigma_s * tr * phase * radiance * pdf_recip
+    }
+
+    fn shade_source_using_phase_sampling(
+        &self,
+        context: &mut RtContext<'_>,
+        ray: &Ray,
+        segment: &RaySegment,
+        sigma_s: Spectrum,
+        distance_sample: &DistanceSample,
+        phase_sample: &PhaseSample,
+    ) -> Contribution {
+        let pdf_distance = distance_sample.pdf();
+        let pdf_phase = phase_sample.pdf();
+        if pdf_distance == Val(0.0) || pdf_phase == Val(0.0) {
+            return Contribution::new();
+        }
+
+        let scene = context.entity_scene();
+        let ray_next = phase_sample.ray_next();
+        let vtester = VisibilityTester::new(scene, ray_next);
+        let Some(target) = vtester.cast() else {
+            return Contribution::new();
+        };
+        let (intersection_next, light) = target.into();
+
+        let scattering = distance_sample.scattering();
+        let length = scattering.distance() - segment.start();
+        let tr = self.transmittance(ray, &RaySegment::new(segment.start(), length));
+
+        let ray_next = phase_sample.ray_next();
+        let phase = self.phase(-ray.direction(), scattering, ray_next.direction());
+
+        let ray_next = phase_sample.ray_next().clone();
+        let radiance = light.shade(context, RtState::new(), ray_next, intersection_next);
+
+        let pdf_recip = (pdf_distance * pdf_phase).recip();
         sigma_s * tr * phase * radiance * pdf_recip
     }
 
@@ -79,6 +116,10 @@ pub trait MediumExt: Medium {
         let pdf2_exp = exp_sampler.pdf_distance(ray, segment, distance).powi(2);
         let pdf2_ea = ea_sampler.pdf_distance(ray, segment, distance).powi(2);
         pdf2_ea / (pdf2_exp + pdf2_ea)
+    }
+
+    fn calc_light_dir_weight(ray: &Ray) -> Val {
+        todo!()
     }
 }
 
