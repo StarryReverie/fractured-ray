@@ -7,7 +7,7 @@ use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, 
 use fractured_ray::domain::math::algebra::UnitVector;
 use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
-use fractured_ray::domain::medium::primitive::Isotropic;
+use fractured_ray::domain::medium::primitive::HenyeyGreenstein;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::scene::entity::BvhEntitySceneBuilder;
 use fractured_ray::domain::scene::volume::BvhVolumeSceneBuilder;
@@ -166,9 +166,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
             Point::new(Val(600.0), Val(600.0), Val(800.0)),
         ),
-        Isotropic::new(
+        HenyeyGreenstein::new(
             (Albedo::WHITE * Val(1.0)).into(),
             Spectrum::broadcast(Val(200.0)),
+            Val(0.5),
         )?,
     );
 
@@ -179,7 +180,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         scene,
         volume_scene,
         Configuration {
-            iterations: 4,
+            iterations: 16,
             ..Configuration::default()
         },
     )?;

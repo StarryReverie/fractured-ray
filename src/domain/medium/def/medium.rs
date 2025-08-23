@@ -33,6 +33,7 @@ pub trait Medium: PhaseSampling + Send + Sync {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MediumKind {
+    HenyeyGreenstein,
     Isotropic,
 }
 

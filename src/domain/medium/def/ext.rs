@@ -131,25 +131,20 @@ pub trait MediumExt: Medium {
             return Val(0.0);
         };
         let ray_next = scattering.spawn(direction);
-        let pdf2_light = light_sampler
-            .pdf_light_volume(&ray_next, Some(preselected_light))
-            .powi(2);
+        let pdf2_light = preselected_light.pdf()
+            * light_sampler
+                .pdf_light_volume(&ray_next, Some(preselected_light))
+                .powi(2);
         let pdf2_phase = phase_sampler
             .pdf_phase(-ray.direction(), scattering, ray_next.direction())
             .powi(2);
         pdf2_light / (pdf2_light + pdf2_phase)
     }
 
-    fn calc_phase_weight(
-        phase_sample: &PhaseSample,
-        preselected_light: &PointSample,
-        light_sampler: &dyn LightSampling,
-    ) -> Val {
+    fn calc_phase_weight(phase_sample: &PhaseSample, light_sampler: &dyn LightSampling) -> Val {
         let ray_next = phase_sample.ray_next();
         let pdf2_phase = phase_sample.pdf().powi(2);
-        let pdf2_light = light_sampler
-            .pdf_light_volume(ray_next, Some(preselected_light))
-            .powi(2);
+        let pdf2_light = light_sampler.pdf_light_volume(ray_next, None).powi(2);
         pdf2_phase / (pdf2_light + pdf2_phase)
     }
 }

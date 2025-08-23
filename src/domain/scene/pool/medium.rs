@@ -3,10 +3,11 @@ use std::fmt::Debug;
 use std::mem::ManuallyDrop;
 
 use crate::domain::medium::def::{Medium, MediumContainer, MediumId, MediumKind};
-use crate::domain::medium::primitive::Isotropic;
+use crate::domain::medium::primitive::{HenyeyGreenstein, Isotropic};
 
 #[derive(Debug, Default)]
 pub struct MediumPool {
+    henyey_greenstein: Vec<HenyeyGreenstein>,
     isotropic: Vec<Isotropic>,
 }
 
@@ -38,7 +39,10 @@ impl MediumContainer for MediumPool {
         let kind = medium.kind();
         let type_id = TypeId::of::<M>();
 
-        if type_id == TypeId::of::<Isotropic>() {
+        if type_id == TypeId::of::<HenyeyGreenstein>() {
+            let index = Self::downcast_and_push(medium, &mut self.henyey_greenstein);
+            MediumId::new(kind, index)
+        } else if type_id == TypeId::of::<Isotropic>() {
             let index = Self::downcast_and_push(medium, &mut self.isotropic);
             MediumId::new(kind, index)
         } else {
@@ -49,6 +53,7 @@ impl MediumContainer for MediumPool {
     fn get_medium(&self, medium_id: MediumId) -> Option<&dyn Medium> {
         let index = medium_id.index() as usize;
         match medium_id.kind() {
+            MediumKind::HenyeyGreenstein => self.henyey_greenstein.get(index).map(Self::upcast),
             MediumKind::Isotropic => self.isotropic.get(index).map(Self::upcast),
         }
     }
