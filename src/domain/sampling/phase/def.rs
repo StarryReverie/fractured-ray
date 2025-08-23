@@ -41,8 +41,4 @@ impl PhaseSample {
             pdf,
         }
     }
-
-    pub fn into_ray_next(self) -> Ray {
-        self.ray_next
-    }
 }

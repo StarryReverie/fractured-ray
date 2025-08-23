@@ -31,11 +31,6 @@ impl DistanceSample {
     }
 
     #[inline]
-    pub fn into_scattering(self) -> RayScattering {
-        self.scattering
-    }
-
-    #[inline]
     pub fn distance(&self) -> Val {
         self.scattering.distance()
     }

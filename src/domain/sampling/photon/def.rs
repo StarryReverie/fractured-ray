@@ -28,10 +28,6 @@ impl PhotonSample {
         Self { photon }
     }
 
-    pub fn into_photon(self) -> PhotonRay {
-        self.photon
-    }
-
     pub fn scale_pdf(self, multiplier: Val) -> Self {
         Self {
             photon: PhotonRay::new(

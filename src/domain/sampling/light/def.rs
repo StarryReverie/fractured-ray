@@ -70,10 +70,6 @@ impl LightSample {
         }
     }
 
-    pub fn into_ray_next(self) -> Ray {
-        self.ray_next
-    }
-
     pub fn scale_pdf(self, multiplier: Val) -> Self {
         Self {
             pdf: self.pdf * multiplier,

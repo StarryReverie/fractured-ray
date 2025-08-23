@@ -63,8 +63,7 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         let cos = intersection.normal().dot(ray_next.direction());
         let coefficient = bsdf * cos / pdf_light;
 
-        let ray_next = sample.into_ray_next();
-        let radiance = light.shade(context, RtState::new(), &ray_next, &intersection_next);
+        let radiance = light.shade(context, RtState::new(), ray_next, &intersection_next);
         weight * coefficient * radiance
     }
 
@@ -94,8 +93,7 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         let weight = pdf_bsdf / (pdf_light + pdf_bsdf);
 
         let coefficient = sample.coefficient();
-        let ray_next = sample.into_ray_next();
-        let radiance = light.shade(context, RtState::new(), &ray_next, &intersection_next);
+        let radiance = light.shade(context, RtState::new(), ray_next, &intersection_next);
         weight * coefficient * radiance
     }
 
@@ -113,10 +111,9 @@ pub trait BsdfMaterialExt: BsdfMaterial {
             return Contribution::new();
         }
 
-        let coefficient = sample.coefficient();
-        let ray_next = sample.into_ray_next();
-        let radiance = renderer.trace(context, state_next, &ray_next, DisRange::positive());
-        coefficient * radiance
+        let ray_next = sample.ray_next();
+        let radiance = renderer.trace(context, state_next, ray_next, DisRange::positive());
+        sample.coefficient() * radiance
     }
 
     fn store_photon(
