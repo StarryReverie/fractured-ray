@@ -37,6 +37,7 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         ray: &Ray,
         intersection: &RayIntersection,
     ) -> Contribution {
+        let renderer = context.renderer();
         let scene = context.entity_scene();
         let lights = scene.get_lights();
 
@@ -53,7 +54,6 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         let Some(target) = vtester.test(sample.distance(), sample.shape_id()) else {
             return Contribution::new();
         };
-        let (intersection_next, light) = target.into();
 
         let pdf_light = sample.pdf();
         let pdf_bsdf = self.pdf_bsdf(ray, intersection, ray_next);
@@ -63,7 +63,8 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         let cos = intersection.normal().dot(ray_next.direction());
         let coefficient = bsdf * cos / pdf_light;
 
-        let radiance = light.shade(context, RtState::new(), ray_next, &intersection_next);
+        let state = RtState::new().with_skip_medium_inscattering(true);
+        let radiance = renderer.trace_to(context, state, ray_next, target.as_some());
         weight * coefficient * radiance
     }
 
@@ -73,6 +74,7 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         ray: &Ray,
         intersection: &RayIntersection,
     ) -> Contribution {
+        let renderer = context.renderer();
         let scene = context.entity_scene();
         let lights = scene.get_lights();
 
@@ -86,14 +88,14 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         let Some(target) = vtester.cast() else {
             return Contribution::new();
         };
-        let (intersection_next, light) = target.into();
 
         let pdf_bsdf = sample.pdf();
         let pdf_light = lights.pdf_light_surface(intersection, ray_next);
         let weight = pdf_bsdf / (pdf_light + pdf_bsdf);
 
         let coefficient = sample.coefficient();
-        let radiance = light.shade(context, RtState::new(), ray_next, &intersection_next);
+        let state = RtState::new().with_skip_medium_inscattering(true);
+        let radiance = renderer.trace_to(context, state, ray_next, target.as_some());
         weight * coefficient * radiance
     }
 

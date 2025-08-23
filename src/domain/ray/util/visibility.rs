@@ -1,5 +1,7 @@
 use std::ops::Bound;
 
+use getset::{CopyGetters, Getters};
+
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
@@ -56,22 +58,29 @@ impl<'s, 'r> VisibilityTester<'s, 'r> {
     }
 }
 
+#[derive(Getters, CopyGetters)]
 pub struct LightTarget<'a> {
-    intersection_next: RayIntersection,
+    #[getset(get = "pub")]
+    intersection: RayIntersection,
+    #[getset(get_copy = "pub")]
     light: &'a dyn Material,
 }
 
 impl<'a> LightTarget<'a> {
-    fn new(intersection_next: RayIntersection, light: &'a dyn Material) -> Self {
+    fn new(intersection: RayIntersection, light: &'a dyn Material) -> Self {
         Self {
-            intersection_next,
+            intersection,
             light,
         }
+    }
+
+    pub fn as_some(&self) -> Option<(&RayIntersection, &dyn Material)> {
+        Some((&self.intersection, self.light))
     }
 }
 
 impl<'a> From<LightTarget<'a>> for (RayIntersection, &'a dyn Material) {
     fn from(value: LightTarget<'a>) -> Self {
-        (value.intersection_next, value.light)
+        (value.intersection, value.light)
     }
 }

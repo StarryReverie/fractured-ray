@@ -168,8 +168,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         ),
         HenyeyGreenstein::new(
             (Albedo::WHITE * Val(1.0)).into(),
-            Spectrum::broadcast(Val(200.0)),
-            Val(0.5),
+            Spectrum::broadcast(Val(300.0)),
+            Val(0.3),
         )?,
     );
 

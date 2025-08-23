@@ -8,9 +8,10 @@ use snafu::prelude::*;
 use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Spectrum;
 use crate::domain::image::Image;
-use crate::domain::material::def::FluxEstimation;
+use crate::domain::material::def::{FluxEstimation, Material};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersection;
 use crate::domain::ray::photon::{PhotonMap, PhotonRay, SearchPolicy};
 use crate::domain::scene::entity::{BvhEntityScene, EntityScene};
 use crate::domain::scene::volume::{BvhVolumeScene, VolumeScene};
@@ -184,30 +185,42 @@ impl Renderer for CoreRenderer {
         ray: &Ray,
         range: DisRange,
     ) -> Contribution {
-        let entity_scene = &self.entity_scene;
-        let volume_scene = &self.volume_scene;
-
         let state = state.increment_depth();
         if state.depth() > self.config.max_depth {
             return Contribution::new();
         }
 
-        let res = entity_scene.find_intersection(ray, range);
-        let (surface_res, vis_range) = if let Some((intersection, id)) = res {
-            let vis_range = range.shrink_end(intersection.distance());
-            let entities = entity_scene.get_entities();
+        let res = self.entity_scene.find_intersection(ray, range);
+        if let Some((intersection, id)) = res {
+            let entities = self.entity_scene.get_entities();
             let material = entities.get_material(id.material_id()).unwrap();
-            let res = material.shade(context, state.clone(), ray, &intersection);
+            let target = Some((&intersection, material));
+            self.trace_to(context, state, ray, target)
+        } else {
+            self.trace_to(context, state, ray, None)
+        }
+    }
+
+    fn trace_to<'a, 'i, 'm>(
+        &'a self,
+        context: &mut RtContext<'a>,
+        state: RtState,
+        ray: &Ray,
+        target: Option<(&'i RayIntersection, &'m dyn Material)>,
+    ) -> Contribution {
+        let (surface_res, vis_range) = if let Some((intersection, material)) = target {
+            let res = material.shade(context, state.clone(), ray, intersection);
+            let vis_range = DisRange::positive().shrink_end(intersection.distance());
             (res, vis_range)
         } else {
             let res = Contribution::from_light(self.config.background_color);
-            (res, range)
+            (res, DisRange::positive())
         };
 
         if !state.visible() {
             return surface_res;
         }
-        let segments = volume_scene.find_segments(ray, vis_range);
+        let segments = self.volume_scene.find_segments(ray, vis_range);
         let (volume_res, transmittance) = if let Some((segment, medium_id)) = segments.first() {
             let boundaries = self.volume_scene.get_boundaries();
             let medium = boundaries.get_medium(*medium_id).unwrap();

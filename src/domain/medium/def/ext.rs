@@ -44,14 +44,15 @@ pub trait MediumExt: Medium {
         let Some(target) = vtester.test(light_sample.distance(), light_sample.shape_id()) else {
             return Contribution::new();
         };
-        let (intersection_next, light) = target.into();
 
         let length = scattering.distance() - segment.start();
         let tr = self.transmittance(ray, &RaySegment::new(segment.start(), length));
 
         let phase = self.phase(-ray.direction(), scattering, ray_next.direction());
 
-        let radiance = light.shade(context, RtState::new(), ray_next, &intersection_next);
+        let renderer = context.renderer();
+        let state = RtState::new().with_skip_medium_inscattering(true);
+        let radiance = renderer.trace_to(context, state, ray_next, target.as_some());
 
         let pdf_recip = (pdf_point * pdf_distance * pdf_light).recip();
         sigma_s * tr * phase * radiance * pdf_recip
@@ -78,7 +79,6 @@ pub trait MediumExt: Medium {
         let Some(target) = vtester.cast() else {
             return Contribution::new();
         };
-        let (intersection_next, light) = target.into();
 
         let scattering = distance_sample.scattering();
         let length = scattering.distance() - segment.start();
@@ -87,7 +87,9 @@ pub trait MediumExt: Medium {
         let ray_next = phase_sample.ray_next();
         let phase = self.phase(-ray.direction(), scattering, ray_next.direction());
 
-        let radiance = light.shade(context, RtState::new(), ray_next, &intersection_next);
+        let renderer = context.renderer();
+        let state = RtState::new().with_skip_medium_inscattering(true);
+        let radiance = renderer.trace_to(context, state, ray_next, target.as_some());
 
         let pdf_recip = (pdf_distance * pdf_phase).recip();
         sigma_s * tr * phase * radiance * pdf_recip
