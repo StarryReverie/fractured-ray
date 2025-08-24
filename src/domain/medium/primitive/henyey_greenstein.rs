@@ -69,12 +69,7 @@ impl Medium for HenyeyGreenstein {
         )
     }
 
-    fn phase(
-        &self,
-        dir_out: UnitVector,
-        _scattering: &RayScattering,
-        dir_in: UnitVector,
-    ) -> Spectrum {
+    fn phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Spectrum {
         Spectrum::broadcast(self.calc_hg(-dir_out.dot(dir_in)))
     }
 
@@ -193,13 +188,8 @@ impl PhaseSampling for HenyeyGreenstein {
         PhaseSample::new(ray_next, Spectrum::broadcast(hg), hg)
     }
 
-    fn pdf_phase(
-        &self,
-        direction_out: UnitVector,
-        _scattering: &RayScattering,
-        direction_in: UnitVector,
-    ) -> Val {
-        self.calc_hg(-direction_out.dot(direction_in))
+    fn pdf_phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Val {
+        self.calc_hg(-dir_out.dot(dir_in))
     }
 }
 

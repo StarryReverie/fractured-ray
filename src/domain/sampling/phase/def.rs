@@ -15,12 +15,7 @@ pub trait PhaseSampling: Send + Sync {
         rng: &mut dyn RngCore,
     ) -> PhaseSample;
 
-    fn pdf_phase(
-        &self,
-        direction_out: UnitVector,
-        scattering: &RayScattering,
-        direction_in: UnitVector,
-    ) -> Val;
+    fn pdf_phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Val;
 }
 
 #[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]

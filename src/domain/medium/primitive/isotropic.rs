@@ -48,12 +48,7 @@ impl Medium for Isotropic {
         )
     }
 
-    fn phase(
-        &self,
-        _dir_out: UnitVector,
-        _scattering: &RayScattering,
-        _dir_in: UnitVector,
-    ) -> Spectrum {
+    fn phase(&self, _dir_out: UnitVector, _dir_in: UnitVector) -> Spectrum {
         const PHASE: Spectrum = Spectrum::broadcast(Val(0.25 * Val::FRAC_1_PI.0));
         PHASE
     }
@@ -111,17 +106,12 @@ impl PhaseSampling for Isotropic {
         rng: &mut dyn RngCore,
     ) -> PhaseSample {
         let ray_next = scattering.spawn(UnitVector::random(rng));
-        let phase = self.phase(-ray.direction(), scattering, ray_next.direction());
-        let pdf = self.pdf_phase(-ray.direction(), scattering, ray_next.direction());
+        let phase = self.phase(-ray.direction(), ray_next.direction());
+        let pdf = self.pdf_phase(-ray.direction(), ray_next.direction());
         PhaseSample::new(ray_next, phase, pdf)
     }
 
-    fn pdf_phase(
-        &self,
-        _direction_out: UnitVector,
-        _scattering: &RayScattering,
-        _direction_in: UnitVector,
-    ) -> Val {
+    fn pdf_phase(&self, _dir_out: UnitVector, _dir_in: UnitVector) -> Val {
         Val(0.25) * Val::FRAC_1_PI
     }
 }

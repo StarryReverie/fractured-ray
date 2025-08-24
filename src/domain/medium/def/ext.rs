@@ -48,7 +48,7 @@ pub trait MediumExt: Medium {
         let length = scattering.distance() - segment.start();
         let tr = self.transmittance(ray, &RaySegment::new(segment.start(), length));
 
-        let phase = self.phase(-ray.direction(), scattering, ray_next.direction());
+        let phase = self.phase(-ray.direction(), ray_next.direction());
 
         let renderer = context.renderer();
         let state = RtState::new().with_skip_medium_inscattering(true);
@@ -85,7 +85,7 @@ pub trait MediumExt: Medium {
         let tr = self.transmittance(ray, &RaySegment::new(segment.start(), length));
 
         let ray_next = phase_sample.ray_next();
-        let phase = self.phase(-ray.direction(), scattering, ray_next.direction());
+        let phase = self.phase(-ray.direction(), ray_next.direction());
 
         let renderer = context.renderer();
         let state = RtState::new().with_skip_medium_inscattering(true);
@@ -136,7 +136,7 @@ pub trait MediumExt: Medium {
                 .pdf_light_volume(&ray_next, Some(preselected_light))
                 .powi(2);
         let pdf2_phase = phase_sampler
-            .pdf_phase(-ray.direction(), scattering, ray_next.direction())
+            .pdf_phase(-ray.direction(), ray_next.direction())
             .powi(2);
         pdf2_light / (pdf2_light + pdf2_phase)
     }

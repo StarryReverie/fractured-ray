@@ -6,7 +6,7 @@ use getset::CopyGetters;
 use crate::domain::color::Spectrum;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::{RayScattering, RaySegment};
+use crate::domain::ray::event::RaySegment;
 use crate::domain::renderer::{Contribution, RtContext, RtState};
 use crate::domain::sampling::phase::PhaseSampling;
 
@@ -15,12 +15,7 @@ pub trait Medium: PhaseSampling + Send + Sync {
 
     fn transmittance(&self, ray: &Ray, segment: &RaySegment) -> Spectrum;
 
-    fn phase(
-        &self,
-        dir_out: UnitVector,
-        scattering: &RayScattering,
-        dir_in: UnitVector,
-    ) -> Spectrum;
+    fn phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Spectrum;
 
     fn shade(
         &self,

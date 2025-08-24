@@ -31,12 +31,7 @@ impl Medium for Vacuum {
         Spectrum::broadcast(Val(1.0))
     }
 
-    fn phase(
-        &self,
-        dir_out: UnitVector,
-        _scattering: &RayScattering,
-        dir_in: UnitVector,
-    ) -> Spectrum {
+    fn phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Spectrum {
         Spectrum::broadcast(Self::calc_phase(dir_out.dot(dir_in)))
     }
 
@@ -62,12 +57,7 @@ impl PhaseSampling for Vacuum {
         PhaseSample::new(ray_next, Spectrum::broadcast(Val(1.0)), Val(1.0))
     }
 
-    fn pdf_phase(
-        &self,
-        dir_out: UnitVector,
-        _scattering: &RayScattering,
-        dir_in: UnitVector,
-    ) -> Val {
+    fn pdf_phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Val {
         Self::calc_phase(dir_out.dot(dir_in))
     }
 }
