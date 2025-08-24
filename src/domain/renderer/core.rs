@@ -10,8 +10,10 @@ use crate::domain::color::Spectrum;
 use crate::domain::image::Image;
 use crate::domain::material::def::{FluxEstimation, Material};
 use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::medium::def::Medium;
+use crate::domain::medium::util::AggregateMedium;
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RaySegment};
 use crate::domain::ray::photon::{PhotonMap, PhotonRay, SearchPolicy};
 use crate::domain::scene::entity::{BvhEntityScene, EntityScene};
 use crate::domain::scene::volume::{BvhVolumeScene, VolumeScene};
@@ -221,21 +223,11 @@ impl Renderer for CoreRenderer {
             return surface_res;
         }
         let segments = self.volume_scene.find_segments(ray, vis_range);
-        let (volume_res, transmittance) = if let Some((segment, medium_id)) = segments.first() {
-            let boundaries = self.volume_scene.get_boundaries();
-            let medium = boundaries.get_medium(*medium_id).unwrap();
+        let aggregator = AggregateMedium::new(&self.volume_scene, &segments);
 
-            let transmittance = medium.transmittance(ray, segment);
-            let res = if !state.skip_medium_inscattering() {
-                medium.shade(context, state, ray, segment)
-            } else {
-                Contribution::new()
-            };
-            (res, transmittance)
-        } else {
-            (Contribution::new(), Spectrum::broadcast(Val(1.0)))
-        };
-
+        let segment = RaySegment::from(vis_range);
+        let volume_res = aggregator.shade(context, state, ray, &segment);
+        let transmittance = aggregator.transmittance(ray, &segment);
         transmittance * surface_res + volume_res
     }
 

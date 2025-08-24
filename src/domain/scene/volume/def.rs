@@ -5,6 +5,8 @@ use crate::domain::ray::event::RaySegment;
 use crate::domain::shape::def::{ShapeContainer, ShapeId, ShapeKind};
 
 pub trait VolumeScene: Send + Sync {
+    fn get_boundaries(&self) -> &dyn BoundaryContainer;
+
     fn find_segments(&self, ray: &Ray, range: DisRange) -> Vec<(RaySegment, MediumId)>;
 }
 

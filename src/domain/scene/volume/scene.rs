@@ -154,13 +154,13 @@ impl BvhVolumeScene {
             Some(id.medium_id())
         }
     }
-
-    pub fn get_boundaries(&self) -> &dyn BoundaryContainer {
-        &*self.boundaries
-    }
 }
 
 impl VolumeScene for BvhVolumeScene {
+    fn get_boundaries(&self) -> &dyn BoundaryContainer {
+        &*self.boundaries
+    }
+
     fn find_segments(&self, ray: &Ray, range: DisRange) -> Vec<(RaySegment, MediumId)> {
         let mut isects = self.bvh.search_all(ray, range, &*self.boundaries);
         isects.sort_by_key(|i| i.0.distance());
