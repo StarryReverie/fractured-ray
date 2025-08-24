@@ -1,5 +1,5 @@
-mod ext;
+mod homogeneous_ext;
 mod medium;
 
-pub use ext::MediumExt;
-pub use medium::{Medium, MediumContainer, MediumId, MediumKind};
+pub use homogeneous_ext::HomogeneousMediumExt;
+pub use medium::{HomogeneousMedium, Medium, MediumContainer, MediumId, MediumKind};

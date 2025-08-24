@@ -10,12 +10,10 @@ use crate::domain::ray::event::RaySegment;
 use crate::domain::renderer::{Contribution, RtContext, RtState};
 use crate::domain::sampling::phase::PhaseSampling;
 
-pub trait Medium: PhaseSampling + Send + Sync {
+pub trait Medium: Send + Sync {
     fn kind(&self) -> MediumKind;
 
     fn transmittance(&self, ray: &Ray, segment: &RaySegment) -> Spectrum;
-
-    fn phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Spectrum;
 
     fn shade(
         &self,
@@ -24,6 +22,12 @@ pub trait Medium: PhaseSampling + Send + Sync {
         ray: &Ray,
         segment: &RaySegment,
     ) -> Contribution;
+}
+
+pub trait HomogeneousMedium: Medium + PhaseSampling {
+    fn sigma_s(&self) -> Spectrum;
+
+    fn phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Spectrum;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

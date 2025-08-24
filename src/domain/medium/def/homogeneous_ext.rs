@@ -1,4 +1,3 @@
-use crate::domain::color::Spectrum;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
@@ -11,15 +10,14 @@ use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::phase::{PhaseSample, PhaseSampling};
 use crate::domain::sampling::point::PointSample;
 
-use super::Medium;
+use super::HomogeneousMedium;
 
-pub trait MediumExt: Medium {
-    fn shade_source_using_light_sampling(
+pub trait HomogeneousMediumExt: HomogeneousMedium {
+    fn shade_light_using_light_sampling(
         &self,
         context: &mut RtContext<'_>,
         ray: &Ray,
         segment: &RaySegment,
-        sigma_s: Spectrum,
         distance_sample: &DistanceSample,
         preselected_light: &PointSample,
     ) -> Contribution {
@@ -55,15 +53,14 @@ pub trait MediumExt: Medium {
         let radiance = renderer.trace_to(context, state, ray_next, target.as_some());
 
         let pdf_recip = (pdf_point * pdf_distance * pdf_light).recip();
-        sigma_s * tr * phase * radiance * pdf_recip
+        self.sigma_s() * tr * phase * radiance * pdf_recip
     }
 
-    fn shade_source_using_phase_sampling(
+    fn shade_light_using_phase_sampling(
         &self,
         context: &mut RtContext<'_>,
         ray: &Ray,
         segment: &RaySegment,
-        sigma_s: Spectrum,
         distance_sample: &DistanceSample,
         phase_sample: &PhaseSample,
     ) -> Contribution {
@@ -92,7 +89,7 @@ pub trait MediumExt: Medium {
         let radiance = renderer.trace_to(context, state, ray_next, target.as_some());
 
         let pdf_recip = (pdf_distance * pdf_phase).recip();
-        sigma_s * tr * phase * radiance * pdf_recip
+        self.sigma_s() * tr * phase * radiance * pdf_recip
     }
 
     fn calc_exp_weight(
@@ -149,4 +146,4 @@ pub trait MediumExt: Medium {
     }
 }
 
-impl<M> MediumExt for M where M: Medium {}
+impl<M> HomogeneousMediumExt for M where M: HomogeneousMedium {}

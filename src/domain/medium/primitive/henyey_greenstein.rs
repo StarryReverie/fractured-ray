@@ -5,7 +5,7 @@ use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::Frame;
 use crate::domain::math::numeric::Val;
-use crate::domain::medium::def::{Medium, MediumExt, MediumKind};
+use crate::domain::medium::def::{HomogeneousMedium, HomogeneousMediumExt, Medium, MediumKind};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
 use crate::domain::renderer::{Contribution, RtContext, RtState};
@@ -69,10 +69,6 @@ impl Medium for HenyeyGreenstein {
         )
     }
 
-    fn phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Spectrum {
-        Spectrum::broadcast(self.calc_hg(-dir_out.dot(dir_in)))
-    }
-
     fn shade(
         &self,
         context: &mut RtContext<'_>,
@@ -99,11 +95,10 @@ impl Medium for HenyeyGreenstein {
         let phase_ea_sample = self.sample_phase(ray, ea_scattering, *context.rng());
 
         let exp_light_contribution = {
-            let radiance = self.shade_source_using_light_sampling(
+            let radiance = self.shade_light_using_light_sampling(
                 context,
                 ray,
                 segment,
-                self.sigma_s,
                 &exp_sample,
                 &preselected,
             );
@@ -113,11 +108,10 @@ impl Medium for HenyeyGreenstein {
         };
 
         let ea_light_contribution = {
-            let radiance = self.shade_source_using_light_sampling(
+            let radiance = self.shade_light_using_light_sampling(
                 context,
                 ray,
                 segment,
-                self.sigma_s,
                 &ea_sample,
                 &preselected,
             );
@@ -127,11 +121,10 @@ impl Medium for HenyeyGreenstein {
         };
 
         let exp_phase_contribution = {
-            let radiance = self.shade_source_using_phase_sampling(
+            let radiance = self.shade_light_using_phase_sampling(
                 context,
                 ray,
                 segment,
-                self.sigma_s,
                 &exp_sample,
                 &phase_exp_sample,
             );
@@ -141,11 +134,10 @@ impl Medium for HenyeyGreenstein {
         };
 
         let ea_phase_contribution = {
-            let radiance = self.shade_source_using_phase_sampling(
+            let radiance = self.shade_light_using_phase_sampling(
                 context,
                 ray,
                 segment,
-                self.sigma_s,
                 &ea_sample,
                 &phase_ea_sample,
             );
@@ -157,6 +149,16 @@ impl Medium for HenyeyGreenstein {
         let light_contribution = exp_light_contribution + ea_light_contribution;
         let phase_contribution = exp_phase_contribution + ea_phase_contribution;
         light_contribution + phase_contribution
+    }
+}
+
+impl HomogeneousMedium for HenyeyGreenstein {
+    fn sigma_s(&self) -> Spectrum {
+        self.sigma_s
+    }
+
+    fn phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Spectrum {
+        Spectrum::broadcast(self.calc_hg(-dir_out.dot(dir_in)))
     }
 }
 

@@ -1,13 +1,9 @@
-use rand::prelude::*;
-
 use crate::domain::color::Spectrum;
-use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::numeric::Val;
 use crate::domain::medium::def::{Medium, MediumKind};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::{RayScattering, RaySegment};
+use crate::domain::ray::event::RaySegment;
 use crate::domain::renderer::{Contribution, RtContext, RtState};
-use crate::domain::sampling::phase::{PhaseSample, PhaseSampling};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vacuum {}
@@ -31,10 +27,6 @@ impl Medium for Vacuum {
         Spectrum::broadcast(Val(1.0))
     }
 
-    fn phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Spectrum {
-        Spectrum::broadcast(Self::calc_phase(dir_out.dot(dir_in)))
-    }
-
     fn shade(
         &self,
         _context: &mut RtContext<'_>,
@@ -43,21 +35,5 @@ impl Medium for Vacuum {
         _segment: &RaySegment,
     ) -> Contribution {
         Contribution::new()
-    }
-}
-
-impl PhaseSampling for Vacuum {
-    fn sample_phase(
-        &self,
-        ray: &Ray,
-        scattering: &RayScattering,
-        _rng: &mut dyn RngCore,
-    ) -> PhaseSample {
-        let ray_next = scattering.spawn(ray.direction());
-        PhaseSample::new(ray_next, Spectrum::broadcast(Val(1.0)), Val(1.0))
-    }
-
-    fn pdf_phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Val {
-        Self::calc_phase(dir_out.dot(dir_in))
     }
 }

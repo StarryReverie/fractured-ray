@@ -4,7 +4,7 @@ use snafu::prelude::*;
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::numeric::Val;
-use crate::domain::medium::def::{Medium, MediumExt, MediumKind};
+use crate::domain::medium::def::{HomogeneousMedium, HomogeneousMediumExt, Medium, MediumKind};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
 use crate::domain::renderer::{Contribution, RtContext, RtState};
@@ -48,11 +48,6 @@ impl Medium for Isotropic {
         )
     }
 
-    fn phase(&self, _dir_out: UnitVector, _dir_in: UnitVector) -> Spectrum {
-        const PHASE: Spectrum = Spectrum::broadcast(Val(0.25 * Val::FRAC_1_PI.0));
-        PHASE
-    }
-
     fn shade(
         &self,
         context: &mut RtContext<'_>,
@@ -72,22 +67,20 @@ impl Medium for Isotropic {
         let exp_sample = exp_sampler.sample_distance(ray, segment, *context.rng());
         let ea_sample = ea_sampler.sample_distance(ray, segment, *context.rng());
 
-        let exp_radiance = self.shade_source_using_light_sampling(
+        let exp_radiance = self.shade_light_using_light_sampling(
             context,
             ray,
             segment,
-            self.sigma_s,
             &exp_sample,
             &preselected_light,
         );
         let exp_weight = Self::calc_exp_weight(ray, segment, &exp_sample, &ea_sampler);
         let exp_contribution = exp_radiance * exp_weight;
 
-        let ea_radiance = self.shade_source_using_light_sampling(
+        let ea_radiance = self.shade_light_using_light_sampling(
             context,
             ray,
             segment,
-            self.sigma_s,
             &ea_sample,
             &preselected_light,
         );
@@ -95,6 +88,17 @@ impl Medium for Isotropic {
         let ea_contribution = ea_radiance * ea_weight;
 
         exp_contribution + ea_contribution
+    }
+}
+
+impl HomogeneousMedium for Isotropic {
+    fn sigma_s(&self) -> Spectrum {
+        self.sigma_s
+    }
+
+    fn phase(&self, _dir_out: UnitVector, _dir_in: UnitVector) -> Spectrum {
+        const PHASE: Spectrum = Spectrum::broadcast(Val(0.25 * Val::FRAC_1_PI.0));
+        PHASE
     }
 }
 
