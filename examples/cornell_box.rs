@@ -7,7 +7,7 @@ use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, 
 use fractured_ray::domain::math::algebra::UnitVector;
 use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
-use fractured_ray::domain::medium::primitive::HenyeyGreenstein;
+use fractured_ray::domain::medium::primitive::{HenyeyGreenstein, Vacuum};
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::scene::entity::BvhEntitySceneBuilder;
 use fractured_ray::domain::scene::volume::BvhVolumeSceneBuilder;
@@ -171,6 +171,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             Spectrum::broadcast(Val(300.0)),
             Val(0.3),
         )?,
+    );
+
+    vol_builder.add(
+        Sphere::new(Point::new(Val(185.0), Val(240.0), Val(169.5)), Val(75.0))?,
+        Vacuum::new(),
     );
 
     let volume_scene = vol_builder.build();

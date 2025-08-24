@@ -3,12 +3,13 @@ use std::fmt::Debug;
 use std::mem::ManuallyDrop;
 
 use crate::domain::medium::def::{Medium, MediumContainer, MediumId, MediumKind};
-use crate::domain::medium::primitive::{HenyeyGreenstein, Isotropic};
+use crate::domain::medium::primitive::{HenyeyGreenstein, Isotropic, Vacuum};
 
 #[derive(Debug, Default)]
 pub struct MediumPool {
     henyey_greenstein: Vec<HenyeyGreenstein>,
     isotropic: Vec<Isotropic>,
+    vacuum: Vec<Vacuum>,
 }
 
 impl MediumPool {
@@ -45,6 +46,9 @@ impl MediumContainer for MediumPool {
         } else if type_id == TypeId::of::<Isotropic>() {
             let index = Self::downcast_and_push(medium, &mut self.isotropic);
             MediumId::new(kind, index)
+        } else if type_id == TypeId::of::<Vacuum>() {
+            let index = Self::downcast_and_push(medium, &mut self.vacuum);
+            MediumId::new(kind, index)
         } else {
             unreachable!("all Medium's subtypes should be exhausted")
         }
@@ -55,6 +59,7 @@ impl MediumContainer for MediumPool {
         match medium_id.kind() {
             MediumKind::HenyeyGreenstein => self.henyey_greenstein.get(index).map(Self::upcast),
             MediumKind::Isotropic => self.isotropic.get(index).map(Self::upcast),
+            MediumKind::Vacuum => self.vacuum.get(index).map(Self::upcast),
         }
     }
 }
