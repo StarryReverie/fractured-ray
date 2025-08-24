@@ -77,6 +77,7 @@ impl CoreRenderer {
 
         let contributions = (0..self.config.spp_per_iteration)
             .map(|_| self.start_tracing(&mut context, pos))
+            .map(|c| c.clamp())
             .collect();
         pixel.radiance(
             Contribution::average(contributions),
@@ -203,12 +204,12 @@ impl Renderer for CoreRenderer {
         }
     }
 
-    fn trace_to<'a, 'i, 'm>(
+    fn trace_to<'a>(
         &'a self,
         context: &mut RtContext<'a>,
         state: RtState,
         ray: &Ray,
-        target: Option<(&'i RayIntersection, &'m dyn Material)>,
+        target: Option<(&RayIntersection, &dyn Material)>,
     ) -> Contribution {
         let (surface_res, vis_range) = if let Some((intersection, material)) = target {
             let res = material.shade(context, state.clone(), ray, intersection);
@@ -265,7 +266,7 @@ impl Default for Configuration {
             iterations: 4,
             spp_per_iteration: 4,
             max_depth: 12,
-            max_invisible_depth: 1,
+            max_invisible_depth: 4,
             photons_global: 200000,
             photons_caustic: 1000000,
             initial_num_nearest: 100,

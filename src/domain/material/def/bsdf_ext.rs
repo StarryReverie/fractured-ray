@@ -232,6 +232,16 @@ impl FluxEstimation {
     pub fn is_empty(&self) -> bool {
         self.num == Val(0.0)
     }
+
+    pub fn clamp_radius(&mut self, max_radius: Val) {
+        if self.radius <= max_radius {
+            return;
+        }
+        let proportion = (max_radius / self.radius).powi(2);
+        self.flux *= proportion;
+        self.num *= proportion;
+        self.radius = max_radius;
+    }
 }
 
 impl Add for FluxEstimation {

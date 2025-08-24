@@ -128,6 +128,14 @@ impl Contribution {
             s => s,
         }
     }
+
+    pub fn clamp(mut self) -> Self {
+        if let Self::All(s) = &mut self {
+            let max_radius = s.global.radius();
+            s.caustic.clamp_radius(max_radius);
+        }
+        self
+    }
 }
 
 impl Add for Contribution {
