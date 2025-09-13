@@ -1,6 +1,6 @@
-use std::any::Any;
 use std::fmt::Debug;
 
+use enum_dispatch::enum_dispatch;
 use getset::CopyGetters;
 
 use crate::domain::color::Spectrum;
@@ -10,6 +10,9 @@ use crate::domain::ray::event::RaySegment;
 use crate::domain::renderer::{Contribution, RtContext, RtState};
 use crate::domain::sampling::phase::PhaseSampling;
 
+use super::{DynMedium, RefDynMedium};
+
+#[enum_dispatch(Medium)]
 pub trait Medium: Send + Sync {
     fn kind(&self) -> MediumKind;
 
@@ -51,10 +54,7 @@ impl MediumId {
 }
 
 pub trait MediumContainer: Debug + Send + Sync + 'static {
-    fn add_medium<M>(&mut self, medium: M) -> MediumId
-    where
-        Self: Sized,
-        M: Medium + Any;
+    fn add_medium(&mut self, medium: DynMedium) -> MediumId;
 
-    fn get_medium(&self, id: MediumId) -> Option<&dyn Medium>;
+    fn get_medium(&self, id: MediumId) -> Option<RefDynMedium>;
 }

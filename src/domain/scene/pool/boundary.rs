@@ -1,6 +1,4 @@
-use std::any::Any;
-
-use crate::domain::medium::def::{Medium, MediumContainer, MediumId};
+use crate::domain::medium::def::{DynMedium, MediumContainer, MediumId, RefDynMedium};
 use crate::domain::scene::volume::{BoundaryContainer, BoundaryId};
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
 
@@ -33,15 +31,11 @@ impl ShapeContainer for BoundaryPool {
 }
 
 impl MediumContainer for BoundaryPool {
-    fn add_medium<M>(&mut self, medium: M) -> MediumId
-    where
-        Self: Sized,
-        M: Medium + Any,
-    {
+    fn add_medium(&mut self, medium: DynMedium) -> MediumId {
         self.media.add_medium(medium)
     }
 
-    fn get_medium(&self, id: MediumId) -> Option<&dyn Medium> {
+    fn get_medium(&self, id: MediumId) -> Option<RefDynMedium> {
         self.media.get_medium(id)
     }
 }

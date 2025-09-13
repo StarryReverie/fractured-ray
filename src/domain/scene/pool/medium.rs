@@ -1,8 +1,8 @@
-use std::any::{Any, TypeId};
 use std::fmt::Debug;
-use std::mem::ManuallyDrop;
 
-use crate::domain::medium::def::{Medium, MediumContainer, MediumId, MediumKind};
+use crate::domain::medium::def::{
+    DynMedium, Medium, MediumContainer, MediumId, MediumKind, RefDynMedium,
+};
 use crate::domain::medium::primitive::{HenyeyGreenstein, Isotropic, Vacuum};
 
 #[derive(Debug, Default)]
@@ -13,53 +13,31 @@ pub struct MediumPool {
 }
 
 impl MediumPool {
-    fn downcast_and_push<MI, M>(medium: MI, collection: &mut Vec<M>) -> u32
+    fn push<M>(medium: M, collection: &mut Vec<M>) -> MediumId
     where
-        MI: Medium + Any,
-        M: Medium + Any,
+        M: Medium,
     {
-        assert_eq!(TypeId::of::<M>(), medium.type_id());
-        // SAFETY: Already checked that M == impl Medium + Any.
-        let medium = unsafe { std::mem::transmute_copy(&ManuallyDrop::new(medium)) };
-
+        let kind = medium.kind();
         collection.push(medium);
-        collection.len() as u32 - 1
-    }
-
-    fn upcast<M: Medium>(medium: &M) -> &dyn Medium {
-        medium
+        MediumId::new(kind, collection.len() as u32 - 1)
     }
 }
 
 impl MediumContainer for MediumPool {
-    fn add_medium<M>(&mut self, medium: M) -> MediumId
-    where
-        Self: Sized,
-        M: Medium + Any,
-    {
-        let kind = medium.kind();
-        let type_id = TypeId::of::<M>();
-
-        if type_id == TypeId::of::<HenyeyGreenstein>() {
-            let index = Self::downcast_and_push(medium, &mut self.henyey_greenstein);
-            MediumId::new(kind, index)
-        } else if type_id == TypeId::of::<Isotropic>() {
-            let index = Self::downcast_and_push(medium, &mut self.isotropic);
-            MediumId::new(kind, index)
-        } else if type_id == TypeId::of::<Vacuum>() {
-            let index = Self::downcast_and_push(medium, &mut self.vacuum);
-            MediumId::new(kind, index)
-        } else {
-            unreachable!("all Medium's subtypes should be exhausted")
+    fn add_medium(&mut self, medium: DynMedium) -> MediumId {
+        match medium {
+            DynMedium::HenyeyGreenstein(s) => Self::push(s, &mut self.henyey_greenstein),
+            DynMedium::Isotropic(s) => Self::push(s, &mut self.isotropic),
+            DynMedium::Vacuum(s) => Self::push(s, &mut self.vacuum),
         }
     }
 
-    fn get_medium(&self, medium_id: MediumId) -> Option<&dyn Medium> {
+    fn get_medium(&self, medium_id: MediumId) -> Option<RefDynMedium> {
         let index = medium_id.index() as usize;
         match medium_id.kind() {
-            MediumKind::HenyeyGreenstein => self.henyey_greenstein.get(index).map(Self::upcast),
-            MediumKind::Isotropic => self.isotropic.get(index).map(Self::upcast),
-            MediumKind::Vacuum => self.vacuum.get(index).map(Self::upcast),
+            MediumKind::HenyeyGreenstein => self.henyey_greenstein.get(index).map(Into::into),
+            MediumKind::Isotropic => self.isotropic.get(index).map(Into::into),
+            MediumKind::Vacuum => self.vacuum.get(index).map(Into::into),
         }
     }
 }

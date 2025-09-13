@@ -14,7 +14,7 @@ use crate::domain::sampling::distance::{
 };
 use crate::domain::sampling::phase::{PhaseSample, PhaseSampling};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HenyeyGreenstein {
     sigma_s: Spectrum,
     sigma_t: Spectrum,

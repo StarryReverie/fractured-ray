@@ -5,7 +5,7 @@ use crate::domain::ray::Ray;
 use crate::domain::ray::event::RaySegment;
 use crate::domain::renderer::{Contribution, RtContext, RtState};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Vacuum {}
 
 impl Vacuum {

@@ -6,6 +6,7 @@ authors = ["Justin Chen oosquare@outlook.com"]
 description = "Minimal Raytracing Implementation"
 
 [dependencies]
+enum_dispatch = "0.3.13"
 getset = "0.1.6"
 indicatif = "0.18.0"
 mockall = "0.13.1"

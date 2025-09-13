@@ -5,7 +5,7 @@ use rand::prelude::*;
 
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::medium::def::{Medium, MediumContainer, MediumId};
+use crate::domain::medium::def::{DynMedium, MediumContainer, MediumId};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RaySegment, SurfaceSide};
 use crate::domain::scene::bvh::Bvh;
@@ -29,10 +29,10 @@ impl BvhVolumeSceneBuilder {
     pub fn add<S, M>(&mut self, shape: S, medium: M) -> &mut Self
     where
         S: Shape,
-        M: Medium + 'static,
+        M: Into<DynMedium>,
     {
         let shape_id = self.boundaries.add_shape(shape);
-        let medium_id = self.boundaries.add_medium(medium);
+        let medium_id = self.boundaries.add_medium(medium.into());
         let boundary_id = BoundaryId::new(shape_id, medium_id);
         self.boundaries.register_id(boundary_id);
         self
@@ -41,10 +41,10 @@ impl BvhVolumeSceneBuilder {
     pub fn add_constructor<C, M>(&mut self, constructor: C, medium: M) -> &mut Self
     where
         C: ShapeConstructor,
-        M: Medium + 'static,
+        M: Into<DynMedium>,
     {
         let shape_ids = constructor.construct(self.boundaries.as_mut());
-        let medium_id = self.boundaries.add_medium(medium);
+        let medium_id = self.boundaries.add_medium(medium.into());
         for shape_id in shape_ids {
             let boundary_id = BoundaryId::new(shape_id, medium_id);
             self.boundaries.register_id(boundary_id);
@@ -288,24 +288,33 @@ mod tests {
             Point::new(Val(0.0), Val(-1.0), Val(-1.0)),
             Point::new(Val(10.0), Val(2.0), Val(2.0)),
         ));
-        let medium_id = boundaries
-            .add_medium(Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0))).unwrap());
+        let medium_id = boundaries.add_medium(
+            Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0)))
+                .unwrap()
+                .into(),
+        );
         boundaries.register_id(BoundaryId::new(shape_id, medium_id));
 
         let shape_id = boundaries.add_shape(Aabb::new(
             Point::new(Val(1.0), Val(0.0), Val(0.0)),
             Point::new(Val(4.0), Val(1.0), Val(1.0)),
         ));
-        let medium_id = boundaries
-            .add_medium(Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0))).unwrap());
+        let medium_id = boundaries.add_medium(
+            Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0)))
+                .unwrap()
+                .into(),
+        );
         boundaries.register_id(BoundaryId::new(shape_id, medium_id));
 
         let shape_id = boundaries.add_shape(Aabb::new(
             Point::new(Val(5.0), Val(0.0), Val(0.0)),
             Point::new(Val(9.0), Val(1.0), Val(1.0)),
         ));
-        let medium_id = boundaries
-            .add_medium(Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0))).unwrap());
+        let medium_id = boundaries.add_medium(
+            Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0)))
+                .unwrap()
+                .into(),
+        );
         boundaries.register_id(BoundaryId::new(shape_id, medium_id));
 
         let ids = boundaries.get_ids().to_owned();
