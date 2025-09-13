@@ -10,7 +10,7 @@ use crate::domain::scene::bvh::Bvh;
 use crate::domain::scene::pool::EntityPool;
 use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer};
 
-use super::{EntityContainer, EntityId, EntityScene};
+use super::{EntityContainer, EntityId, EntityScene, EntitySceneBuilder};
 
 #[derive(Debug)]
 pub struct BvhEntitySceneBuilder {
@@ -28,36 +28,6 @@ impl BvhEntitySceneBuilder {
             lights: Vec::new(),
             emitters: Vec::new(),
         }
-    }
-
-    pub fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
-    where
-        S: Shape,
-        M: Material + 'static,
-    {
-        let shape_id = self.entities.add_shape(shape);
-        let material_id = self.entities.add_material(material);
-        let entity_id = EntityId::new(shape_id, material_id);
-        self.entities.register_id(entity_id);
-        self.post_add_entity(entity_id);
-        self
-    }
-
-    pub fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self
-    where
-        C: ShapeConstructor,
-        M: Material + 'static,
-    {
-        let shape_ids = constructor.construct(self.entities.as_mut());
-        let material_id = self.entities.add_material(material);
-
-        for shape_id in shape_ids {
-            let entity_id = EntityId::new(shape_id, material_id);
-            self.entities.register_id(entity_id);
-            self.post_add_entity(entity_id);
-        }
-
-        self
     }
 
     fn post_add_entity(&mut self, entity_id: EntityId) {
@@ -101,8 +71,42 @@ impl BvhEntitySceneBuilder {
             }
         }
     }
+}
 
-    pub fn build(self) -> BvhEntityScene {
+impl EntitySceneBuilder for BvhEntitySceneBuilder {
+    type Output = BvhEntityScene;
+
+    fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
+    where
+        S: Shape,
+        M: Material + 'static,
+    {
+        let shape_id = self.entities.add_shape(shape);
+        let material_id = self.entities.add_material(material);
+        let entity_id = EntityId::new(shape_id, material_id);
+        self.entities.register_id(entity_id);
+        self.post_add_entity(entity_id);
+        self
+    }
+
+    fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self
+    where
+        C: ShapeConstructor,
+        M: Material + 'static,
+    {
+        let shape_ids = constructor.construct(self.entities.as_mut());
+        let material_id = self.entities.add_material(material);
+
+        for shape_id in shape_ids {
+            let entity_id = EntityId::new(shape_id, material_id);
+            self.entities.register_id(entity_id);
+            self.post_add_entity(entity_id);
+        }
+
+        self
+    }
+
+    fn build(self) -> Self::Output {
         let light_surfaces: Box<dyn PointSampling> = if self.light_surfaces.len() > 1 {
             let samplers = (self.light_surfaces.into_iter())
                 .map(|s| (s, Val(1.0)))

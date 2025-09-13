@@ -1,13 +1,13 @@
 use std::fmt::Debug;
 
-use crate::domain::material::def::{MaterialContainer, MaterialId, MaterialKind};
+use crate::domain::material::def::{Material, MaterialContainer, MaterialId, MaterialKind};
 use crate::domain::math::numeric::DisRange;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
 use crate::domain::sampling::point::PointSampling;
-use crate::domain::shape::def::{ShapeContainer, ShapeId, ShapeKind};
+use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer, ShapeId, ShapeKind};
 
 pub trait EntityScene: Send + Sync {
     fn get_entities(&self) -> &dyn EntityContainer;
@@ -36,6 +36,22 @@ pub trait EntityScene: Send + Sync {
             None
         }
     }
+}
+
+pub trait EntitySceneBuilder: Send + Sync + Sized {
+    type Output: EntityScene;
+
+    fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
+    where
+        S: Shape,
+        M: Material + 'static;
+
+    fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self
+    where
+        C: ShapeConstructor,
+        M: Material + 'static;
+
+    fn build(self) -> Self::Output;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
