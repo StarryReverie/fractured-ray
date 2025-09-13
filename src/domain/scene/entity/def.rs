@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
-use crate::domain::material::def::{Material, MaterialContainer, MaterialId, MaterialKind};
+use crate::domain::material::def::{Material, MaterialKind};
+use crate::domain::material::util::{MaterialContainer, MaterialId};
 use crate::domain::math::numeric::DisRange;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;

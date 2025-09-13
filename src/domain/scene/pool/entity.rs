@@ -1,7 +1,8 @@
 use std::any::Any;
 use std::fmt::Debug;
 
-use crate::domain::material::def::{Material, MaterialContainer, MaterialId};
+use crate::domain::material::def::Material;
+use crate::domain::material::util::{MaterialContainer, MaterialId};
 use crate::domain::scene::entity::{EntityContainer, EntityId};
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
 

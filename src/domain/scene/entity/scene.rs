@@ -1,5 +1,6 @@
-use crate::domain::material::def::{Material, MaterialContainer, MaterialKind};
+use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::material::primitive::Emissive;
+use crate::domain::material::util::MaterialContainer;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;

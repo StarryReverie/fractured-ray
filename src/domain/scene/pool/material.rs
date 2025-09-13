@@ -2,10 +2,9 @@ use std::any::{Any, TypeId};
 use std::fmt::Debug;
 use std::mem::ManuallyDrop;
 
-use crate::domain::material::def::{Material, MaterialContainer, MaterialId, MaterialKind};
-use crate::domain::material::primitive::{
-    Blurry, Diffuse, Emissive, Glossy, Refractive, Scattering, Specular,
-};
+use crate::domain::material::def::{Material, MaterialKind};
+use crate::domain::material::primitive::*;
+use crate::domain::material::util::{MaterialContainer, MaterialId};
 
 #[derive(Debug, Default)]
 pub struct MaterialPool {
