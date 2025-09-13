@@ -2,11 +2,13 @@ use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
 use crate::domain::math::numeric::Val;
-use crate::domain::medium::def::{Medium, MediumId, MediumKind};
+use crate::domain::medium::def::{Medium, MediumKind};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RaySegment;
 use crate::domain::renderer::{Contribution, RtContext, RtState};
 use crate::domain::scene::volume::VolumeScene;
+
+use super::MediumId;
 
 pub struct AggregateMedium<'a> {
     volume_scene: &'a dyn VolumeScene,

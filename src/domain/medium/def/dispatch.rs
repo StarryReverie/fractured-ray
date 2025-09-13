@@ -28,8 +28,8 @@ macro_rules! impl_from_ref_for_variant {
     };
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
 #[enum_dispatch(Medium)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DynMedium {
     HenyeyGreenstein(HenyeyGreenstein),
     Isotropic(Isotropic),

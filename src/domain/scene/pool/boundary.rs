@@ -1,4 +1,5 @@
-use crate::domain::medium::def::{DynMedium, MediumContainer, MediumId, RefDynMedium};
+use crate::domain::medium::def::{DynMedium, RefDynMedium};
+use crate::domain::medium::util::{MediumContainer, MediumId};
 use crate::domain::scene::volume::{BoundaryContainer, BoundaryId};
 use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
 

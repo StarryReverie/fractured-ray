@@ -1,9 +1,8 @@
 use std::fmt::Debug;
 
-use crate::domain::medium::def::{
-    DynMedium, Medium, MediumContainer, MediumId, MediumKind, RefDynMedium,
-};
-use crate::domain::medium::primitive::{HenyeyGreenstein, Isotropic, Vacuum};
+use crate::domain::medium::def::{DynMedium, Medium, MediumKind, RefDynMedium};
+use crate::domain::medium::primitive::*;
+use crate::domain::medium::util::{MediumContainer, MediumId};
 
 #[derive(Debug, Default)]
 pub struct MediumPool {

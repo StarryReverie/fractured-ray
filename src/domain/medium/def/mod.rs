@@ -1,7 +1,7 @@
+mod dispatch;
 mod homogeneous_ext;
 mod medium;
-mod variant;
 
+pub use dispatch::{DynMedium, RefDynMedium};
 pub use homogeneous_ext::HomogeneousMediumExt;
-pub use medium::{HomogeneousMedium, Medium, MediumContainer, MediumId, MediumKind};
-pub use variant::{DynMedium, RefDynMedium};
+pub use medium::{HomogeneousMedium, Medium, MediumKind};
