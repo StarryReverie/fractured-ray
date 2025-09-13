@@ -13,7 +13,7 @@ use crate::domain::ray::util as ray_util;
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Specular {
     albedo: Albedo,
 }

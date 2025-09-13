@@ -11,7 +11,7 @@ use crate::domain::ray::event::{RayIntersection, SurfaceSide};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 
-#[derive(Debug, Clone, PartialEq, CopyGetters)]
+#[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct Emissive {
     radiance: Spectrum,

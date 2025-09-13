@@ -14,7 +14,7 @@ use crate::domain::renderer::{
 };
 use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Diffuse {
     albedo: Albedo,
 }
