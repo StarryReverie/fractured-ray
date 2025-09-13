@@ -1,8 +1,6 @@
-use std::any::{Any, TypeId};
 use std::fmt::Debug;
-use std::mem::ManuallyDrop;
 
-use crate::domain::material::def::{Material, MaterialKind};
+use crate::domain::material::def::{DynMaterial, Material, MaterialKind, RefDynMaterial};
 use crate::domain::material::primitive::*;
 use crate::domain::material::util::{MaterialContainer, MaterialId};
 
@@ -18,68 +16,39 @@ pub struct MaterialPool {
 }
 
 impl MaterialPool {
-    fn downcast_and_push<MI, M>(material: MI, collection: &mut Vec<M>) -> u32
+    fn push<M>(material: M, collection: &mut Vec<M>) -> MaterialId
     where
-        MI: Material + Any,
-        M: Material + Any,
+        M: Material,
     {
-        assert_eq!(TypeId::of::<M>(), material.type_id());
-        // SAFETY: Already checked that M == impl Material + Any.
-        let material = unsafe { std::mem::transmute_copy(&ManuallyDrop::new(material)) };
-
+        let kind = material.kind();
         collection.push(material);
-        collection.len() as u32 - 1
-    }
-
-    fn upcast<M: Material>(material: &M) -> &dyn Material {
-        material
+        MaterialId::new(kind, collection.len() as u32 - 1)
     }
 }
 
 impl MaterialContainer for MaterialPool {
-    fn add_material<M>(&mut self, material: M) -> MaterialId
-    where
-        M: Material + Any,
-    {
-        let kind = material.kind();
-        let type_id = TypeId::of::<M>();
-
-        if type_id == TypeId::of::<Blurry>() {
-            let index = Self::downcast_and_push(material, &mut self.blurry);
-            MaterialId::new(kind, index)
-        } else if type_id == TypeId::of::<Diffuse>() {
-            let index = Self::downcast_and_push(material, &mut self.diffuse);
-            MaterialId::new(kind, index)
-        } else if type_id == TypeId::of::<Emissive>() {
-            let index = Self::downcast_and_push(material, &mut self.emissive);
-            MaterialId::new(kind, index)
-        } else if type_id == TypeId::of::<Glossy>() {
-            let index = Self::downcast_and_push(material, &mut self.glossy);
-            MaterialId::new(kind, index)
-        } else if type_id == TypeId::of::<Refractive>() {
-            let index = Self::downcast_and_push(material, &mut self.refractive);
-            MaterialId::new(kind, index)
-        } else if type_id == TypeId::of::<Scattering>() {
-            let index = Self::downcast_and_push(material, &mut self.scattering);
-            MaterialId::new(kind, index)
-        } else if type_id == TypeId::of::<Specular>() {
-            let index = Self::downcast_and_push(material, &mut self.specular);
-            MaterialId::new(kind, index)
-        } else {
-            unreachable!("all Material's subtypes should be exhausted")
+    fn add_material(&mut self, material: DynMaterial) -> MaterialId {
+        match material {
+            DynMaterial::Blurry(s) => Self::push(s, &mut self.blurry),
+            DynMaterial::Diffuse(s) => Self::push(s, &mut self.diffuse),
+            DynMaterial::Emissive(s) => Self::push(s, &mut self.emissive),
+            DynMaterial::Glossy(s) => Self::push(s, &mut self.glossy),
+            DynMaterial::Refractive(s) => Self::push(s, &mut self.refractive),
+            DynMaterial::Scattering(s) => Self::push(s, &mut self.scattering),
+            DynMaterial::Specular(s) => Self::push(s, &mut self.specular),
         }
     }
 
-    fn get_material(&self, material_id: MaterialId) -> Option<&dyn Material> {
+    fn get_material(&self, material_id: MaterialId) -> Option<RefDynMaterial<'_>> {
         let index = material_id.index() as usize;
         match material_id.kind() {
-            MaterialKind::Blurry => self.blurry.get(index).map(Self::upcast),
-            MaterialKind::Diffuse => self.diffuse.get(index).map(Self::upcast),
-            MaterialKind::Emissive => self.emissive.get(index).map(Self::upcast),
-            MaterialKind::Glossy => self.glossy.get(index).map(Self::upcast),
-            MaterialKind::Refractive => self.refractive.get(index).map(Self::upcast),
-            MaterialKind::Scattering => self.scattering.get(index).map(Self::upcast),
-            MaterialKind::Specular => self.specular.get(index).map(Self::upcast),
+            MaterialKind::Blurry => self.blurry.get(index).map(Into::into),
+            MaterialKind::Diffuse => self.diffuse.get(index).map(Into::into),
+            MaterialKind::Emissive => self.emissive.get(index).map(Into::into),
+            MaterialKind::Glossy => self.glossy.get(index).map(Into::into),
+            MaterialKind::Refractive => self.refractive.get(index).map(Into::into),
+            MaterialKind::Scattering => self.scattering.get(index).map(Into::into),
+            MaterialKind::Specular => self.specular.get(index).map(Into::into),
         }
     }
 }

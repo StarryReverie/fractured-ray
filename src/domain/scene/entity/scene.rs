@@ -1,5 +1,4 @@
-use crate::domain::material::def::{Material, MaterialKind};
-use crate::domain::material::primitive::Emissive;
+use crate::domain::material::def::{DynMaterial, MaterialKind, RefDynMaterial};
 use crate::domain::material::util::MaterialContainer;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
@@ -64,8 +63,7 @@ impl BvhEntitySceneBuilder {
 
             let material_id = entity_id.material_id();
             let material = self.entities.get_material(material_id).unwrap();
-            if let Some(material) = material.as_any() {
-                let emissive = material.downcast_ref::<Emissive>().unwrap();
+            if let RefDynMaterial::Emissive(emissive) = material {
                 if let Some(sampler) = shape.get_photon_sampler(shape_id, emissive.clone()) {
                     self.emitters.push(sampler);
                 }
@@ -80,10 +78,10 @@ impl EntitySceneBuilder for BvhEntitySceneBuilder {
     fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
     where
         S: Shape,
-        M: Material + 'static,
+        M: Into<DynMaterial>,
     {
         let shape_id = self.entities.add_shape(shape);
-        let material_id = self.entities.add_material(material);
+        let material_id = self.entities.add_material(material.into());
         let entity_id = EntityId::new(shape_id, material_id);
         self.entities.register_id(entity_id);
         self.post_add_entity(entity_id);
@@ -93,10 +91,10 @@ impl EntitySceneBuilder for BvhEntitySceneBuilder {
     fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self
     where
         C: ShapeConstructor,
-        M: Material + 'static,
+        M: Into<DynMaterial>,
     {
         let shape_ids = constructor.construct(self.entities.as_mut());
-        let material_id = self.entities.add_material(material);
+        let material_id = self.entities.add_material(material.into());
 
         for shape_id in shape_ids {
             let entity_id = EntityId::new(shape_id, material_id);

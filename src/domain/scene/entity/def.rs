@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::domain::material::def::{Material, MaterialKind};
+use crate::domain::material::def::{DynMaterial, MaterialKind};
 use crate::domain::material::util::{MaterialContainer, MaterialId};
 use crate::domain::math::numeric::DisRange;
 use crate::domain::ray::Ray;
@@ -45,12 +45,12 @@ pub trait EntitySceneBuilder: Send + Sync + Sized {
     fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
     where
         S: Shape,
-        M: Material + 'static;
+        M: Into<DynMaterial>;
 
     fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self
     where
         C: ShapeConstructor,
-        M: Material + 'static;
+        M: Into<DynMaterial>;
 
     fn build(self) -> Self::Output;
 }

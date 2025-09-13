@@ -1,7 +1,6 @@
-use std::any::Any;
 use std::fmt::Debug;
 
-use crate::domain::material::def::{Material, MaterialKind};
+use crate::domain::material::def::{DynMaterial, MaterialKind, RefDynMaterial};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct MaterialId {
@@ -24,10 +23,7 @@ impl MaterialId {
 }
 
 pub trait MaterialContainer: Debug + Send + Sync + 'static {
-    fn add_material<M>(&mut self, material: M) -> MaterialId
-    where
-        Self: Sized,
-        M: Material + Any;
+    fn add_material(&mut self, material: DynMaterial) -> MaterialId;
 
-    fn get_material(&self, id: MaterialId) -> Option<&dyn Material>;
+    fn get_material(&self, id: MaterialId) -> Option<RefDynMaterial>;
 }

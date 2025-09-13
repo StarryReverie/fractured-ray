@@ -8,7 +8,7 @@ use snafu::prelude::*;
 use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Spectrum;
 use crate::domain::image::Image;
-use crate::domain::material::def::{FluxEstimation, Material};
+use crate::domain::material::def::{FluxEstimation, Material, RefDynMaterial};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::medium::def::Medium;
 use crate::domain::medium::util::AggregateMedium;
@@ -209,7 +209,7 @@ impl Renderer for CoreRenderer {
         context: &mut RtContext<'a>,
         state: RtState,
         ray: &Ray,
-        target: Option<(&RayIntersection, &dyn Material)>,
+        target: Option<(&RayIntersection, RefDynMaterial)>,
     ) -> Contribution {
         let (surface_res, vis_range) = if let Some((intersection, material)) = target {
             let res = material.shade(context, state.clone(), ray, intersection);

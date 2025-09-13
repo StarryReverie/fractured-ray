@@ -2,7 +2,7 @@ use std::ops::{Add, Mul};
 
 use crate::domain::color::Spectrum;
 use crate::domain::image::Image;
-use crate::domain::material::def::{FluxEstimation, Material};
+use crate::domain::material::def::{FluxEstimation, RefDynMaterial};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
@@ -28,7 +28,7 @@ pub trait Renderer: Send + Sync + 'static {
         context: &mut RtContext<'a>,
         state: RtState,
         ray: &Ray,
-        target: Option<(&'i RayIntersection, &'m dyn Material)>,
+        target: Option<(&'i RayIntersection, RefDynMaterial<'m>)>,
     ) -> Contribution;
 
     fn emit<'a>(

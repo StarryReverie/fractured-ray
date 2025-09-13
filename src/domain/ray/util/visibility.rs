@@ -2,7 +2,7 @@ use std::ops::Bound;
 
 use getset::{CopyGetters, Getters};
 
-use crate::domain::material::def::{Material, MaterialKind};
+use crate::domain::material::def::{Material, MaterialKind, RefDynMaterial};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
@@ -63,23 +63,23 @@ pub struct LightTarget<'a> {
     #[getset(get = "pub")]
     intersection: RayIntersection,
     #[getset(get_copy = "pub")]
-    light: &'a dyn Material,
+    light: RefDynMaterial<'a>,
 }
 
 impl<'a> LightTarget<'a> {
-    fn new(intersection: RayIntersection, light: &'a dyn Material) -> Self {
+    fn new(intersection: RayIntersection, light: RefDynMaterial<'a>) -> Self {
         Self {
             intersection,
             light,
         }
     }
 
-    pub fn as_some(&self) -> Option<(&RayIntersection, &dyn Material)> {
+    pub fn as_some(&self) -> Option<(&RayIntersection, RefDynMaterial<'a>)> {
         Some((&self.intersection, self.light))
     }
 }
 
-impl<'a> From<LightTarget<'a>> for (RayIntersection, &'a dyn Material) {
+impl<'a> From<LightTarget<'a>> for (RayIntersection, RefDynMaterial<'a>) {
     fn from(value: LightTarget<'a>) -> Self {
         (value.intersection, value.light)
     }
