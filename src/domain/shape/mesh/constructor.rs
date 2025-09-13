@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use smallvec::SmallVec;
@@ -21,33 +20,36 @@ pub struct MeshConstructor {
 impl MeshConstructor {
     pub fn new(
         vertices: Vec<Point>,
-        mut vertex_indices: Vec<Vec<usize>>,
+        vertex_indices: Vec<Vec<usize>>,
     ) -> Result<Self, TryNewMeshError> {
-        Self::validate_vertex_uniqueness(&vertices)?;
+        Self::new_shared(vertices.into(), vertex_indices)
+    }
 
-        let triangle_indices = vertex_indices
-            .extract_if(.., |s| s.len() == 3)
-            .collect::<Vec<_>>();
-        let triangles = Self::validate_and_create_triangles(&vertices, &triangle_indices)?;
-
-        let polygon_indices = vertex_indices;
-        let polygons = Self::validate_and_create_polygons(&vertices, &polygon_indices)?;
-
+    pub fn new_shared(
+        vertices: Arc<[Point]>,
+        vertex_indices: Vec<Vec<usize>>,
+    ) -> Result<Self, TryNewMeshError> {
+        let (triangles, polygons) = Self::validate_and_create_shapes(&vertices, vertex_indices)?;
         Ok(Self {
-            vertices: vertices.into(),
+            vertices,
             triangles: triangles.into(),
             polygons: polygons.into(),
         })
     }
 
-    fn validate_vertex_uniqueness(vertices: &[Point]) -> Result<(), TryNewMeshError> {
-        let mut buc = HashMap::new();
-        for (i, v) in vertices.iter().enumerate() {
-            if let Some(former) = buc.insert(*v, i) {
-                return Err(TryNewMeshError::DuplicatedVertices { former, latter: i });
-            }
-        }
-        Ok(())
+    fn validate_and_create_shapes(
+        vertices: &[Point],
+        mut vertex_indices: Vec<Vec<usize>>,
+    ) -> Result<(Vec<(u32, u32, u32)>, Vec<SmallVec<[u32; 5]>>), TryNewMeshError> {
+        let triangle_indices = vertex_indices
+            .extract_if(.., |s| s.len() == 3)
+            .collect::<Vec<_>>();
+        let triangles = Self::validate_and_create_triangles(vertices, &triangle_indices)?;
+
+        let polygon_indices = vertex_indices;
+        let polygons = Self::validate_and_create_polygons(vertices, &polygon_indices)?;
+
+        Ok((triangles, polygons))
     }
 
     fn validate_and_create_triangles(

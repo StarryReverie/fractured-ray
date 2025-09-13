@@ -19,8 +19,6 @@ pub struct MeshData {
 #[snafu(visibility(pub(super)))]
 #[non_exhaustive]
 pub enum TryNewMeshError {
-    #[snafu(display("mesh has duplicated vertices {former} and {latter}"))]
-    DuplicatedVertices { former: usize, latter: usize },
     #[snafu(display("index {index} for vertex in face {face} is out of bound"))]
     OutOfBound { face: usize, index: usize },
     #[snafu(display("could not create mesh face {face} as triangle"))]
