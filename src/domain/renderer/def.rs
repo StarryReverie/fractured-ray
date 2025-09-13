@@ -22,6 +22,7 @@ pub trait Renderer: Send + Sync + 'static {
         range: DisRange,
     ) -> Contribution;
 
+    #[allow(clippy::needless_lifetimes)]
     fn trace_to<'a, 'i, 'm>(
         &'a self,
         context: &mut RtContext<'a>,

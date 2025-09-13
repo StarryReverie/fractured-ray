@@ -10,11 +10,14 @@ use crate::domain::shape::primitive::{Polygon, Triangle};
 use super::data::{OutOfBoundSnafu, PolygonSnafu, TriangleSnafu};
 use super::{MeshData, MeshPolygon, MeshTriangle, TryNewMeshError};
 
+type TriangleIndices = (u32, u32, u32);
+type PolygonIndices = SmallVec<[u32; 5]>;
+
 #[derive(Debug, Clone)]
 pub struct MeshConstructor {
     vertices: Arc<[Point]>,
-    triangles: Arc<[(u32, u32, u32)]>,
-    polygons: Arc<[SmallVec<[u32; 5]>]>,
+    triangles: Arc<[TriangleIndices]>,
+    polygons: Arc<[PolygonIndices]>,
 }
 
 impl MeshConstructor {
@@ -40,7 +43,7 @@ impl MeshConstructor {
     fn validate_and_create_shapes(
         vertices: &[Point],
         mut vertex_indices: Vec<Vec<usize>>,
-    ) -> Result<(Vec<(u32, u32, u32)>, Vec<SmallVec<[u32; 5]>>), TryNewMeshError> {
+    ) -> Result<(Vec<TriangleIndices>, Vec<PolygonIndices>), TryNewMeshError> {
         let triangle_indices = vertex_indices
             .extract_if(.., |s| s.len() == 3)
             .collect::<Vec<_>>();
@@ -55,7 +58,7 @@ impl MeshConstructor {
     fn validate_and_create_triangles(
         vertices: &[Point],
         triangles: &[Vec<usize>],
-    ) -> Result<Vec<(u32, u32, u32)>, TryNewMeshError> {
+    ) -> Result<Vec<TriangleIndices>, TryNewMeshError> {
         let mut res = Vec::with_capacity(triangles.len());
 
         for (face, triangle) in triangles.iter().enumerate() {
@@ -78,7 +81,7 @@ impl MeshConstructor {
     fn validate_and_create_polygons(
         vertices: &[Point],
         polygons: &[Vec<usize>],
-    ) -> Result<Vec<SmallVec<[u32; 5]>>, TryNewMeshError> {
+    ) -> Result<Vec<PolygonIndices>, TryNewMeshError> {
         let mut res = Vec::with_capacity(polygons.len());
 
         for (face, polygon) in polygons.iter().enumerate() {
