@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use rand::prelude::*;
 use snafu::prelude::*;
 
@@ -173,10 +171,6 @@ impl Material for Glossy {
             }
             StoragePolicy::Caustic => {}
         }
-    }
-
-    fn as_any(&self) -> Option<&dyn Any> {
-        Some(self)
     }
 }
 

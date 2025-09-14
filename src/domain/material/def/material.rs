@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::fmt::Debug;
 
 use enum_dispatch::enum_dispatch;
@@ -33,10 +32,6 @@ pub trait Material: Debug + Send + Sync {
         photon: &PhotonRay,
         intersection: &RayIntersection,
     );
-
-    fn as_any(&self) -> Option<&dyn Any> {
-        None
-    }
 }
 
 pub trait BsdfMaterial: Material + BsdfSampling {

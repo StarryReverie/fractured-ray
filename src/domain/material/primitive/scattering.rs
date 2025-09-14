@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use rand::prelude::*;
 use snafu::prelude::*;
 
@@ -290,10 +288,6 @@ impl Material for Scattering {
         } else {
             self.receive_back_face(context, state, photon, intersection);
         }
-    }
-
-    fn as_any(&self) -> Option<&dyn Any> {
-        Some(self)
     }
 }
 

@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use rand::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
@@ -49,10 +47,6 @@ impl Material for Specular {
     ) {
         let state_next = state.with_has_specular(true);
         self.maybe_bounce_next_photon(context, state_next, photon, intersection);
-    }
-
-    fn as_any(&self) -> Option<&dyn Any> {
-        Some(self)
     }
 }
 

@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use rand::prelude::*;
 use snafu::prelude::*;
 
@@ -83,10 +81,6 @@ impl Material for Blurry {
             }
             StoragePolicy::Caustic => {}
         }
-    }
-
-    fn as_any(&self) -> Option<&dyn Any> {
-        Some(self)
     }
 }
 

@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use getset::CopyGetters;
 
 use crate::domain::color::Spectrum;
@@ -60,9 +58,5 @@ impl Material for Emissive {
         _photon: &PhotonRay,
         _intersection: &RayIntersection,
     ) {
-    }
-
-    fn as_any(&self) -> Option<&dyn Any> {
-        Some(self)
     }
 }

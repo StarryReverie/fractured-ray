@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use rand::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
@@ -71,10 +69,6 @@ impl Material for Diffuse {
                 }
             }
         }
-    }
-
-    fn as_any(&self) -> Option<&dyn Any> {
-        Some(self)
     }
 }
 

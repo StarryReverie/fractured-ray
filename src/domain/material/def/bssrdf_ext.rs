@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
@@ -100,10 +98,6 @@ where
             photon.throughput() * (self.diffusion.bssrdf_diffusion() / self.diffusion.pdf()),
         );
         self.maybe_bounce_next_photon(context, state, &photon_scaled, intersection);
-    }
-
-    fn as_any(&self) -> Option<&dyn Any> {
-        None
     }
 }
 
