@@ -4,11 +4,11 @@ use smallvec::SmallVec;
 use snafu::prelude::*;
 
 use crate::domain::math::geometry::{AllTransformation, Point};
-use crate::domain::shape::primitive::{Polygon, Triangle};
+use crate::domain::shape::primitive::{MeshPolygon, MeshTriangle, Polygon, Triangle};
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
 use super::data::{OutOfBoundSnafu, PolygonSnafu, TriangleSnafu};
-use super::{MeshData, MeshPolygon, MeshTriangle, TryNewMeshError};
+use super::{MeshData, TryNewMeshError};
 
 type TriangleIndices = (u32, u32, u32);
 type PolygonIndices = SmallVec<[u32; 5]>;
@@ -112,17 +112,11 @@ impl MeshConstructor {
         });
 
         let mesh_triangles = (0..data.triangles.len())
-            .map(|index| MeshTriangle {
-                data: data.clone(),
-                index,
-            })
+            .map(|index| MeshTriangle::new(data.clone(), index))
             .collect();
 
         let mesh_polygons = (0..data.polygons.len())
-            .map(|index| MeshPolygon {
-                data: data.clone(),
-                index,
-            })
+            .map(|index| MeshPolygon::new(data.clone(), index))
             .collect();
 
         (mesh_triangles, mesh_polygons)

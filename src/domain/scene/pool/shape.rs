@@ -4,8 +4,7 @@ use std::mem::ManuallyDrop;
 
 use crate::domain::shape::def::{Shape, ShapeKind};
 use crate::domain::shape::instance::Instance;
-use crate::domain::shape::mesh::{MeshPolygon, MeshTriangle};
-use crate::domain::shape::primitive::{Aabb, Plane, Polygon, Sphere, Triangle};
+use crate::domain::shape::primitive::*;
 use crate::domain::shape::util::{ShapeContainer, ShapeId};
 
 #[derive(Debug, Default)]

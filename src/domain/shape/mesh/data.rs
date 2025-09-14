@@ -8,11 +8,11 @@ use crate::domain::shape::primitive::{TryNewPolygonError, TryNewTriangleError};
 
 #[derive(Debug)]
 pub struct MeshData {
-    pub(super) vertices: Arc<[Point]>,
-    pub(super) triangles: Arc<[(u32, u32, u32)]>,
-    pub(super) polygons: Arc<[SmallVec<[u32; 5]>]>,
-    pub(super) transformation: Option<AllTransformation>,
-    pub(super) inv_transformation: Option<AllTransformation>,
+    pub(in crate::domain::shape) vertices: Arc<[Point]>,
+    pub(in crate::domain::shape) triangles: Arc<[(u32, u32, u32)]>,
+    pub(in crate::domain::shape) polygons: Arc<[SmallVec<[u32; 5]>]>,
+    pub(in crate::domain::shape) transformation: Option<AllTransformation>,
+    pub(in crate::domain::shape) inv_transformation: Option<AllTransformation>,
 }
 
 #[derive(Debug, Snafu, Clone, PartialEq, Eq)]
