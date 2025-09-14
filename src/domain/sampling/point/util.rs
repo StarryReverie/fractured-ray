@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::util::ShapeId;
 
 use super::{PointSample, PointSampling};
@@ -21,7 +21,7 @@ impl PointSampling for EmptyPointSampler {
         None
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
+    fn shape(&self) -> Option<RefDynShape> {
         None
     }
 

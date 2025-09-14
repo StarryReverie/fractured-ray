@@ -4,7 +4,7 @@ use rand_distr::weighted::WeightedIndex;
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{Val, WrappedVal};
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::{RefDynShape, Shape};
 use crate::domain::shape::primitive::Aabb;
 use crate::domain::shape::util::ShapeId;
 
@@ -101,8 +101,8 @@ impl PointSampling for AabbPointSampler {
         Some(self.id)
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
-        Some(&self.aabb)
+    fn shape(&self) -> Option<RefDynShape> {
+        Some((&self.aabb).into())
     }
 
     fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {

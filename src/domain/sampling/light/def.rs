@@ -9,13 +9,13 @@ use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
 use crate::domain::sampling::point::{PointSample, PointSampling};
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::{RefDynShape, Shape};
 use crate::domain::shape::util::ShapeId;
 
 pub trait LightSampling: Debug + Send + Sync {
     fn id(&self) -> Option<ShapeId>;
 
-    fn shape(&self) -> Option<&dyn Shape>;
+    fn shape(&self) -> Option<RefDynShape>;
 
     fn sample_light_surface(
         &self,

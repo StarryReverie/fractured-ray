@@ -3,7 +3,7 @@ use smallvec::SmallVec;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
-use crate::domain::shape::def::BoundingBox;
+use crate::domain::shape::def::{BoundingBox, Shape};
 use crate::domain::shape::util::{ShapeContainer, ShapeId};
 
 #[derive(Debug)]
@@ -513,7 +513,7 @@ mod tests {
 
         let sphere = Sphere::new(Point::new(Val(1.0), Val(0.0), Val(2.0)), Val(1.0)).unwrap();
         let bbox_sphere = sphere.bounding_box().unwrap();
-        nodes.push((shapes.add_shape(sphere), bbox_sphere));
+        nodes.push((shapes.add_shape(sphere.into()), bbox_sphere));
 
         let triangle = Triangle::new(
             Point::new(Val(-2.0), Val(0.0), Val(0.0)),
@@ -522,7 +522,7 @@ mod tests {
         )
         .unwrap();
         let bbox_triangle = triangle.bounding_box().unwrap();
-        nodes.push((shapes.add_shape(triangle), bbox_triangle));
+        nodes.push((shapes.add_shape(triangle.into()), bbox_triangle));
 
         let polygon = Polygon::new([
             Point::new(Val(0.0), Val(-1.0), Val(0.0)),
@@ -532,7 +532,7 @@ mod tests {
         ])
         .unwrap();
         let bbox_polygon = polygon.bounding_box().unwrap();
-        nodes.push((shapes.add_shape(polygon), bbox_polygon));
+        nodes.push((shapes.add_shape(polygon.into()), bbox_polygon));
 
         let bvh = Bvh::new(nodes, Vec::new());
         (shapes, bvh)

@@ -6,7 +6,7 @@ use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::point::PointSample;
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::util::{Instance, ShapeId};
 
 use super::{LightSample, LightSampling};
@@ -37,8 +37,8 @@ impl LightSampling for InstanceLightSampler {
         Some(self.id)
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
-        Some(&self.instance)
+    fn shape(&self) -> Option<RefDynShape> {
+        Some((&self.instance).into())
     }
 
     fn sample_light_surface(

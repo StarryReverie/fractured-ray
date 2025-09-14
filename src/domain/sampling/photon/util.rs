@@ -9,6 +9,7 @@ use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::sampling::point::PointSampling;
+use crate::domain::shape::def::Shape;
 
 use super::{PhotonSample, PhotonSampling};
 

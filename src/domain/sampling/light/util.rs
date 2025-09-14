@@ -4,7 +4,7 @@ use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
 use crate::domain::sampling::point::{PointSample, PointSampling};
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::util::ShapeId;
 
 use super::{LightSample, LightSampling};
@@ -23,7 +23,7 @@ impl LightSampling for EmptyLightSampler {
         None
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
+    fn shape(&self) -> Option<RefDynShape> {
         None
     }
 
@@ -78,7 +78,7 @@ where
         self.inner.id()
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
+    fn shape(&self) -> Option<RefDynShape> {
         self.inner.shape()
     }
 

@@ -3,12 +3,13 @@ use crate::domain::material::util::MaterialContainer;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
+use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{AggregateLightSampler, EmptyLightSampler, LightSampling};
 use crate::domain::sampling::photon::{AggregatePhotonSampler, EmptyPhotonSampler, PhotonSampling};
 use crate::domain::sampling::point::{AggregatePointSampler, EmptyPointSampler, PointSampling};
 use crate::domain::scene::bvh::Bvh;
 use crate::domain::scene::pool::EntityPool;
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::{DynShape, Shape};
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer};
 
 use super::{EntityContainer, EntityId, EntityScene, EntitySceneBuilder};
@@ -78,10 +79,10 @@ impl EntitySceneBuilder for BvhEntitySceneBuilder {
 
     fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
     where
-        S: Shape + 'static,
+        S: Into<DynShape>,
         M: Into<DynMaterial>,
     {
-        let shape_id = self.entities.add_shape(shape);
+        let shape_id = self.entities.add_shape(shape.into());
         let material_id = self.entities.add_material(material.into());
         let entity_id = EntityId::new(shape_id, material_id);
         self.entities.register_id(entity_id);

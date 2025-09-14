@@ -6,7 +6,7 @@ use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
 use crate::domain::sampling::point::PointSample;
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::primitive::Sphere;
 use crate::domain::shape::util::ShapeId;
 
@@ -76,8 +76,8 @@ impl LightSampling for SphereLightSampler {
         Some(self.id)
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
-        Some(&self.sphere)
+    fn shape(&self) -> Option<RefDynShape> {
+        Some((&self.sphere).into())
     }
 
     fn sample_light_surface(
@@ -152,7 +152,7 @@ impl LightSampling for SphereLightSampler {
 mod tests {
     use crate::domain::math::geometry::Point;
     use crate::domain::ray::event::SurfaceSide;
-    use crate::domain::shape::def::ShapeKind;
+    use crate::domain::shape::def::{Shape, ShapeKind};
 
     use super::*;
 

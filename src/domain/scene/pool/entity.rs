@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use crate::domain::material::def::{DynMaterial, RefDynMaterial};
 use crate::domain::material::util::{MaterialContainer, MaterialId};
 use crate::domain::scene::entity::{EntityContainer, EntityId};
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::{DynShape, RefDynShape};
 use crate::domain::shape::util::{ShapeContainer, ShapeId};
 
 use super::{MaterialPool, ShapePool};
@@ -22,14 +22,14 @@ impl EntityPool {
 }
 
 impl ShapeContainer for EntityPool {
-    fn add_shape<S: Shape + 'static>(&mut self, shape: S) -> ShapeId
+    fn add_shape(&mut self, shape: DynShape) -> ShapeId
     where
         Self: Sized,
     {
         self.shapes.add_shape(shape)
     }
 
-    fn get_shape(&self, id: ShapeId) -> Option<&dyn Shape> {
+    fn get_shape(&self, id: ShapeId) -> Option<RefDynShape> {
         self.shapes.get_shape(id)
     }
 }
@@ -62,7 +62,7 @@ mod tests {
     use crate::domain::math::geometry::Point;
     use crate::domain::math::numeric::Val;
     use crate::domain::scene::entity::EntityId;
-    use crate::domain::shape::def::ShapeKind;
+    use crate::domain::shape::def::{Shape, ShapeKind};
     use crate::domain::shape::primitive::Sphere;
 
     use super::*;
@@ -70,8 +70,11 @@ mod tests {
     #[test]
     fn entity_pool_operation_succeeds() {
         let mut pool = EntityPool::new();
-        let shape_id = pool
-            .add_shape(Sphere::new(Point::new(Val(0.0), Val(0.0), Val(0.0)), Val(1.0)).unwrap());
+        let shape_id = pool.add_shape(
+            Sphere::new(Point::new(Val(0.0), Val(0.0), Val(0.0)), Val(1.0))
+                .unwrap()
+                .into(),
+        );
         let material_id = pool.add_material(Diffuse::new(Albedo::WHITE).into());
         let id = EntityId::new(shape_id, material_id);
         assert_eq!(

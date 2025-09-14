@@ -9,9 +9,10 @@ use crate::domain::medium::def::DynMedium;
 use crate::domain::medium::util::{MediumContainer, MediumId};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RaySegment, SurfaceSide};
+use crate::domain::sampling::Sampleable;
 use crate::domain::scene::bvh::Bvh;
 use crate::domain::scene::pool::BoundaryPool;
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::{DynShape, Shape};
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer};
 
 use super::{BoundaryContainer, BoundaryId, VolumeScene};
@@ -30,10 +31,10 @@ impl BvhVolumeSceneBuilder {
 
     pub fn add<S, M>(&mut self, shape: S, medium: M) -> &mut Self
     where
-        S: Shape + 'static,
+        S: Into<DynShape>,
         M: Into<DynMedium>,
     {
-        let shape_id = self.boundaries.add_shape(shape);
+        let shape_id = self.boundaries.add_shape(shape.into());
         let medium_id = self.boundaries.add_medium(medium.into());
         let boundary_id = BoundaryId::new(shape_id, medium_id);
         self.boundaries.register_id(boundary_id);
@@ -285,10 +286,13 @@ mod tests {
     fn get_test_bvh_volume_scene() -> (BvhVolumeScene, Vec<BoundaryId>) {
         let mut boundaries = Box::new(BoundaryPool::new());
 
-        let shape_id = boundaries.add_shape(Aabb::new(
-            Point::new(Val(0.0), Val(-1.0), Val(-1.0)),
-            Point::new(Val(10.0), Val(2.0), Val(2.0)),
-        ));
+        let shape_id = boundaries.add_shape(
+            Aabb::new(
+                Point::new(Val(0.0), Val(-1.0), Val(-1.0)),
+                Point::new(Val(10.0), Val(2.0), Val(2.0)),
+            )
+            .into(),
+        );
         let medium_id = boundaries.add_medium(
             Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0)))
                 .unwrap()
@@ -296,10 +300,13 @@ mod tests {
         );
         boundaries.register_id(BoundaryId::new(shape_id, medium_id));
 
-        let shape_id = boundaries.add_shape(Aabb::new(
-            Point::new(Val(1.0), Val(0.0), Val(0.0)),
-            Point::new(Val(4.0), Val(1.0), Val(1.0)),
-        ));
+        let shape_id = boundaries.add_shape(
+            Aabb::new(
+                Point::new(Val(1.0), Val(0.0), Val(0.0)),
+                Point::new(Val(4.0), Val(1.0), Val(1.0)),
+            )
+            .into(),
+        );
         let medium_id = boundaries.add_medium(
             Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0)))
                 .unwrap()
@@ -307,10 +314,13 @@ mod tests {
         );
         boundaries.register_id(BoundaryId::new(shape_id, medium_id));
 
-        let shape_id = boundaries.add_shape(Aabb::new(
-            Point::new(Val(5.0), Val(0.0), Val(0.0)),
-            Point::new(Val(9.0), Val(1.0), Val(1.0)),
-        ));
+        let shape_id = boundaries.add_shape(
+            Aabb::new(
+                Point::new(Val(5.0), Val(0.0), Val(0.0)),
+                Point::new(Val(9.0), Val(1.0), Val(1.0)),
+            )
+            .into(),
+        );
         let medium_id = boundaries.add_medium(
             Isotropic::new(Albedo::WHITE, Spectrum::broadcast(Val(1.0)))
                 .unwrap()

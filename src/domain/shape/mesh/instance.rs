@@ -60,10 +60,10 @@ impl ShapeConstructor for MeshInstanceConstructor {
 
         let mut ids = Vec::with_capacity(triangles.len() + polygons.len());
         for triangle in triangles {
-            ids.push(container.add_shape(triangle));
+            ids.push(container.add_shape(triangle.into()));
         }
         for polygon in polygons {
-            ids.push(container.add_shape(polygon));
+            ids.push(container.add_shape(polygon.into()));
         }
         ids
     }

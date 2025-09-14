@@ -1,7 +1,7 @@
 use crate::domain::medium::def::{DynMedium, RefDynMedium};
 use crate::domain::medium::util::{MediumContainer, MediumId};
 use crate::domain::scene::volume::{BoundaryContainer, BoundaryId};
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::{DynShape, RefDynShape};
 use crate::domain::shape::util::{ShapeContainer, ShapeId};
 
 use super::{MediumPool, ShapePool};
@@ -20,14 +20,14 @@ impl BoundaryPool {
 }
 
 impl ShapeContainer for BoundaryPool {
-    fn add_shape<S: Shape + 'static>(&mut self, shape: S) -> ShapeId
+    fn add_shape(&mut self, shape: DynShape) -> ShapeId
     where
         Self: Sized,
     {
         self.shapes.add_shape(shape)
     }
 
-    fn get_shape(&self, id: ShapeId) -> Option<&dyn Shape> {
+    fn get_shape(&self, id: ShapeId) -> Option<RefDynShape> {
         self.shapes.get_shape(id)
     }
 }

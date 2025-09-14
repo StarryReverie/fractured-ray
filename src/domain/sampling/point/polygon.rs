@@ -4,7 +4,7 @@ use rand_distr::weighted::WeightedIndex;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{Val, WrappedVal};
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::{RefDynShape, Shape};
 use crate::domain::shape::primitive::Polygon;
 use crate::domain::shape::util::ShapeId;
 
@@ -53,8 +53,8 @@ impl PointSampling for PolygonPointSampler {
         Some(self.id)
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
-        Some(&self.polygon)
+    fn shape(&self) -> Option<RefDynShape> {
+        Some((&self.polygon).into())
     }
 
     fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {

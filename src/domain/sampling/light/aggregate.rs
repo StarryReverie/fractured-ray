@@ -8,7 +8,7 @@ use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
 use crate::domain::sampling::point::PointSample;
 use crate::domain::scene::bvh::Bvh;
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::{DynShape, RefDynShape, Shape};
 use crate::domain::shape::util::{ShapeContainer, ShapeId};
 
 use super::{LightSample, LightSampling};
@@ -51,7 +51,7 @@ impl LightSampling for AggregateLightSampler {
         unreachable!("AggregateLightSampler::id() doesn't have a unique ID")
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
+    fn shape(&self) -> Option<RefDynShape> {
         unreachable!("AggregateLightSampler doesn't have a unique inner shape")
     }
 
@@ -129,14 +129,11 @@ impl LightContainer {
 }
 
 impl ShapeContainer for LightContainer {
-    fn add_shape<S: Shape>(&mut self, _shape: S) -> ShapeId
-    where
-        Self: Sized,
-    {
+    fn add_shape(&mut self, _shape: DynShape) -> ShapeId {
         unimplemented!()
     }
 
-    fn get_shape(&self, id: ShapeId) -> Option<&dyn Shape> {
+    fn get_shape(&self, id: ShapeId) -> Option<RefDynShape> {
         self.lights.get(&id).and_then(|l| l.shape())
     }
 }

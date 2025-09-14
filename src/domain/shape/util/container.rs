@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use getset::CopyGetters;
 
-use crate::domain::shape::def::{Shape, ShapeKind};
+use crate::domain::shape::def::{DynShape, RefDynShape, ShapeKind};
 
 pub trait ShapeConstructor: Debug + Send + Sync + 'static {
     fn construct<C: ShapeContainer>(self, container: &mut C) -> Vec<ShapeId>;
@@ -22,9 +22,7 @@ impl ShapeId {
 }
 
 pub trait ShapeContainer: Debug + Send + Sync + 'static {
-    fn add_shape<S: Shape + 'static>(&mut self, shape: S) -> ShapeId
-    where
-        Self: Sized;
+    fn add_shape(&mut self, shape: DynShape) -> ShapeId;
 
-    fn get_shape(&self, id: ShapeId) -> Option<&dyn Shape>;
+    fn get_shape(&self, id: ShapeId) -> Option<RefDynShape>;
 }

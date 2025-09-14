@@ -3,7 +3,7 @@ use rand_distr::weighted::WeightedIndex;
 
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{Val, WrappedVal};
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::util::ShapeId;
 
 use super::{PointSample, PointSampling};
@@ -40,7 +40,7 @@ impl PointSampling for AggregatePointSampler {
         unreachable!("AggregatePointSampler::id() doesn't have a unique ID")
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
+    fn shape(&self) -> Option<RefDynShape> {
         unreachable!("AggregatePointSampler doesn't have a unique inner shape")
     }
 
@@ -65,7 +65,7 @@ impl PointSampling for AggregatePointSampler {
 #[cfg(test)]
 mod tests {
     use crate::domain::sampling::point::TrianglePointSampler;
-    use crate::domain::shape::def::ShapeKind;
+    use crate::domain::shape::def::{Shape, ShapeKind};
     use crate::domain::shape::primitive::Triangle;
 
     use super::*;

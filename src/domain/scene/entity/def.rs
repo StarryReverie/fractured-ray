@@ -8,7 +8,7 @@ use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
 use crate::domain::sampling::point::PointSampling;
-use crate::domain::shape::def::{Shape, ShapeKind};
+use crate::domain::shape::def::{DynShape, ShapeKind};
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
 pub trait EntityScene: Send + Sync {
@@ -45,7 +45,7 @@ pub trait EntitySceneBuilder: Send + Sync + Sized {
 
     fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
     where
-        S: Shape + 'static,
+        S: Into<DynShape>,
         M: Into<DynMaterial>;
 
     fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self

@@ -1,11 +1,11 @@
 use rand::prelude::*;
 
-use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
 use crate::domain::shape::def::Shape;
 use crate::domain::shape::primitive::Sphere;
 use crate::domain::shape::util::ShapeId;
+use crate::domain::{math::algebra::UnitVector, shape::def::RefDynShape};
 
 use super::{PointSample, PointSampling};
 
@@ -32,8 +32,8 @@ impl PointSampling for SpherePointSampler {
         Some(self.id)
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
-        Some(&self.sphere)
+    fn shape(&self) -> Option<RefDynShape> {
+        Some((&self.sphere).into())
     }
 
     fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {

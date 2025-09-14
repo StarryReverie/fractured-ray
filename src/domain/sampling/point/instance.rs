@@ -3,7 +3,7 @@ use rand::prelude::*;
 use crate::domain::math::geometry::{AllTransformation, Point, Transform, Transformation};
 use crate::domain::math::numeric::Val;
 use crate::domain::sampling::Sampleable;
-use crate::domain::shape::def::Shape;
+use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::util::{Instance, ShapeId};
 
 use super::{PointSample, PointSampling};
@@ -34,8 +34,8 @@ impl PointSampling for InstancePointSampler {
         Some(self.id)
     }
 
-    fn shape(&self) -> Option<&dyn Shape> {
-        Some(&self.instance)
+    fn shape(&self) -> Option<RefDynShape> {
+        Some((&self.instance).into())
     }
 
     fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {
