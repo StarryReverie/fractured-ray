@@ -1,16 +1,21 @@
 use std::fmt::Debug;
 use std::ops::{Bound, RangeBounds};
 
+use enum_dispatch::enum_dispatch;
+
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::Sampleable;
+use crate::domain::shape::primitive::*;
+use crate::domain::shape::util::Instance;
 
-use super::BoundingBox;
+use super::{BoundingBox, DynShape};
 
-pub trait Shape: Sampleable + Debug + Send + Sync + 'static {
+#[enum_dispatch]
+pub trait Shape: Sampleable + Debug + Send + Sync {
     fn kind(&self) -> ShapeKind;
 
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection>;

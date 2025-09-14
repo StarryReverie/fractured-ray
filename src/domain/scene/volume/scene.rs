@@ -30,7 +30,7 @@ impl BvhVolumeSceneBuilder {
 
     pub fn add<S, M>(&mut self, shape: S, medium: M) -> &mut Self
     where
-        S: Shape,
+        S: Shape + 'static,
         M: Into<DynMedium>,
     {
         let shape_id = self.boundaries.add_shape(shape);

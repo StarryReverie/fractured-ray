@@ -17,10 +17,10 @@ use crate::domain::shape::util::ShapeId;
 
 use super::{Plane, Triangle, TryNewTriangleError};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Polygon(PolygonInner);
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PolygonInner {
     Triangle(Triangle),
     General {

@@ -15,9 +15,9 @@ use crate::domain::sampling::point::PointSampling;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
 use crate::domain::shape::util::ShapeId;
 
-#[derive(Debug, Clone, PartialEq, CopyGetters)]
-#[getset(get_copy = "pub")]
+#[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
 pub struct Plane {
+    #[getset(get_copy = "pub")]
     point: Point,
     normal: UnitVector,
 }

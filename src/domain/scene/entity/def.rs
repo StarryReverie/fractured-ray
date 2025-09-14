@@ -45,7 +45,7 @@ pub trait EntitySceneBuilder: Send + Sync + Sized {
 
     fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
     where
-        S: Shape,
+        S: Shape + 'static,
         M: Into<DynMaterial>;
 
     fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self

@@ -22,7 +22,7 @@ impl EntityPool {
 }
 
 impl ShapeContainer for EntityPool {
-    fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId
+    fn add_shape<S: Shape + 'static>(&mut self, shape: S) -> ShapeId
     where
         Self: Sized,
     {

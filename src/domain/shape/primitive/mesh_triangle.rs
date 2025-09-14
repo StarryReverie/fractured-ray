@@ -109,6 +109,14 @@ impl Sampleable for MeshTriangle {
     }
 }
 
+impl PartialEq for MeshTriangle {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.data, &other.data) && self.index == other.index
+    }
+}
+
+impl Eq for MeshTriangle {}
+
 #[cfg(test)]
 mod tests {
     use crate::domain::math::numeric::Val;

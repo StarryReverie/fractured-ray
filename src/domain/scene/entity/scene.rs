@@ -78,7 +78,7 @@ impl EntitySceneBuilder for BvhEntitySceneBuilder {
 
     fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
     where
-        S: Shape,
+        S: Shape + 'static,
         M: Into<DynMaterial>,
     {
         let shape_id = self.entities.add_shape(shape);

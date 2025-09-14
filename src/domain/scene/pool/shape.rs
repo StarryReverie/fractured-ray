@@ -19,7 +19,10 @@ pub struct ShapePool {
 }
 
 impl ShapePool {
-    fn downcast_and_push<S: Shape>(shape: impl Shape + Any, collection: &mut Vec<S>) -> u32 {
+    fn downcast_and_push<S: Shape + 'static>(
+        shape: impl Shape + Any,
+        collection: &mut Vec<S>,
+    ) -> u32 {
         assert_eq!(TypeId::of::<S>(), shape.type_id());
         // SAFETY: Already checked that S == impl Shape + Any.
         let shape = unsafe { std::mem::transmute_copy(&ManuallyDrop::new(shape)) };
@@ -34,7 +37,7 @@ impl ShapePool {
 }
 
 impl ShapeContainer for ShapePool {
-    fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId {
+    fn add_shape<S: Shape + 'static>(&mut self, shape: S) -> ShapeId {
         let kind = shape.kind();
         let type_id = TypeId::of::<S>();
 

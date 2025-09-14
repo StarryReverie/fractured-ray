@@ -16,7 +16,7 @@ use crate::domain::sampling::point::{PointSampling, TrianglePointSampler};
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
 use crate::domain::shape::util::ShapeId;
 
-#[derive(Debug, Clone, PartialEq, CopyGetters)]
+#[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct Triangle {
     vertex0: Point,

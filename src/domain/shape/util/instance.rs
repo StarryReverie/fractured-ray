@@ -14,34 +14,34 @@ use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{InstanceLightSampler, LightSampling};
 use crate::domain::sampling::photon::{InstancePhotonSampler, PhotonSampling};
 use crate::domain::sampling::point::{InstancePointSampler, PointSampling};
-use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
+use crate::domain::shape::def::{BoundingBox, DynShape, Shape, ShapeKind};
 use crate::domain::shape::util::ShapeId;
 
-#[derive(Debug, Clone, Getters)]
+#[derive(Debug, Clone, Getters, PartialEq, Eq)]
 pub struct Instance {
     #[getset(get = "pub")]
-    prototype: Arc<dyn Shape>,
+    prototype: Arc<DynShape>,
     #[getset(get = "pub")]
     transformation: AllTransformation,
 }
 
 impl Instance {
-    pub fn new(prototype: Arc<dyn Shape>, transformation: AllTransformation) -> Self {
+    pub fn new(prototype: Arc<DynShape>, transformation: AllTransformation) -> Self {
         Self {
             prototype,
             transformation,
         }
     }
 
-    pub fn of(prototype: Arc<dyn Shape>) -> Self {
+    pub fn of(prototype: Arc<DynShape>) -> Self {
         Self {
             prototype,
             transformation: AllTransformation::default(),
         }
     }
 
-    pub fn wrap<S: Shape>(prototype: S) -> Self {
-        Self::of(Arc::new(prototype))
+    pub fn wrap<S: Into<DynShape>>(prototype: S) -> Self {
+        Self::of(Arc::new(prototype.into()))
     }
 
     pub fn rotate(self, rotation: Rotation) -> Self {

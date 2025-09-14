@@ -22,7 +22,7 @@ impl ShapeId {
 }
 
 pub trait ShapeContainer: Debug + Send + Sync + 'static {
-    fn add_shape<S: Shape>(&mut self, shape: S) -> ShapeId
+    fn add_shape<S: Shape + 'static>(&mut self, shape: S) -> ShapeId
     where
         Self: Sized;
 
