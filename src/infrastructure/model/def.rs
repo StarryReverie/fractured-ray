@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use snafu::prelude::*;
 
+use crate::domain::material::def::MaterialKind;
 use crate::domain::scene::entity::EntitySceneBuilder;
 use crate::domain::shape::mesh::TryNewMeshError;
 
@@ -24,6 +25,14 @@ pub enum LoadEntityModelError {
         path: Option<PathBuf>,
         mesh_name: String,
         source: TryNewMeshError,
+    },
+    #[snafu(display(
+        "parameters of material {material_name} ({material_kind:?}) are incorrectly configured"
+    ))]
+    InvalidMaterial {
+        material_kind: MaterialKind,
+        material_name: String,
+        source: Box<dyn Error + Send + Sync>,
     },
     #[snafu(display(
         "no material is specified for mesh `{mesh_name}` from `{}`",

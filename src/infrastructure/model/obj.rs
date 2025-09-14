@@ -4,9 +4,7 @@ use std::sync::Arc;
 use obj::{Group, MtlLibsLoadError, Obj, ObjData, ObjError, ObjMaterial, Object};
 use snafu::prelude::*;
 
-use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::DynMaterial;
-use crate::domain::material::primitive::Diffuse;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{Val, WrappedVal};
 use crate::domain::scene::entity::EntitySceneBuilder;
@@ -15,6 +13,7 @@ use crate::infrastructure::model::def::{
     InvalidMeshSnafu, MissingMaterialSnafu, UnspecifiedMaterialSnafu,
 };
 
+use super::obj_material::ObjMaterialConverterChain;
 use super::{EntityModelLoader, LoadEntityModelError};
 
 #[derive(Debug, Clone)]
@@ -22,6 +21,7 @@ pub struct EntityObjModelLoader {
     obj: ObjData,
     path: Option<PathBuf>,
     vertices: Arc<[Point]>,
+    converter: ObjMaterialConverterChain,
 }
 
 impl EntityObjModelLoader {
@@ -50,6 +50,7 @@ impl EntityObjModelLoader {
             obj,
             path,
             vertices,
+            converter: ObjMaterialConverterChain::new(),
         }
     }
 
@@ -93,10 +94,7 @@ impl EntityObjModelLoader {
                 .fail();
             }
         };
-
-        // TODO: add material converter
-        let kd = Self::map_f32_array(material.kd.as_ref().unwrap_or(&[0.0, 0.0, 0.0]));
-        Ok(Diffuse::new(Albedo::clamp(Spectrum::new(kd[0], kd[1], kd[2]))).into())
+        self.converter.convert(material)
     }
 
     fn map_f32_array(&[x, y, z]: &[f32; 3]) -> [Val; 3] {
