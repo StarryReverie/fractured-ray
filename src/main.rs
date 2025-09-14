@@ -10,8 +10,7 @@ use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::scene::entity::{BvhEntitySceneBuilder, EntitySceneBuilder};
 use fractured_ray::domain::scene::volume::BvhVolumeSceneBuilder;
-use fractured_ray::domain::shape::instance::MeshConstructorInstance;
-use fractured_ray::domain::shape::mesh::MeshConstructor;
+use fractured_ray::domain::shape::mesh::{MeshConstructor, MeshInstanceConstructor};
 use fractured_ray::domain::shape::primitive::{Plane, Polygon, Sphere};
 use fractured_ray::infrastructure::image::PngWriter;
 
@@ -93,7 +92,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     builder.add_constructor(
-        MeshConstructorInstance::wrap(MeshConstructor::new(
+        MeshInstanceConstructor::wrap(MeshConstructor::new(
             vec![
                 Point::new(Val(1.0), Val(0.0), Val(1.0)),
                 Point::new(Val(-1.0), Val(0.0), Val(1.0)),

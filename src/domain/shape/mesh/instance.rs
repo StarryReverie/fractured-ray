@@ -5,12 +5,12 @@ use crate::domain::shape::mesh::MeshConstructor;
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
 #[derive(Debug, Clone)]
-pub struct MeshConstructorInstance {
+pub struct MeshInstanceConstructor {
     prototype: Arc<MeshConstructor>,
     transformation: AllTransformation,
 }
 
-impl MeshConstructorInstance {
+impl MeshInstanceConstructor {
     pub fn new(prototype: Arc<MeshConstructor>, transformation: AllTransformation) -> Self {
         Self {
             prototype,
@@ -50,7 +50,7 @@ impl MeshConstructorInstance {
     }
 }
 
-impl ShapeConstructor for MeshConstructorInstance {
+impl ShapeConstructor for MeshInstanceConstructor {
     fn construct<C: ShapeContainer>(self, container: &mut C) -> Vec<ShapeId> {
         let inv_transformation = Some(self.transformation.clone().inverse());
         let transformation = Some(self.transformation);

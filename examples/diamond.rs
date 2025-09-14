@@ -13,8 +13,7 @@ use fractured_ray::domain::medium::primitive::Isotropic;
 use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::scene::entity::{BvhEntitySceneBuilder, EntitySceneBuilder};
 use fractured_ray::domain::scene::volume::BvhVolumeSceneBuilder;
-use fractured_ray::domain::shape::instance::MeshConstructorInstance;
-use fractured_ray::domain::shape::mesh::MeshConstructor;
+use fractured_ray::domain::shape::mesh::{MeshConstructor, MeshInstanceConstructor};
 use fractured_ray::domain::shape::primitive::{Aabb, Plane, Polygon};
 use fractured_ray::infrastructure::image::PngWriter;
 
@@ -24,7 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let diamond = get_diamond_mesh()?;
 
     scene.add_constructor(
-        MeshConstructorInstance::wrap(diamond)
+        MeshInstanceConstructor::wrap(diamond)
             .rotate(Rotation::new(
                 UnitVector::y_direction(),
                 Vector::new(Val(-2.0), Val(2.5), Val(2.0)).normalize()?,

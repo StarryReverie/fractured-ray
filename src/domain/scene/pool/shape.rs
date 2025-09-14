@@ -3,9 +3,8 @@ use std::fmt::Debug;
 use std::mem::ManuallyDrop;
 
 use crate::domain::shape::def::{Shape, ShapeKind};
-use crate::domain::shape::instance::Instance;
 use crate::domain::shape::primitive::*;
-use crate::domain::shape::util::{ShapeContainer, ShapeId};
+use crate::domain::shape::util::{Instance, ShapeContainer, ShapeId};
 
 #[derive(Debug, Default)]
 pub struct ShapePool {

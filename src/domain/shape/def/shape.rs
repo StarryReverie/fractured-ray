@@ -1,8 +1,6 @@
 use std::fmt::Debug;
 use std::ops::{Bound, RangeBounds};
 
-use getset::CopyGetters;
-
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};

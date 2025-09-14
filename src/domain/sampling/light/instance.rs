@@ -6,8 +6,7 @@ use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
 use crate::domain::sampling::point::PointSample;
 use crate::domain::shape::def::Shape;
-use crate::domain::shape::instance::Instance;
-use crate::domain::shape::util::ShapeId;
+use crate::domain::shape::util::{Instance, ShapeId};
 
 use super::{LightSample, LightSampling};
 
