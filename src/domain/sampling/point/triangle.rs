@@ -3,8 +3,9 @@ use rand::prelude::*;
 use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
-use crate::domain::shape::def::{Shape, ShapeId};
+use crate::domain::shape::def::Shape;
 use crate::domain::shape::primitive::Triangle;
+use crate::domain::shape::util::ShapeId;
 
 use super::{PointSample, PointSampling};
 

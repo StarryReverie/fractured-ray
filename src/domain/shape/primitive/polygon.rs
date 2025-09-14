@@ -12,7 +12,8 @@ use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
 use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
 use crate::domain::sampling::point::{PointSampling, PolygonPointSampler};
-use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
+use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
+use crate::domain::shape::util::ShapeId;
 
 use super::{Plane, Triangle, TryNewTriangleError};
 

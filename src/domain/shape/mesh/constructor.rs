@@ -4,8 +4,8 @@ use smallvec::SmallVec;
 use snafu::prelude::*;
 
 use crate::domain::math::geometry::{AllTransformation, Point};
-use crate::domain::shape::def::{ShapeConstructor, ShapeContainer, ShapeId};
 use crate::domain::shape::primitive::{Polygon, Triangle};
+use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
 use super::data::{OutOfBoundSnafu, PolygonSnafu, TriangleSnafu};
 use super::{MeshData, MeshPolygon, MeshTriangle, TryNewMeshError};

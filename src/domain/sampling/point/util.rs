@@ -2,7 +2,8 @@ use rand::prelude::*;
 
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
-use crate::domain::shape::def::{Shape, ShapeId};
+use crate::domain::shape::def::Shape;
+use crate::domain::shape::util::ShapeId;
 
 use super::{PointSample, PointSampling};
 

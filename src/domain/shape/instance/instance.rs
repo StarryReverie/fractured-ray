@@ -14,7 +14,8 @@ use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{InstanceLightSampler, LightSampling};
 use crate::domain::sampling::photon::{InstancePhotonSampler, PhotonSampling};
 use crate::domain::sampling::point::{InstancePointSampler, PointSampling};
-use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
+use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
+use crate::domain::shape::util::ShapeId;
 
 #[derive(Debug, Clone, Getters)]
 pub struct Instance {

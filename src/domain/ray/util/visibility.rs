@@ -7,7 +7,7 @@ use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::scene::entity::EntityScene;
-use crate::domain::shape::def::ShapeId;
+use crate::domain::shape::util::ShapeId;
 
 pub struct VisibilityTester<'s, 'r> {
     scene: &'s dyn EntityScene,

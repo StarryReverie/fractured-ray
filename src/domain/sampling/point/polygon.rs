@@ -4,8 +4,9 @@ use rand_distr::weighted::WeightedIndex;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{Val, WrappedVal};
-use crate::domain::shape::def::{Shape, ShapeId};
+use crate::domain::shape::def::Shape;
 use crate::domain::shape::primitive::Polygon;
+use crate::domain::shape::util::ShapeId;
 
 use super::{PointSample, PointSampling, TrianglePointSampler};
 

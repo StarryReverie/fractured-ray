@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use crate::domain::math::geometry::{AllTransformation, Rotation, Transformation, Translation};
-use crate::domain::shape::def::{ShapeConstructor, ShapeContainer, ShapeId};
 use crate::domain::shape::mesh::MeshConstructor;
+use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
 #[derive(Debug, Clone)]
 pub struct MeshConstructorInstance {

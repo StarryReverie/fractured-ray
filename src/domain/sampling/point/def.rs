@@ -6,7 +6,8 @@ use rand::prelude::*;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::{AllTransformation, Point, Transform};
 use crate::domain::math::numeric::Val;
-use crate::domain::shape::def::{Shape, ShapeId};
+use crate::domain::shape::def::Shape;
+use crate::domain::shape::util::ShapeId;
 
 pub trait PointSampling: Debug + Send + Sync {
     fn id(&self) -> Option<ShapeId>;

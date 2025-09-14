@@ -3,8 +3,9 @@ use rand::prelude::*;
 use crate::domain::math::geometry::{AllTransformation, Point, Transform, Transformation};
 use crate::domain::math::numeric::Val;
 use crate::domain::sampling::Sampleable;
-use crate::domain::shape::def::{Shape, ShapeId};
+use crate::domain::shape::def::Shape;
 use crate::domain::shape::instance::Instance;
+use crate::domain::shape::util::ShapeId;
 
 use super::{PointSample, PointSampling};
 

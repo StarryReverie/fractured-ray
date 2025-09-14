@@ -3,7 +3,8 @@ use std::fmt::Debug;
 use crate::domain::material::def::{DynMaterial, RefDynMaterial};
 use crate::domain::material::util::{MaterialContainer, MaterialId};
 use crate::domain::scene::entity::{EntityContainer, EntityId};
-use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
+use crate::domain::shape::def::Shape;
+use crate::domain::shape::util::{ShapeContainer, ShapeId};
 
 use super::{MaterialPool, ShapePool};
 

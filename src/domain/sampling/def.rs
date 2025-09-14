@@ -1,5 +1,5 @@
 use crate::domain::material::primitive::Emissive;
-use crate::domain::shape::def::ShapeId;
+use crate::domain::shape::util::ShapeId;
 
 use super::light::LightSampling;
 use super::photon::PhotonSampling;

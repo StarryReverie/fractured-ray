@@ -8,7 +8,8 @@ use crate::domain::sampling::photon::{AggregatePhotonSampler, EmptyPhotonSampler
 use crate::domain::sampling::point::{AggregatePointSampler, EmptyPointSampler, PointSampling};
 use crate::domain::scene::bvh::Bvh;
 use crate::domain::scene::pool::EntityPool;
-use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer};
+use crate::domain::shape::def::Shape;
+use crate::domain::shape::util::{ShapeConstructor, ShapeContainer};
 
 use super::{EntityContainer, EntityId, EntityScene, EntitySceneBuilder};
 

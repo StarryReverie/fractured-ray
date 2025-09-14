@@ -8,7 +8,8 @@ use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
 use crate::domain::sampling::point::PointSample;
 use crate::domain::scene::bvh::Bvh;
-use crate::domain::shape::def::{Shape, ShapeContainer, ShapeId};
+use crate::domain::shape::def::Shape;
+use crate::domain::shape::util::{ShapeContainer, ShapeId};
 
 use super::{LightSample, LightSampling};
 

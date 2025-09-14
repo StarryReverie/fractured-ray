@@ -12,7 +12,8 @@ use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
 use crate::domain::sampling::point::PointSampling;
-use crate::domain::shape::def::{BoundingBox, Shape, ShapeId, ShapeKind};
+use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
+use crate::domain::shape::util::ShapeId;
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
 #[getset(get_copy = "pub")]

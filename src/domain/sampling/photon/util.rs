@@ -107,8 +107,9 @@ where
 mod tests {
     use crate::domain::math::geometry::{Point, SpreadAngle};
     use crate::domain::sampling::point::TrianglePointSampler;
-    use crate::domain::shape::def::{ShapeId, ShapeKind};
+    use crate::domain::shape::def::ShapeKind;
     use crate::domain::shape::primitive::Triangle;
+    use crate::domain::shape::util::ShapeId;
 
     use super::*;
 

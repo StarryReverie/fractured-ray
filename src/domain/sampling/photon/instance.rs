@@ -5,8 +5,8 @@ use crate::domain::material::primitive::Emissive;
 use crate::domain::math::geometry::AllTransformation;
 use crate::domain::math::geometry::Transform;
 use crate::domain::math::numeric::Val;
-use crate::domain::shape::def::ShapeId;
 use crate::domain::shape::instance::Instance;
+use crate::domain::shape::util::ShapeId;
 
 use super::{PhotonSample, PhotonSampling};
 

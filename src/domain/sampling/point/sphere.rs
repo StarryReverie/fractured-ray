@@ -3,8 +3,9 @@ use rand::prelude::*;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
-use crate::domain::shape::def::{Shape, ShapeId};
+use crate::domain::shape::def::Shape;
 use crate::domain::shape::primitive::Sphere;
+use crate::domain::shape::util::ShapeId;
 
 use super::{PointSample, PointSampling};
 
@@ -62,7 +63,8 @@ impl PointSampling for SpherePointSampler {
 #[cfg(test)]
 mod tests {
     use crate::domain::math::geometry::Point;
-    use crate::domain::shape::def::{ShapeId, ShapeKind};
+    use crate::domain::shape::def::ShapeKind;
+    use crate::domain::shape::util::ShapeId;
 
     use super::*;
 

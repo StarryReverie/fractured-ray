@@ -11,7 +11,8 @@ use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RaySegment, SurfaceSide};
 use crate::domain::scene::bvh::Bvh;
 use crate::domain::scene::pool::BoundaryPool;
-use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer};
+use crate::domain::shape::def::Shape;
+use crate::domain::shape::util::{ShapeConstructor, ShapeContainer};
 
 use super::{BoundaryContainer, BoundaryId, VolumeScene};
 

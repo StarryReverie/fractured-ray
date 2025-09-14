@@ -8,7 +8,8 @@ use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
 use crate::domain::sampling::point::PointSampling;
-use crate::domain::shape::def::{Shape, ShapeConstructor, ShapeContainer, ShapeId, ShapeKind};
+use crate::domain::shape::def::{Shape, ShapeKind};
+use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
 pub trait EntityScene: Send + Sync {
     fn get_entities(&self) -> &dyn EntityContainer;
