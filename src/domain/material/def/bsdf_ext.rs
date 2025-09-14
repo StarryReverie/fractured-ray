@@ -144,7 +144,7 @@ pub trait BsdfMaterialExt: BsdfMaterial {
         let continue_prob = (throughput.red())
             .max(throughput.green())
             .max(throughput.blue())
-            .clamp(Val(0.0), Val(1.0));
+            .clamp(Val(0.0), Val(0.9));
         if Val(context.rng().random()) < continue_prob {
             throughput /= continue_prob;
         } else {
