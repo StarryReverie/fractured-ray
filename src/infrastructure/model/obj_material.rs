@@ -25,6 +25,10 @@ impl ObjMaterialConverterChain {
         Self {
             chain: vec![
                 EmissiveObjMaterialConverter::create(),
+                BlurryObjMaterialConverter::create(),
+                RefractiveObjMaterialConverter::create(),
+                GlossyObjMaterialConverter::create(),
+                SpecularObjMaterialConverter::create(),
                 DiffuseObjMaterialConverter::create(),
             ],
             fallback: Diffuse::new(Albedo::BLACK).into(),
@@ -53,6 +57,10 @@ trait ObjMaterialConverter: Send + Sync {
 #[derive(Debug, Clone)]
 enum DynObjMaterialConverter {
     Emissive(EmissiveObjMaterialConverter),
+    Blurry(BlurryObjMaterialConverter),
+    Refractive(RefractiveObjMaterialConverter),
+    Glossy(GlossyObjMaterialConverter),
+    Specular(SpecularObjMaterialConverter),
     Diffuse(DiffuseObjMaterialConverter),
 }
 
@@ -87,6 +95,120 @@ impl ObjMaterialConverter for EmissiveObjMaterialConverter {
     }
 }
 
+def_obj_material_converter!(BlurryObjMaterialConverter);
+
+impl ObjMaterialConverter for BlurryObjMaterialConverter {
+    fn try_convert(
+        &self,
+        mtl: &ExtMaterial,
+    ) -> ControlFlow<Result<DynMaterial, LoadEntityModelError>> {
+        let Some(ni) = mtl.ni.map(map_f32) else {
+            return ControlFlow::Continue(());
+        };
+
+        let Some(ns) = mtl.ns.map(map_f32) else {
+            return ControlFlow::Continue(());
+        };
+        let roughness = convert_ns_to_roughness(ns);
+
+        if mtl.d.is_some() {
+            let Some([ks_r, ks_g, ks_b]) = mtl.ks.map(map_f32_array) else {
+                return ControlFlow::Continue(());
+            };
+            wrap_break(MaterialKind::Blurry, &mtl.name, || {
+                let albedo = Albedo::new(ks_r, ks_g, ks_b)?;
+                let blurry = Blurry::new(albedo, ni, roughness)?;
+                Ok(blurry.into())
+            })
+        } else if let Some([tf_r, tf_g, tf_b]) = mtl.tf.map(map_f32_array) {
+            wrap_break(MaterialKind::Blurry, &mtl.name, || {
+                let albedo = Albedo::new(tf_r, tf_g, tf_b)?;
+                let blurry = Blurry::new(albedo, ni, roughness)?;
+                Ok(blurry.into())
+            })
+        } else {
+            ControlFlow::Continue(())
+        }
+    }
+}
+
+def_obj_material_converter!(RefractiveObjMaterialConverter);
+
+impl ObjMaterialConverter for RefractiveObjMaterialConverter {
+    fn try_convert(
+        &self,
+        mtl: &ExtMaterial,
+    ) -> ControlFlow<Result<DynMaterial, LoadEntityModelError>> {
+        let Some(ni) = mtl.ni.map(map_f32) else {
+            return ControlFlow::Continue(());
+        };
+
+        if mtl.d.is_some() {
+            let Some([ks_r, ks_g, ks_b]) = mtl.ks.map(map_f32_array) else {
+                return ControlFlow::Continue(());
+            };
+            wrap_break(MaterialKind::Refractive, &mtl.name, || {
+                let albedo = Albedo::new(ks_r, ks_g, ks_b)?;
+                let refractive = Refractive::new(albedo, ni)?;
+                Ok(refractive.into())
+            })
+        } else if let Some([tf_r, tf_g, tf_b]) = mtl.tf.map(map_f32_array) {
+            wrap_break(MaterialKind::Refractive, &mtl.name, || {
+                let albedo = Albedo::new(tf_r, tf_g, tf_b)?;
+                let refractive = Refractive::new(albedo, ni)?;
+                Ok(refractive.into())
+            })
+        } else {
+            ControlFlow::Continue(())
+        }
+    }
+}
+
+def_obj_material_converter!(GlossyObjMaterialConverter);
+
+impl ObjMaterialConverter for GlossyObjMaterialConverter {
+    fn try_convert(
+        &self,
+        mtl: &ExtMaterial,
+    ) -> ControlFlow<Result<DynMaterial, LoadEntityModelError>> {
+        let metalness = mtl.km.map(map_f32).unwrap_or(Val(0.0));
+
+        let Some(ns) = mtl.ns.map(map_f32) else {
+            return ControlFlow::Continue(());
+        };
+        let roughness = convert_ns_to_roughness(ns);
+
+        let Some([ks_r, ks_g, ks_b]) = mtl.ks.map(map_f32_array) else {
+            return ControlFlow::Continue(());
+        };
+
+        wrap_break(MaterialKind::Glossy, &mtl.name, || {
+            let albedo = Albedo::new(ks_r, ks_g, ks_b)?;
+            let glossy = Glossy::new(albedo, metalness, roughness)?;
+            Ok(glossy.into())
+        })
+    }
+}
+
+def_obj_material_converter!(SpecularObjMaterialConverter);
+
+impl ObjMaterialConverter for SpecularObjMaterialConverter {
+    fn try_convert(
+        &self,
+        mtl: &ExtMaterial,
+    ) -> ControlFlow<Result<DynMaterial, LoadEntityModelError>> {
+        let Some([ks_r, ks_g, ks_b]) = mtl.ks.map(map_f32_array) else {
+            return ControlFlow::Continue(());
+        };
+
+        wrap_break(MaterialKind::Specular, &mtl.name, || {
+            let albedo = Albedo::new(ks_r, ks_g, ks_b)?;
+            let specular = Specular::new(albedo);
+            Ok(specular.into())
+        })
+    }
+}
+
 def_obj_material_converter!(DiffuseObjMaterialConverter);
 
 impl ObjMaterialConverter for DiffuseObjMaterialConverter {
@@ -103,6 +225,11 @@ impl ObjMaterialConverter for DiffuseObjMaterialConverter {
             Ok(diffuse.into())
         })
     }
+}
+
+#[inline]
+fn convert_ns_to_roughness(ns: Val) -> Val {
+    (Val(1.0) - ns / Val(1000.0)).clamp(Val(0.0), Val(1.0))
 }
 
 #[inline]
@@ -153,6 +280,90 @@ mod tests {
     }
 
     #[test]
+    fn obj_material_converter_chain_convert_succeeds_given_blurry_parameters() {
+        let converter = ObjMaterialConverterChain::new();
+
+        let mtl = ExtMaterial {
+            ks: Some([0.5, 0.5, 0.5]),
+            ns: Some(200.0),
+            d: Some(0.8),
+            ni: Some(1.5),
+            ..get_initial_ext_material()
+        };
+        assert!(matches!(
+            converter.convert(&mtl),
+            Ok(DynMaterial::Blurry(_)),
+        ));
+
+        let mtl = ExtMaterial {
+            tf: Some([0.5, 0.5, 0.5]),
+            ns: Some(200.0),
+            ni: Some(1.5),
+            ..get_initial_ext_material()
+        };
+        assert!(matches!(
+            converter.convert(&mtl),
+            Ok(DynMaterial::Blurry(_)),
+        ));
+    }
+
+    #[test]
+    fn obj_material_converter_chain_convert_succeeds_given_refractive_parameters() {
+        let converter = ObjMaterialConverterChain::new();
+
+        let mtl = ExtMaterial {
+            ks: Some([0.5, 0.5, 0.5]),
+            d: Some(0.8),
+            ni: Some(1.5),
+            ..get_initial_ext_material()
+        };
+        assert!(matches!(
+            converter.convert(&mtl),
+            Ok(DynMaterial::Refractive(_)),
+        ));
+
+        let mtl = ExtMaterial {
+            tf: Some([0.5, 0.5, 0.5]),
+            ni: Some(1.5),
+            ..get_initial_ext_material()
+        };
+        assert!(matches!(
+            converter.convert(&mtl),
+            Ok(DynMaterial::Refractive(_)),
+        ));
+    }
+
+    #[test]
+    fn obj_material_converter_chain_convert_succeeds_given_glossy_parameters() {
+        let converter = ObjMaterialConverterChain::new();
+
+        let mtl = ExtMaterial {
+            ks: Some([0.5, 0.5, 0.5]),
+            km: Some(0.4),
+            ns: Some(800.0),
+            ..get_initial_ext_material()
+        };
+        assert!(matches!(
+            converter.convert(&mtl),
+            Ok(DynMaterial::Glossy(_)),
+        ));
+    }
+
+    #[test]
+    fn obj_material_converter_chain_convert_succeeds_given_specular_parameters() {
+        let converter = ObjMaterialConverterChain::new();
+
+        let mtl = ExtMaterial {
+            ks: Some([0.5, 0.5, 0.5]),
+            ..get_initial_ext_material()
+        };
+        assert!(matches!(
+            converter.convert(&mtl),
+            Ok(DynMaterial::Specular(_)),
+        ));
+    }
+
+    #[test]
     fn obj_material_converter_chain_convert_succeeds_given_diffuse_parameters() {
         let converter = ObjMaterialConverterChain::new();
 
@@ -163,15 +374,6 @@ mod tests {
         assert!(matches!(
             converter.convert(&mtl),
             Ok(DynMaterial::Diffuse(_)),
-        ));
-
-        let mtl = ExtMaterial {
-            kd: Some([1.5, 1.5, 1.5]),
-            ..get_initial_ext_material()
-        };
-        assert!(matches!(
-            converter.convert(&mtl),
-            Err(LoadEntityModelError::InvalidMaterial { .. }),
         ));
     }
 
