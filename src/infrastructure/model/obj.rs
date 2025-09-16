@@ -7,7 +7,7 @@ use snafu::prelude::*;
 use crate::domain::material::def::DynMaterial;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{Val, WrappedVal};
-use crate::domain::scene::entity::EntitySceneBuilder;
+use crate::domain::scene::entity::{EntitySceneBuilder, TypedEntitySceneBuilder};
 use crate::domain::shape::mesh::MeshConstructor;
 use crate::infrastructure::model::def::{
     InvalidMeshSnafu, MissingMaterialSnafu, UnspecifiedMaterialSnafu,
@@ -110,10 +110,7 @@ impl EntityObjModelLoader {
 }
 
 impl EntityModelLoader for EntityObjModelLoader {
-    fn load<B>(&self, builder: &mut B) -> Result<(), LoadEntityModelError>
-    where
-        B: EntitySceneBuilder,
-    {
+    fn load(&self, builder: &mut dyn EntitySceneBuilder) -> Result<(), LoadEntityModelError> {
         let mut meshes = Vec::with_capacity(self.obj.objects.len());
         for object in &self.obj.objects {
             for group in &object.groups {

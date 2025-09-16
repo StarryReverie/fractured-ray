@@ -46,7 +46,7 @@ impl BvhVolumeSceneBuilder {
         C: ShapeConstructor,
         M: Into<DynMedium>,
     {
-        let shape_ids = constructor.construct(self.boundaries.as_mut());
+        let shape_ids = Box::new(constructor).construct(self.boundaries.as_mut());
         let medium_id = self.boundaries.add_medium(medium.into());
         for shape_id in shape_ids {
             let boundary_id = BoundaryId::new(shape_id, medium_id);

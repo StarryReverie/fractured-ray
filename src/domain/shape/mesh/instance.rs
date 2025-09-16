@@ -51,7 +51,7 @@ impl MeshInstanceConstructor {
 }
 
 impl ShapeConstructor for MeshInstanceConstructor {
-    fn construct<C: ShapeContainer>(self, container: &mut C) -> Vec<ShapeId> {
+    fn construct(self: Box<Self>, container: &mut dyn ShapeContainer) -> Vec<ShapeId> {
         let inv_transformation = Some(self.transformation.clone().inverse());
         let transformation = Some(self.transformation);
 

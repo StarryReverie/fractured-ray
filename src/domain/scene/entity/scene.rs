@@ -23,13 +23,13 @@ pub struct BvhEntitySceneBuilder {
 }
 
 impl BvhEntitySceneBuilder {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Box<Self> {
+        Box::new(Self {
             entities: Box::new(EntityPool::new()),
             light_surfaces: Vec::new(),
             lights: Vec::new(),
             emitters: Vec::new(),
-        }
+        })
     }
 
     fn post_add_entity(&mut self, entity_id: EntityId) {
@@ -75,39 +75,30 @@ impl BvhEntitySceneBuilder {
 }
 
 impl EntitySceneBuilder for BvhEntitySceneBuilder {
-    type Output = BvhEntityScene;
-
-    fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
-    where
-        S: Into<DynShape>,
-        M: Into<DynMaterial>,
-    {
-        let shape_id = self.entities.add_shape(shape.into());
-        let material_id = self.entities.add_material(material.into());
+    fn add_dyn(&mut self, shape: DynShape, material: DynMaterial) {
+        let shape_id = self.entities.add_shape(shape);
+        let material_id = self.entities.add_material(material);
         let entity_id = EntityId::new(shape_id, material_id);
         self.entities.register_id(entity_id);
         self.post_add_entity(entity_id);
-        self
     }
 
-    fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self
-    where
-        C: ShapeConstructor,
-        M: Into<DynMaterial>,
-    {
+    fn add_constructor_dyn(
+        &mut self,
+        constructor: Box<dyn ShapeConstructor>,
+        material: DynMaterial,
+    ) {
         let shape_ids = constructor.construct(self.entities.as_mut());
-        let material_id = self.entities.add_material(material.into());
+        let material_id = self.entities.add_material(material);
 
         for shape_id in shape_ids {
             let entity_id = EntityId::new(shape_id, material_id);
             self.entities.register_id(entity_id);
             self.post_add_entity(entity_id);
         }
-
-        self
     }
 
-    fn build(self) -> Self::Output {
+    fn build(self: Box<Self>) -> Box<dyn EntityScene> {
         let light_surfaces: Box<dyn PointSampling> = if self.light_surfaces.len() > 1 {
             let samplers = (self.light_surfaces.into_iter())
                 .map(|s| (s, Val(1.0)))
@@ -135,7 +126,12 @@ impl EntitySceneBuilder for BvhEntitySceneBuilder {
                 .unwrap_or(Box::new(EmptyPhotonSampler::new()))
         };
 
-        BvhEntityScene::new(self.entities, light_surfaces, lights, emitters)
+        Box::new(BvhEntityScene::new(
+            self.entities,
+            light_surfaces,
+            lights,
+            emitters,
+        ))
     }
 }
 

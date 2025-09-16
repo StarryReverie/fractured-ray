@@ -8,9 +8,7 @@ use crate::domain::scene::entity::EntitySceneBuilder;
 use crate::domain::shape::mesh::TryNewMeshError;
 
 pub trait EntityModelLoader: Send + Sync {
-    fn load<B>(&self, builder: &mut B) -> Result<(), LoadEntityModelError>
-    where
-        B: EntitySceneBuilder;
+    fn load(&self, builder: &mut dyn EntitySceneBuilder) -> Result<(), LoadEntityModelError>;
 }
 
 #[derive(Debug, Snafu)]

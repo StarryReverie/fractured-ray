@@ -15,17 +15,16 @@ use crate::domain::medium::util::AggregateMedium;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RaySegment};
 use crate::domain::ray::photon::{PhotonMap, PhotonRay, SearchPolicy};
-use crate::domain::scene::entity::{BvhEntityScene, EntityScene};
+use crate::domain::scene::entity::EntityScene;
 use crate::domain::scene::volume::{BvhVolumeScene, VolumeScene};
 
 use super::{
     Contribution, PhotonInfo, PmContext, PmState, Renderer, RtContext, RtState, StoragePolicy,
 };
 
-#[derive(Debug)]
 pub struct CoreRenderer {
     camera: Camera,
-    entity_scene: BvhEntityScene,
+    entity_scene: Box<dyn EntityScene>,
     volume_scene: BvhVolumeScene,
     config: Configuration,
 }
@@ -33,7 +32,7 @@ pub struct CoreRenderer {
 impl CoreRenderer {
     pub fn new(
         camera: Camera,
-        entity_scene: BvhEntityScene,
+        entity_scene: Box<dyn EntityScene>,
         volume_scene: BvhVolumeScene,
         config: Configuration,
     ) -> Result<Self, ConfigurationError> {
@@ -67,7 +66,7 @@ impl CoreRenderer {
         let mut rng = rand::rng();
         let mut context = RtContext::new(
             self,
-            &self.entity_scene,
+            self.entity_scene.as_ref(),
             &self.volume_scene,
             &mut rng,
             &self.config,
@@ -131,7 +130,7 @@ impl CoreRenderer {
                 let mut rng = rand::rng();
                 if let Some(photon) = self.entity_scene.get_emitters().sample_photon(&mut rng) {
                     let mut context =
-                        PmContext::new(self, &self.entity_scene, &mut rng, &mut photons);
+                        PmContext::new(self, self.entity_scene.as_ref(), &mut rng, &mut photons);
                     let state = PmState::new(false, policy);
                     self.emit(&mut context, state, photon.photon(), DisRange::positive());
                 }

@@ -124,7 +124,7 @@ impl MeshConstructor {
 }
 
 impl ShapeConstructor for MeshConstructor {
-    fn construct<C: ShapeContainer>(self, container: &mut C) -> Vec<ShapeId> {
+    fn construct(self: Box<Self>, container: &mut dyn ShapeContainer) -> Vec<ShapeId> {
         let (triangles, polygons) = self.construct_impl(None, None);
 
         let mut ids = Vec::with_capacity(triangles.len() + polygons.len());

@@ -5,7 +5,7 @@ use getset::CopyGetters;
 use crate::domain::shape::def::{DynShape, RefDynShape, ShapeKind};
 
 pub trait ShapeConstructor: Debug + Send + Sync + 'static {
-    fn construct<C: ShapeContainer>(self, container: &mut C) -> Vec<ShapeId>;
+    fn construct(self: Box<Self>, container: &mut dyn ShapeContainer) -> Vec<ShapeId>;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, CopyGetters)]

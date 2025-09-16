@@ -40,21 +40,37 @@ pub trait EntityScene: Send + Sync {
     }
 }
 
-pub trait EntitySceneBuilder: Send + Sync + Sized {
-    type Output: EntityScene;
+pub trait EntitySceneBuilder: Send + Sync {
+    fn add_dyn(&mut self, shape: DynShape, material: DynMaterial);
 
-    fn add<S, M>(&mut self, shape: S, material: M) -> &mut Self
+    fn add_constructor_dyn(
+        &mut self,
+        constructor: Box<dyn ShapeConstructor>,
+        material: DynMaterial,
+    );
+
+    fn build(self: Box<Self>) -> Box<dyn EntityScene>;
+}
+
+pub trait TypedEntitySceneBuilder: EntitySceneBuilder {
+    fn add<S, M>(&mut self, shape: S, material: M)
     where
         S: Into<DynShape>,
-        M: Into<DynMaterial>;
+        M: Into<DynMaterial>,
+    {
+        self.add_dyn(shape.into(), material.into());
+    }
 
-    fn add_constructor<C, M>(&mut self, constructor: C, material: M) -> &mut Self
+    fn add_constructor<C, M>(&mut self, constructor: C, material: M)
     where
         C: ShapeConstructor,
-        M: Into<DynMaterial>;
-
-    fn build(self) -> Self::Output;
+        M: Into<DynMaterial>,
+    {
+        self.add_constructor_dyn(Box::new(constructor), material.into());
+    }
 }
+
+impl<T> TypedEntitySceneBuilder for T where T: EntitySceneBuilder + ?Sized {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EntityId {
