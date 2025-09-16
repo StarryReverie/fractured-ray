@@ -1,16 +1,44 @@
 use crate::domain::math::numeric::DisRange;
-use crate::domain::medium::def::MediumKind;
+use crate::domain::medium::def::{DynMedium, MediumKind};
 use crate::domain::medium::util::{MediumContainer, MediumId};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RaySegment;
-use crate::domain::shape::def::ShapeKind;
-use crate::domain::shape::util::{ShapeContainer, ShapeId};
+use crate::domain::shape::def::{DynShape, ShapeKind};
+use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
 pub trait VolumeScene: Send + Sync {
     fn get_boundaries(&self) -> &dyn BoundaryContainer;
 
     fn find_segments(&self, ray: &Ray, range: DisRange) -> Vec<(RaySegment, MediumId)>;
 }
+
+pub trait VolumeSceneBuilder: Send + Sync {
+    fn add_dyn(&mut self, shape: DynShape, medium: DynMedium);
+
+    fn add_constructor_dyn(&mut self, constructor: Box<dyn ShapeConstructor>, medium: DynMedium);
+
+    fn build(self: Box<Self>) -> Box<dyn VolumeScene>;
+}
+
+pub trait TypedVolumeSceneBuilder: VolumeSceneBuilder {
+    fn add<S, M>(&mut self, shape: S, medium: M)
+    where
+        S: Into<DynShape>,
+        M: Into<DynMedium>,
+    {
+        self.add_dyn(shape.into(), medium.into());
+    }
+
+    fn add_constructor<C, M>(&mut self, constructor: C, medium: M)
+    where
+        C: ShapeConstructor,
+        M: Into<DynMedium>,
+    {
+        self.add_constructor_dyn(Box::new(constructor), medium.into());
+    }
+}
+
+impl<T> TypedVolumeSceneBuilder for T where T: VolumeSceneBuilder + ?Sized {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BoundaryId {

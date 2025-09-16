@@ -16,7 +16,7 @@ use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RaySegment};
 use crate::domain::ray::photon::{PhotonMap, PhotonRay, SearchPolicy};
 use crate::domain::scene::entity::EntityScene;
-use crate::domain::scene::volume::{BvhVolumeScene, VolumeScene};
+use crate::domain::scene::volume::VolumeScene;
 
 use super::{
     Contribution, PhotonInfo, PmContext, PmState, Renderer, RtContext, RtState, StoragePolicy,
@@ -25,7 +25,7 @@ use super::{
 pub struct CoreRenderer {
     camera: Camera,
     entity_scene: Box<dyn EntityScene>,
-    volume_scene: BvhVolumeScene,
+    volume_scene: Box<dyn VolumeScene>,
     config: Configuration,
 }
 
@@ -33,7 +33,7 @@ impl CoreRenderer {
     pub fn new(
         camera: Camera,
         entity_scene: Box<dyn EntityScene>,
-        volume_scene: BvhVolumeScene,
+        volume_scene: Box<dyn VolumeScene>,
         config: Configuration,
     ) -> Result<Self, ConfigurationError> {
         ensure!(config.iterations > 0, InvalidIterationsSnafu);
@@ -67,7 +67,7 @@ impl CoreRenderer {
         let mut context = RtContext::new(
             self,
             self.entity_scene.as_ref(),
-            &self.volume_scene,
+            self.volume_scene.as_ref(),
             &mut rng,
             &self.config,
             photon_global,
@@ -223,7 +223,7 @@ impl Renderer for CoreRenderer {
             return surface_res;
         }
         let segments = self.volume_scene.find_segments(ray, vis_range);
-        let aggregator = AggregateMedium::new(&self.volume_scene, &segments);
+        let aggregator = AggregateMedium::new(self.volume_scene.as_ref(), &segments);
 
         let segment = RaySegment::from(vis_range);
         let volume_res = aggregator.shade(context, state, ray, &segment);

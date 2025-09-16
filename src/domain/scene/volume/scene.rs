@@ -15,7 +15,7 @@ use crate::domain::scene::pool::BoundaryPool;
 use crate::domain::shape::def::{DynShape, Shape};
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer};
 
-use super::{BoundaryContainer, BoundaryId, VolumeScene};
+use super::{BoundaryContainer, BoundaryId, VolumeScene, VolumeSceneBuilder};
 
 #[derive(Debug)]
 pub struct BvhVolumeSceneBuilder {
@@ -23,40 +23,32 @@ pub struct BvhVolumeSceneBuilder {
 }
 
 impl BvhVolumeSceneBuilder {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Box<Self> {
+        Box::new(Self {
             boundaries: Box::new(BoundaryPool::new()),
-        }
+        })
     }
+}
 
-    pub fn add<S, M>(&mut self, shape: S, medium: M) -> &mut Self
-    where
-        S: Into<DynShape>,
-        M: Into<DynMedium>,
-    {
-        let shape_id = self.boundaries.add_shape(shape.into());
-        let medium_id = self.boundaries.add_medium(medium.into());
+impl VolumeSceneBuilder for BvhVolumeSceneBuilder {
+    fn add_dyn(&mut self, shape: DynShape, medium: DynMedium) {
+        let shape_id = self.boundaries.add_shape(shape);
+        let medium_id = self.boundaries.add_medium(medium);
         let boundary_id = BoundaryId::new(shape_id, medium_id);
         self.boundaries.register_id(boundary_id);
-        self
     }
 
-    pub fn add_constructor<C, M>(&mut self, constructor: C, medium: M) -> &mut Self
-    where
-        C: ShapeConstructor,
-        M: Into<DynMedium>,
-    {
-        let shape_ids = Box::new(constructor).construct(self.boundaries.as_mut());
-        let medium_id = self.boundaries.add_medium(medium.into());
+    fn add_constructor_dyn(&mut self, constructor: Box<dyn ShapeConstructor>, medium: DynMedium) {
+        let shape_ids = constructor.construct(self.boundaries.as_mut());
+        let medium_id = self.boundaries.add_medium(medium);
         for shape_id in shape_ids {
             let boundary_id = BoundaryId::new(shape_id, medium_id);
             self.boundaries.register_id(boundary_id);
         }
-        self
     }
 
-    pub fn build(self) -> BvhVolumeScene {
-        BvhVolumeScene::new(self.boundaries)
+    fn build(self: Box<Self>) -> Box<dyn VolumeScene> {
+        Box::new(BvhVolumeScene::new(self.boundaries))
     }
 }
 

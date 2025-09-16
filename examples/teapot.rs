@@ -11,7 +11,7 @@ use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
 use fractured_ray::domain::scene::entity::{
     BvhEntitySceneBuilder, EntitySceneBuilder, TypedEntitySceneBuilder,
 };
-use fractured_ray::domain::scene::volume::BvhVolumeSceneBuilder;
+use fractured_ray::domain::scene::volume::{BvhVolumeSceneBuilder, VolumeSceneBuilder};
 use fractured_ray::domain::shape::primitive::Polygon;
 use fractured_ray::infrastructure::image::PngWriter;
 use fractured_ray::infrastructure::model::{EntityModelLoader, EntityObjModelLoader};
