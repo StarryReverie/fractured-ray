@@ -22,6 +22,10 @@ impl Mixed {
     pub fn builder() -> MixedBuilder {
         MixedBuilder::new()
     }
+
+    pub fn emissive_component(&self) -> Option<&Emissive> {
+        self.emissive.as_ref().map(AsRef::as_ref)
+    }
 }
 
 impl Material for Mixed {

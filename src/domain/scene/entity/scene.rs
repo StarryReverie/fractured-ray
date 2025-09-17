@@ -1,4 +1,5 @@
 use crate::domain::material::def::{DynMaterial, MaterialKind, RefDynMaterial};
+use crate::domain::material::primitive::Emissive;
 use crate::domain::material::util::MaterialContainer;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
@@ -9,8 +10,8 @@ use crate::domain::sampling::photon::{AggregatePhotonSampler, EmptyPhotonSampler
 use crate::domain::sampling::point::{AggregatePointSampler, EmptyPointSampler, PointSampling};
 use crate::domain::scene::bvh::Bvh;
 use crate::domain::scene::pool::EntityPool;
-use crate::domain::shape::def::{DynShape, Shape};
-use crate::domain::shape::util::{ShapeConstructor, ShapeContainer};
+use crate::domain::shape::def::{DynShape, RefDynShape, Shape};
+use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
 use super::{EntityContainer, EntityId, EntityScene, EntitySceneBuilder};
 
@@ -33,43 +34,41 @@ impl BvhEntitySceneBuilder {
     }
 
     fn post_add_entity(&mut self, entity_id: EntityId) {
-        self.register_light_surface(entity_id);
-        self.register_light(entity_id);
-        self.register_emitter(entity_id);
+        self.register_emissive(entity_id);
     }
 
-    fn register_light_surface(&mut self, entity_id: EntityId) {
-        if entity_id.material_id().kind() == MaterialKind::Emissive {
-            let shape_id = entity_id.shape_id();
-            let shape = self.entities.get_shape(shape_id).unwrap();
-            if let Some(sampler) = shape.get_point_sampler(shape_id) {
+    fn register_emissive(&mut self, entity_id: EntityId) {
+        Self::inspect_emissive(self.entities.as_ref(), entity_id, |id, shape, emissive| {
+            if let Some(sampler) = shape.get_point_sampler(id) {
                 self.light_surfaces.push(sampler);
             }
-        }
-    }
-
-    fn register_light(&mut self, entity_id: EntityId) {
-        if entity_id.material_id().kind() == MaterialKind::Emissive {
-            let shape_id = entity_id.shape_id();
-            let shape = self.entities.get_shape(shape_id).unwrap();
-            if let Some(sampler) = shape.get_light_sampler(shape_id) {
+            if let Some(sampler) = shape.get_light_sampler(id) {
                 self.lights.push(sampler);
             }
-        }
+            if let Some(sampler) = shape.get_photon_sampler(id, emissive) {
+                self.emitters.push(sampler);
+            }
+        });
     }
 
-    fn register_emitter(&mut self, entity_id: EntityId) {
+    fn inspect_emissive<F>(entities: &dyn EntityContainer, entity_id: EntityId, mut callback: F)
+    where
+        F: FnMut(ShapeId, RefDynShape, Emissive),
+    {
         if entity_id.material_id().kind() == MaterialKind::Emissive {
-            let shape_id = entity_id.shape_id();
-            let shape = self.entities.get_shape(shape_id).unwrap();
-
-            let material_id = entity_id.material_id();
-            let material = self.entities.get_material(material_id).unwrap();
+            let material = entities.get_material(entity_id.material_id()).unwrap();
             if let RefDynMaterial::Emissive(emissive) = material {
-                if let Some(sampler) = shape.get_photon_sampler(shape_id, emissive.clone()) {
-                    self.emitters.push(sampler);
+                let shape = entities.get_shape(entity_id.shape_id()).unwrap();
+                callback(entity_id.shape_id(), shape, emissive.clone());
+            };
+        } else if entity_id.material_id().kind() == MaterialKind::Mixed {
+            let material = entities.get_material(entity_id.material_id()).unwrap();
+            if let RefDynMaterial::Mixed(mixed) = material {
+                if let Some(emissive) = mixed.emissive_component() {
+                    let shape = entities.get_shape(entity_id.shape_id()).unwrap();
+                    callback(entity_id.shape_id(), shape, emissive.clone())
                 }
-            }
+            };
         }
     }
 }
