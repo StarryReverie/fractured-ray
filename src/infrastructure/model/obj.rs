@@ -1,5 +1,6 @@
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use obj::{Group, MtlLibsLoadError, Obj, ObjData, ObjError, ObjMaterial, Object};
 use snafu::prelude::*;
@@ -22,6 +23,7 @@ pub struct EntityObjModelLoader {
     path: Option<PathBuf>,
     vertices: Arc<[Point]>,
     converter: ObjMaterialConverterChain,
+    material_cache: Arc<RwLock<HashMap<String, DynMaterial>>>,
 }
 
 impl EntityObjModelLoader {
@@ -51,6 +53,7 @@ impl EntityObjModelLoader {
             path,
             vertices,
             converter: ObjMaterialConverterChain::new(),
+            material_cache: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -94,7 +97,18 @@ impl EntityObjModelLoader {
                 .fail();
             }
         };
-        self.converter.convert(material)
+
+        let name = &material.name;
+        if let Some(material) = self.material_cache.read().unwrap().get(name) {
+            Ok(material.clone())
+        } else {
+            let material = self.converter.convert(material)?;
+            self.material_cache
+                .write()
+                .unwrap()
+                .insert(name.to_owned(), material.clone());
+            Ok(material)
+        }
     }
 
     fn map_f32_array(&[x, y, z]: &[f32; 3]) -> [Val; 3] {
