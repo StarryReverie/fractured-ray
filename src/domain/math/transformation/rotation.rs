@@ -1,7 +1,7 @@
 use crate::domain::math::algebra::{Product, Quaternion, UnitVector};
 use crate::domain::math::numeric::Val;
 
-use super::Transformation;
+use super::{AtomTransformation, Transformation};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Rotation {
@@ -55,6 +55,8 @@ impl Transformation for Rotation {
         }
     }
 }
+
+impl AtomTransformation for Rotation {}
 
 #[cfg(test)]
 mod tests {

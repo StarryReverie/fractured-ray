@@ -4,7 +4,7 @@ use getset::CopyGetters;
 
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::math::transformation::{Sequential, Transform};
+use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
 use crate::domain::shape::primitive::Aabb;
 
@@ -64,8 +64,12 @@ impl BoundingBox {
     }
 }
 
-impl Transform<Sequential> for BoundingBox {
-    fn transform(&self, transformation: &Sequential) -> Self {
+impl<T> Transform<T> for BoundingBox
+where
+    T: AtomTransformation,
+    Point: Transform<T>,
+{
+    fn transform(&self, transformation: &T) -> Self {
         let (min, max) = (self.min(), self.max());
         let mut c1 = Point::new(Val::INFINITY, Val::INFINITY, Val::INFINITY);
         let mut c2 = Point::new(-Val::INFINITY, -Val::INFINITY, -Val::INFINITY);

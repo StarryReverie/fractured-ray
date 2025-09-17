@@ -3,7 +3,7 @@ use getset::CopyGetters;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
-use crate::domain::math::transformation::{Sequential, Transform};
+use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
 
 #[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
@@ -23,8 +23,12 @@ impl RayScattering {
     }
 }
 
-impl Transform<Sequential> for RayScattering {
-    fn transform(&self, transformation: &Sequential) -> Self {
+impl<T> Transform<T> for RayScattering
+where
+    T: AtomTransformation,
+    Point: Transform<T>,
+{
+    fn transform(&self, transformation: &T) -> Self {
         Self::new(self.distance, self.position.transform(transformation))
     }
 }

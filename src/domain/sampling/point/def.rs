@@ -6,7 +6,7 @@ use rand::prelude::*;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
-use crate::domain::math::transformation::{Sequential, Transform};
+use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::util::ShapeId;
 
@@ -47,8 +47,13 @@ impl PointSample {
     }
 }
 
-impl Transform<Sequential> for PointSample {
-    fn transform(&self, transformation: &Sequential) -> Self {
+impl<T> Transform<T> for PointSample
+where
+    T: AtomTransformation,
+    Point: Transform<T>,
+    UnitVector: Transform<T>,
+{
+    fn transform(&self, transformation: &T) -> Self {
         Self::new(
             self.point.transform(transformation),
             self.normal.transform(transformation),

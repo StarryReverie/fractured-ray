@@ -1,6 +1,6 @@
 use crate::domain::math::algebra::Vector;
 
-use super::Transformation;
+use super::{AtomTransformation, Transformation};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Translation {
@@ -22,3 +22,5 @@ impl Transformation for Translation {
         Self::new(-self.displacement)
     }
 }
+
+impl AtomTransformation for Translation {}

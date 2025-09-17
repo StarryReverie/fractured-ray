@@ -3,7 +3,7 @@ use getset::CopyGetters;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
-use crate::domain::math::transformation::{Sequential, Transform};
+use crate::domain::math::transformation::{AtomTransformation, Transform};
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
 #[getset(get_copy = "pub")]
@@ -22,8 +22,13 @@ impl Ray {
     }
 }
 
-impl Transform<Sequential> for Ray {
-    fn transform(&self, transformation: &Sequential) -> Self {
+impl<T> Transform<T> for Ray
+where
+    T: AtomTransformation,
+    Point: Transform<T>,
+    UnitVector: Transform<T>,
+{
+    fn transform(&self, transformation: &T) -> Self {
         Ray::new(
             self.start().transform(transformation),
             self.direction().transform(transformation),
