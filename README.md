@@ -24,6 +24,10 @@ Diamond
 
 ![Diamond](docs/images/diamond.png)
 
+Teapot
+
+![Teapot](docs/images/teapot.png)
+
 ## TODOs
 
 - [x] Algorithms
