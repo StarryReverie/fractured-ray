@@ -4,8 +4,8 @@ use rand::prelude::*;
 use rand_distr::UnitSphere;
 use snafu::prelude::*;
 
-use crate::domain::math::geometry::{Rotation, Transform, Translation};
 use crate::domain::math::numeric::Val;
+use crate::domain::math::transformation::{Rotation, Transform, Translation};
 
 use super::{Product, Vector};
 

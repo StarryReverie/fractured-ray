@@ -7,10 +7,11 @@ use fractured_ray::domain::material::primitive::{
     Emissive, Glossy, GlossyPredefinition, Refractive,
 };
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
-use fractured_ray::domain::math::geometry::{Point, Rotation, SpreadAngle, Translation};
+use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
+use fractured_ray::domain::math::transformation::{Rotation, Translation};
 use fractured_ray::domain::medium::primitive::Isotropic;
-use fractured_ray::domain::renderer::{CoreRendererConfiguration, CoreRenderer, Renderer};
+use fractured_ray::domain::renderer::{CoreRenderer, CoreRendererConfiguration, Renderer};
 use fractured_ray::domain::scene::entity::{
     BvhEntitySceneBuilder, EntitySceneBuilder, TypedEntitySceneBuilder,
 };

@@ -4,8 +4,9 @@ use spade::{DelaunayTriangulation, Point2, Triangulation};
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::{Point, Rotation, Transform, Transformation};
+use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
+use crate::domain::math::transformation::{Rotation, Transform, Transformation};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::Sampleable;

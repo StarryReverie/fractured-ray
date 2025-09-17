@@ -4,8 +4,9 @@ use smallvec::SmallVec;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::{Point, Transform};
+use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::math::transformation::Transform;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::sampling::Sampleable;

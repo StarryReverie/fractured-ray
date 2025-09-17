@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::domain::math::geometry::{Rotation, Sequential, Transformation, Translation};
+use crate::domain::math::transformation::{Rotation, Sequential, Transformation, Translation};
 use crate::domain::shape::mesh::MeshConstructor;
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 

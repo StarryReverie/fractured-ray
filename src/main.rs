@@ -5,8 +5,9 @@ use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::{Albedo, Spectrum};
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
-use fractured_ray::domain::math::geometry::{Point, Rotation, SpreadAngle, Translation};
+use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
+use fractured_ray::domain::math::transformation::{Rotation, Translation};
 use fractured_ray::domain::renderer::{CoreRenderer, CoreRendererConfiguration, Renderer};
 use fractured_ray::domain::scene::entity::{
     BvhEntitySceneBuilder, EntitySceneBuilder, TypedEntitySceneBuilder,

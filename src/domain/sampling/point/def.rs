@@ -4,8 +4,9 @@ use getset::CopyGetters;
 use rand::prelude::*;
 
 use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::{Sequential, Point, Transform};
+use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
+use crate::domain::math::transformation::{Sequential, Transform};
 use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::util::ShapeId;
 

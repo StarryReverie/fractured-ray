@@ -1,7 +1,8 @@
 use rand::prelude::*;
 
-use crate::domain::math::geometry::{Sequential, Point, Transform, Transformation};
+use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
+use crate::domain::math::transformation::{Sequential, Transform, Transformation};
 use crate::domain::sampling::Sampleable;
 use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::util::{Instance, ShapeId};

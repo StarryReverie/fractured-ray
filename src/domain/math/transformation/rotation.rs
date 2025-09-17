@@ -1,51 +1,7 @@
-use getset::{CopyGetters, Getters, WithSetters};
-
-use crate::domain::math::algebra::{Product, Quaternion, UnitVector, Vector};
+use crate::domain::math::algebra::{Product, Quaternion, UnitVector};
 use crate::domain::math::numeric::Val;
 
-pub trait Transformation {
-    fn inverse(self) -> Self;
-}
-
-pub trait Transform<T: Transformation> {
-    fn transform(&self, transformation: &T) -> Self;
-}
-
-#[derive(Debug, Default, Clone, PartialEq, Eq, Getters, CopyGetters, WithSetters)]
-pub struct Sequential {
-    #[getset(get = "pub", set_with = "pub")]
-    rotation: Rotation,
-    #[getset(get = "pub", set_with = "pub")]
-    translation: Translation,
-    #[getset(get_copy = "pub")]
-    inverted: bool,
-}
-
-impl Transformation for Sequential {
-    fn inverse(self) -> Self {
-        Self {
-            rotation: self.rotation.inverse(),
-            translation: self.translation.inverse(),
-            inverted: !self.inverted,
-        }
-    }
-}
-
-impl<T> Transform<Sequential> for T
-where
-    Self: Transform<Rotation>,
-    Self: Transform<Translation>,
-{
-    fn transform(&self, transformation: &Sequential) -> Self {
-        if transformation.inverted {
-            self.transform(&transformation.translation)
-                .transform(&transformation.rotation)
-        } else {
-            self.transform(&transformation.rotation)
-                .transform(&transformation.translation)
-        }
-    }
-}
+use super::Transformation;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Rotation {
@@ -100,29 +56,10 @@ impl Transformation for Rotation {
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct Translation {
-    displacement: Vector,
-}
-
-impl Translation {
-    pub fn new(displacement: Vector) -> Self {
-        Self { displacement }
-    }
-
-    pub fn displacement(&self) -> Vector {
-        self.displacement
-    }
-}
-
-impl Transformation for Translation {
-    fn inverse(self) -> Self {
-        Self::new(-self.displacement)
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::domain::math::algebra::Vector;
+
     use super::*;
 
     #[test]

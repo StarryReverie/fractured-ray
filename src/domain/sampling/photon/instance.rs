@@ -2,9 +2,8 @@ use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::geometry::Sequential;
-use crate::domain::math::geometry::Transform;
 use crate::domain::math::numeric::Val;
+use crate::domain::math::transformation::{Sequential, Transform};
 use crate::domain::sampling::Sampleable;
 use crate::domain::shape::util::{Instance, ShapeId};
 

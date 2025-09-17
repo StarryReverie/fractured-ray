@@ -3,7 +3,8 @@ use std::sync::Arc;
 use smallvec::SmallVec;
 use snafu::prelude::*;
 
-use crate::domain::math::geometry::{Sequential, Point};
+use crate::domain::math::geometry::Point;
+use crate::domain::math::transformation::Sequential;
 use crate::domain::shape::primitive::{MeshPolygon, MeshTriangle, Polygon, Triangle};
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 

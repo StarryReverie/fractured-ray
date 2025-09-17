@@ -4,8 +4,9 @@ use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
 use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::{Point, Sequential, Transform};
+use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::math::transformation::{Sequential, Transform};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
 use crate::domain::sampling::point::{PointSample, PointSampling};

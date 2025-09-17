@@ -2,8 +2,9 @@ use std::ops::{Bound, RangeBounds};
 
 use getset::CopyGetters;
 
-use crate::domain::math::geometry::{Sequential, Point, Transform};
+use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::math::transformation::{Sequential, Transform};
 use crate::domain::ray::Ray;
 use crate::domain::shape::primitive::Aabb;
 

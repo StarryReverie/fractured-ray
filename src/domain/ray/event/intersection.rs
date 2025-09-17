@@ -1,8 +1,9 @@
 use getset::CopyGetters;
 
 use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::{Sequential, Point, Transform};
+use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
+use crate::domain::math::transformation::{Sequential, Transform};
 use crate::domain::ray::Ray;
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]

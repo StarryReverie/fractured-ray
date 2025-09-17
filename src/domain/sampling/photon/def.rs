@@ -4,8 +4,8 @@ use getset::Getters;
 use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
-use crate::domain::math::geometry::{Sequential, Transform};
 use crate::domain::math::numeric::Val;
+use crate::domain::math::transformation::{Sequential, Transform};
 use crate::domain::ray::photon::PhotonRay;
 
 pub trait PhotonSampling: Debug + Send + Sync {

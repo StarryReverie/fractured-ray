@@ -1,7 +1,7 @@
 use rand::prelude::*;
 
-use crate::domain::math::geometry::{Sequential, Transform, Transformation};
 use crate::domain::math::numeric::Val;
+use crate::domain::math::transformation::{Sequential, Transform, Transformation};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
 use crate::domain::sampling::Sampleable;
