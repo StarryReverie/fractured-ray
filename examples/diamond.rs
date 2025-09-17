@@ -10,7 +10,7 @@ use fractured_ray::domain::math::algebra::{UnitVector, Vector};
 use fractured_ray::domain::math::geometry::{Point, Rotation, SpreadAngle, Translation};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::medium::primitive::Isotropic;
-use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
+use fractured_ray::domain::renderer::{CoreRendererConfiguration, CoreRenderer, Renderer};
 use fractured_ray::domain::scene::entity::{
     BvhEntitySceneBuilder, EntitySceneBuilder, TypedEntitySceneBuilder,
 };
@@ -84,12 +84,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene.build(),
         vol_scene.build(),
-        Configuration {
-            iterations: 256,
-            photons_caustic: 0,
-            background_color: Spectrum::broadcast(Val(0.01)),
-            ..Configuration::default()
-        },
+        CoreRendererConfiguration::default()
+            .with_iterations(256)
+            .with_photons_caustic(0),
     )?;
 
     let image = renderer.render();

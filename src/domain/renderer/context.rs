@@ -5,7 +5,7 @@ use crate::domain::ray::photon::{Photon, PhotonMap, SearchPolicy};
 use crate::domain::scene::entity::EntityScene;
 use crate::domain::scene::volume::VolumeScene;
 
-use super::{Configuration, Renderer};
+use super::{CoreRendererConfiguration, Renderer};
 
 #[derive(Getters, CopyGetters)]
 pub struct RtContext<'a> {
@@ -17,7 +17,7 @@ pub struct RtContext<'a> {
     volume_scene: &'a dyn VolumeScene,
     rng: &'a mut dyn RngCore,
     #[getset(get_copy = "pub")]
-    config: &'a Configuration,
+    config: &'a CoreRendererConfiguration,
     #[getset(get = "pub")]
     photon_global: PhotonInfo<'a>,
     #[getset(get = "pub")]
@@ -30,7 +30,7 @@ impl<'a> RtContext<'a> {
         entity_scene: &'a dyn EntityScene,
         volume_scene: &'a dyn VolumeScene,
         rng: &'a mut dyn RngCore,
-        config: &'a Configuration,
+        config: &'a CoreRendererConfiguration,
         photon_global: PhotonInfo<'a>,
         photon_casutic: PhotonInfo<'a>,
     ) -> Self {

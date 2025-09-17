@@ -7,7 +7,7 @@ use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Glossy, Glos
 use fractured_ray::domain::math::algebra::UnitVector;
 use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
-use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
+use fractured_ray::domain::renderer::{CoreRenderer, CoreRendererConfiguration, Renderer};
 use fractured_ray::domain::scene::entity::{
     BvhEntitySceneBuilder, EntitySceneBuilder, TypedEntitySceneBuilder,
 };
@@ -34,12 +34,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene.build(),
         BvhVolumeSceneBuilder::new().build(),
-        Configuration {
-            iterations: 24,
-            photons_caustic: 0,
-            background_color: Spectrum::broadcast(Val(0.01)),
-            ..Configuration::default()
-        },
+        CoreRendererConfiguration::default()
+            .with_iterations(24)
+            .with_photons_caustic(0)
+            .with_background_color(Spectrum::broadcast(Val(0.01))),
     )?;
 
     let image = renderer.render();

@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::domain::math::geometry::{AllTransformation, Transform, Transformation};
+use crate::domain::math::geometry::{Sequential, Transform, Transformation};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
@@ -16,7 +16,7 @@ pub struct InstanceLightSampler {
     id: ShapeId,
     instance: Instance,
     sampler: Option<Box<dyn LightSampling>>,
-    inv_transformation: AllTransformation,
+    inv_transformation: Sequential,
 }
 
 impl InstanceLightSampler {

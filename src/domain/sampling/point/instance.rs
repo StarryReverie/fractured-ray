@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::domain::math::geometry::{AllTransformation, Point, Transform, Transformation};
+use crate::domain::math::geometry::{Sequential, Point, Transform, Transformation};
 use crate::domain::math::numeric::Val;
 use crate::domain::sampling::Sampleable;
 use crate::domain::shape::def::RefDynShape;
@@ -13,7 +13,7 @@ pub struct InstancePointSampler {
     id: ShapeId,
     instance: Instance,
     sampler: Option<Box<dyn PointSampling>>,
-    inv_transformation: AllTransformation,
+    inv_transformation: Sequential,
 }
 
 impl InstancePointSampler {

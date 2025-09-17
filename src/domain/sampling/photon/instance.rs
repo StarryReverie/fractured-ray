@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::geometry::AllTransformation;
+use crate::domain::math::geometry::Sequential;
 use crate::domain::math::geometry::Transform;
 use crate::domain::math::numeric::Val;
 use crate::domain::sampling::Sampleable;
@@ -13,7 +13,7 @@ use super::{PhotonSample, PhotonSampling};
 #[derive(Debug)]
 pub struct InstancePhotonSampler {
     sampler: Option<Box<dyn PhotonSampling>>,
-    transformation: AllTransformation,
+    transformation: Sequential,
 }
 
 impl InstancePhotonSampler {

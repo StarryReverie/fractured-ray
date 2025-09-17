@@ -8,7 +8,7 @@ use fractured_ray::domain::math::algebra::UnitVector;
 use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::medium::primitive::{HenyeyGreenstein, Vacuum};
-use fractured_ray::domain::renderer::{Configuration, CoreRenderer, Renderer};
+use fractured_ray::domain::renderer::{CoreRenderer, CoreRendererConfiguration, Renderer};
 use fractured_ray::domain::scene::entity::{
     BvhEntitySceneBuilder, EntitySceneBuilder, TypedEntitySceneBuilder,
 };
@@ -188,10 +188,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         camera,
         scene,
         volume_scene,
-        Configuration {
-            iterations: 16,
-            ..Configuration::default()
-        },
+        CoreRendererConfiguration::default().with_iterations(16),
     )?;
     let image = renderer.render();
     PngWriter::new(File::create("output/cornell-box.png")?).write(image)?;

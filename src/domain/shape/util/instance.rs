@@ -5,7 +5,7 @@ use getset::Getters;
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::{
-    AllTransformation, Point, Rotation, Transform, Transformation, Translation,
+    Point, Rotation, Sequential, Transform, Transformation, Translation,
 };
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
@@ -22,11 +22,11 @@ pub struct Instance {
     #[getset(get = "pub")]
     prototype: Arc<DynShape>,
     #[getset(get = "pub")]
-    transformation: AllTransformation,
+    transformation: Sequential,
 }
 
 impl Instance {
-    pub fn new(prototype: Arc<DynShape>, transformation: AllTransformation) -> Self {
+    pub fn new(prototype: Arc<DynShape>, transformation: Sequential) -> Self {
         Self {
             prototype,
             transformation,
@@ -36,7 +36,7 @@ impl Instance {
     pub fn of(prototype: Arc<DynShape>) -> Self {
         Self {
             prototype,
-            transformation: AllTransformation::default(),
+            transformation: Sequential::default(),
         }
     }
 
@@ -46,20 +46,14 @@ impl Instance {
 
     pub fn rotate(self, rotation: Rotation) -> Self {
         Self {
-            transformation: AllTransformation {
-                rotation,
-                ..self.transformation
-            },
+            transformation: self.transformation.with_rotation(rotation),
             ..self
         }
     }
 
     pub fn translate(self, translation: Translation) -> Self {
         Self {
-            transformation: AllTransformation {
-                translation,
-                ..self.transformation
-            },
+            transformation: self.transformation.with_translation(translation),
             ..self
         }
     }

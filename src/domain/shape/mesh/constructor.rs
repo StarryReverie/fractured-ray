@@ -3,7 +3,7 @@ use std::sync::Arc;
 use smallvec::SmallVec;
 use snafu::prelude::*;
 
-use crate::domain::math::geometry::{AllTransformation, Point};
+use crate::domain::math::geometry::{Sequential, Point};
 use crate::domain::shape::primitive::{MeshPolygon, MeshTriangle, Polygon, Triangle};
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
@@ -100,8 +100,8 @@ impl MeshConstructor {
 
     pub fn construct_impl(
         self,
-        transformation: Option<AllTransformation>,
-        inv_transformation: Option<AllTransformation>,
+        transformation: Option<Sequential>,
+        inv_transformation: Option<Sequential>,
     ) -> (Vec<MeshTriangle>, Vec<MeshPolygon>) {
         let data = Arc::new(MeshData {
             vertices: Arc::clone(&self.vertices),

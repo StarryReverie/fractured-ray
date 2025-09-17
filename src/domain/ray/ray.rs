@@ -1,7 +1,7 @@
 use getset::CopyGetters;
 
 use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::{AllTransformation, Point, Transform};
+use crate::domain::math::geometry::{Sequential, Point, Transform};
 use crate::domain::math::numeric::Val;
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
@@ -21,8 +21,8 @@ impl Ray {
     }
 }
 
-impl Transform<AllTransformation> for Ray {
-    fn transform(&self, transformation: &AllTransformation) -> Self {
+impl Transform<Sequential> for Ray {
+    fn transform(&self, transformation: &Sequential) -> Self {
         Ray::new(
             self.start().transform(transformation),
             self.direction().transform(transformation),

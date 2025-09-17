@@ -4,7 +4,7 @@ use getset::CopyGetters;
 use rand::prelude::*;
 
 use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::{AllTransformation, Point, Transform};
+use crate::domain::math::geometry::{Sequential, Point, Transform};
 use crate::domain::math::numeric::Val;
 use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::util::ShapeId;
@@ -46,8 +46,8 @@ impl PointSample {
     }
 }
 
-impl Transform<AllTransformation> for PointSample {
-    fn transform(&self, transformation: &AllTransformation) -> Self {
+impl Transform<Sequential> for PointSample {
+    fn transform(&self, transformation: &Sequential) -> Self {
         Self::new(
             self.point.transform(transformation),
             self.normal.transform(transformation),

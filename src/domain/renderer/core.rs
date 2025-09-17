@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use getset::{CopyGetters, WithSetters};
 use indicatif::{ProgressBar, ProgressFinish, ProgressStyle};
 use rand::prelude::*;
 use rayon::prelude::*;
@@ -26,7 +27,7 @@ pub struct CoreRenderer {
     camera: Camera,
     entity_scene: Box<dyn EntityScene>,
     volume_scene: Box<dyn VolumeScene>,
-    config: Configuration,
+    config: CoreRendererConfiguration,
 }
 
 impl CoreRenderer {
@@ -34,8 +35,8 @@ impl CoreRenderer {
         camera: Camera,
         entity_scene: Box<dyn EntityScene>,
         volume_scene: Box<dyn VolumeScene>,
-        config: Configuration,
-    ) -> Result<Self, ConfigurationError> {
+        config: CoreRendererConfiguration,
+    ) -> Result<Self, CoreRendererConfigurationError> {
         ensure!(config.iterations > 0, InvalidIterationsSnafu);
         ensure!(config.spp_per_iteration > 0, InvalidSppPerIterationSnafu);
         ensure!(config.max_depth > 0, InvalidMaxDepthSnafu);
@@ -247,19 +248,20 @@ impl Renderer for CoreRenderer {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Configuration {
-    pub iterations: usize,
-    pub spp_per_iteration: usize,
-    pub max_depth: usize,
-    pub max_invisible_depth: usize,
-    pub photons_global: usize,
-    pub photons_caustic: usize,
-    pub initial_num_nearest: usize,
-    pub background_color: Spectrum,
+#[derive(Debug, Clone, PartialEq, CopyGetters, WithSetters)]
+#[getset(get_copy = "pub", set_with = "pub")]
+pub struct CoreRendererConfiguration {
+    iterations: usize,
+    spp_per_iteration: usize,
+    max_depth: usize,
+    max_invisible_depth: usize,
+    photons_global: usize,
+    photons_caustic: usize,
+    initial_num_nearest: usize,
+    background_color: Spectrum,
 }
 
-impl Default for Configuration {
+impl Default for CoreRendererConfiguration {
     fn default() -> Self {
         Self {
             iterations: 4,
@@ -276,7 +278,7 @@ impl Default for Configuration {
 
 #[derive(Debug, Snafu, Clone, PartialEq)]
 #[non_exhaustive]
-pub enum ConfigurationError {
+pub enum CoreRendererConfigurationError {
     #[snafu(display("number of iterations is not positive"))]
     InvalidIterations,
     #[snafu(display("sample per pixel per iteration is not positive"))]

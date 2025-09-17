@@ -2,7 +2,7 @@ use std::ops::{Bound, RangeBounds};
 
 use getset::CopyGetters;
 
-use crate::domain::math::geometry::{AllTransformation, Point, Transform};
+use crate::domain::math::geometry::{Sequential, Point, Transform};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::shape::primitive::Aabb;
@@ -63,8 +63,8 @@ impl BoundingBox {
     }
 }
 
-impl Transform<AllTransformation> for BoundingBox {
-    fn transform(&self, transformation: &AllTransformation) -> Self {
+impl Transform<Sequential> for BoundingBox {
+    fn transform(&self, transformation: &Sequential) -> Self {
         let (min, max) = (self.min(), self.max());
         let mut c1 = Point::new(Val::INFINITY, Val::INFINITY, Val::INFINITY);
         let mut c2 = Point::new(-Val::INFINITY, -Val::INFINITY, -Val::INFINITY);

@@ -1,17 +1,17 @@
 use std::sync::Arc;
 
-use crate::domain::math::geometry::{AllTransformation, Rotation, Transformation, Translation};
+use crate::domain::math::geometry::{Rotation, Sequential, Transformation, Translation};
 use crate::domain::shape::mesh::MeshConstructor;
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
 #[derive(Debug, Clone)]
 pub struct MeshInstanceConstructor {
     prototype: Arc<MeshConstructor>,
-    transformation: AllTransformation,
+    transformation: Sequential,
 }
 
 impl MeshInstanceConstructor {
-    pub fn new(prototype: Arc<MeshConstructor>, transformation: AllTransformation) -> Self {
+    pub fn new(prototype: Arc<MeshConstructor>, transformation: Sequential) -> Self {
         Self {
             prototype,
             transformation,
@@ -21,7 +21,7 @@ impl MeshInstanceConstructor {
     pub fn of(prototype: Arc<MeshConstructor>) -> Self {
         Self {
             prototype,
-            transformation: AllTransformation::default(),
+            transformation: Sequential::default(),
         }
     }
 
@@ -31,20 +31,14 @@ impl MeshInstanceConstructor {
 
     pub fn rotate(self, rotation: Rotation) -> Self {
         Self {
-            transformation: AllTransformation {
-                rotation,
-                ..self.transformation
-            },
+            transformation: self.transformation.with_rotation(rotation),
             ..self
         }
     }
 
     pub fn translate(self, translation: Translation) -> Self {
         Self {
-            transformation: AllTransformation {
-                translation,
-                ..self.transformation
-            },
+            transformation: self.transformation.with_translation(translation),
             ..self
         }
     }

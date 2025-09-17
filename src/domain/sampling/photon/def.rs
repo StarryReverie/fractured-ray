@@ -4,7 +4,7 @@ use getset::Getters;
 use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
-use crate::domain::math::geometry::{AllTransformation, Transform};
+use crate::domain::math::geometry::{Sequential, Transform};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::photon::PhotonRay;
 
@@ -34,8 +34,8 @@ impl PhotonSample {
     }
 }
 
-impl Transform<AllTransformation> for PhotonSample {
-    fn transform(&self, transformation: &AllTransformation) -> Self {
+impl Transform<Sequential> for PhotonSample {
+    fn transform(&self, transformation: &Sequential) -> Self {
         Self::new(PhotonRay::new(
             self.photon.ray().transform(transformation),
             self.photon.throughput(),

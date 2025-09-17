@@ -1,7 +1,7 @@
 use getset::CopyGetters;
 
 use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::{AllTransformation, Point, Transform};
+use crate::domain::math::geometry::{Sequential, Point, Transform};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 
@@ -30,8 +30,8 @@ impl RayIntersection {
     }
 }
 
-impl Transform<AllTransformation> for RayIntersection {
-    fn transform(&self, transformation: &AllTransformation) -> Self {
+impl Transform<Sequential> for RayIntersection {
+    fn transform(&self, transformation: &Sequential) -> Self {
         RayIntersection::new(
             self.distance(),
             self.position().transform(transformation),
