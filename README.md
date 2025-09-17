@@ -45,12 +45,12 @@ Diamond
   - [ ] Volumes
   - [ ] Shading Normal
 - [ ] Materials
-  - [ ] Common Material Primitives
+  - [x] Common Material Primitives
     - [x] Blurry
     - [x] Diffuse
     - [x] Emissive
     - [x] Glossy
-    - [ ] Mixed
+    - [x] Mixed
     - [x] Refractive
     - [x] Scattering
     - [x] Specular

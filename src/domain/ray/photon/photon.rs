@@ -3,6 +3,7 @@ use getset::{CopyGetters, Getters};
 use crate::domain::color::Spectrum;
 use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
+use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 
 #[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]
@@ -16,6 +17,13 @@ pub struct PhotonRay {
 impl PhotonRay {
     pub fn new(ray: Ray, throughput: Spectrum) -> Self {
         Self { ray, throughput }
+    }
+
+    pub fn scale_throughput(self, multiplier: Val) -> Self {
+        Self {
+            throughput: self.throughput * multiplier,
+            ..self
+        }
     }
 
     pub fn start(&self) -> Point {

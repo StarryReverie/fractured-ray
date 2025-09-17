@@ -6,7 +6,6 @@ use rand::prelude::*;
 use crate::domain::color::Spectrum;
 use crate::domain::math::geometry::{AllTransformation, Transform};
 use crate::domain::math::numeric::Val;
-use crate::domain::ray::Ray;
 use crate::domain::ray::photon::PhotonRay;
 
 pub trait PhotonSampling: Debug + Send + Sync {
@@ -30,10 +29,7 @@ impl PhotonSample {
 
     pub fn scale_pdf(self, multiplier: Val) -> Self {
         Self {
-            photon: PhotonRay::new(
-                Ray::new(self.photon.start(), self.photon.direction()),
-                self.photon.throughput() / multiplier,
-            ),
+            photon: self.photon.scale_throughput(multiplier.recip()),
         }
     }
 }

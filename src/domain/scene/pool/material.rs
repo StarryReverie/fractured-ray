@@ -13,6 +13,7 @@ pub struct MaterialPool {
     refractive: Vec<Refractive>,
     scattering: Vec<Scattering>,
     specular: Vec<Specular>,
+    mixed: Vec<Mixed>,
 }
 
 impl MaterialPool {
@@ -36,6 +37,7 @@ impl MaterialContainer for MaterialPool {
             DynMaterial::Refractive(s) => Self::push(s, &mut self.refractive),
             DynMaterial::Scattering(s) => Self::push(s, &mut self.scattering),
             DynMaterial::Specular(s) => Self::push(s, &mut self.specular),
+            DynMaterial::Mixed(s) => Self::push(s, &mut self.mixed),
         }
     }
 
@@ -49,6 +51,7 @@ impl MaterialContainer for MaterialPool {
             MaterialKind::Refractive => self.refractive.get(index).map(Into::into),
             MaterialKind::Scattering => self.scattering.get(index).map(Into::into),
             MaterialKind::Specular => self.specular.get(index).map(Into::into),
+            MaterialKind::Mixed => self.mixed.get(index).map(Into::into),
         }
     }
 }

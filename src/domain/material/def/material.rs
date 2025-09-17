@@ -56,4 +56,30 @@ pub enum MaterialKind {
     Refractive,
     Scattering,
     Specular,
+    Mixed,
+}
+
+impl MaterialKind {
+    pub fn category(&self) -> MaterialCategory {
+        match self {
+            Self::Blurry => MaterialCategory::Microfacet,
+            Self::Diffuse => MaterialCategory::Diffuse,
+            Self::Emissive => MaterialCategory::Emissive,
+            Self::Glossy => MaterialCategory::Microfacet,
+            Self::Refractive => MaterialCategory::Specular,
+            Self::Scattering => MaterialCategory::Scattering,
+            Self::Specular => MaterialCategory::Specular,
+            Self::Mixed => MaterialCategory::Mixed,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum MaterialCategory {
+    Emissive,
+    Diffuse,
+    Microfacet,
+    Scattering,
+    Specular,
+    Mixed,
 }

@@ -18,6 +18,7 @@ macro_rules! impl_dispatch {
             $type::Refractive(s) => s.$method($($arg),*),
             $type::Scattering(s) => s.$method($($arg),*),
             $type::Specular(s) => s.$method($($arg),*),
+            $type::Mixed(s) => s.$method($($arg),*),
         }
     };
 }
@@ -42,6 +43,7 @@ pub enum DynMaterial {
     Refractive(Refractive),
     Scattering(Scattering),
     Specular(Specular),
+    Mixed(Mixed),
 }
 
 impl<'a> From<&'a DynMaterial> for RefDynMaterial<'a> {
@@ -59,6 +61,7 @@ pub enum RefDynMaterial<'a> {
     Refractive(&'a Refractive),
     Scattering(&'a Scattering),
     Specular(&'a Specular),
+    Mixed(&'a Mixed),
 }
 
 impl<'a> Material for RefDynMaterial<'a> {
@@ -94,3 +97,4 @@ impl_from_ref_for_variant!('a, RefDynMaterial<'a>, Glossy);
 impl_from_ref_for_variant!('a, RefDynMaterial<'a>, Refractive);
 impl_from_ref_for_variant!('a, RefDynMaterial<'a>, Scattering);
 impl_from_ref_for_variant!('a, RefDynMaterial<'a>, Specular);
+impl_from_ref_for_variant!('a, RefDynMaterial<'a>, Mixed);
