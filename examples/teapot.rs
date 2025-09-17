@@ -3,7 +3,7 @@ use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::{Albedo, Spectrum};
-use fractured_ray::domain::material::primitive::{Diffuse, Emissive};
+use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Glossy, GlossyPredefinition};
 use fractured_ray::domain::math::algebra::UnitVector;
 use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         scene.build(),
         BvhVolumeSceneBuilder::new().build(),
         Configuration {
-            iterations: 8,
+            iterations: 24,
             photons_caustic: 0,
             background_color: Spectrum::broadcast(Val(0.01)),
             ..Configuration::default()
@@ -68,7 +68,7 @@ fn load_box(scene: &mut dyn EntitySceneBuilder) -> Result<(), Box<dyn Error>> {
             Point::new(Val(-5.0), Val(0.0), Val(5.0)),
             Point::new(Val(5.0), Val(0.0), Val(5.0)),
         ])?,
-        Diffuse::new(Albedo::WHITE),
+        Glossy::lookup(GlossyPredefinition::Copper, Val(0.3))?,
     );
     scene.add(
         Polygon::new([
@@ -86,7 +86,7 @@ fn load_box(scene: &mut dyn EntitySceneBuilder) -> Result<(), Box<dyn Error>> {
             Point::new(Val(-5.0), Val(10.0), Val(5.0)),
             Point::new(Val(-5.0), Val(0.0), Val(5.0)),
         ])?,
-        Diffuse::new(Albedo::RED),
+        Diffuse::new(Albedo::WHITE),
     );
     scene.add(
         Polygon::new([
@@ -95,7 +95,7 @@ fn load_box(scene: &mut dyn EntitySceneBuilder) -> Result<(), Box<dyn Error>> {
             Point::new(Val(5.0), Val(10.0), Val(5.0)),
             Point::new(Val(5.0), Val(10.0), Val(-5.0)),
         ])?,
-        Diffuse::new(Albedo::BLUE),
+        Diffuse::new(Albedo::WHITE),
     );
     scene.add(
         Polygon::new([
