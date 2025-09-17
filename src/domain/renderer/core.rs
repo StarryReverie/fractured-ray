@@ -37,18 +37,7 @@ impl CoreRenderer {
         volume_scene: Box<dyn VolumeScene>,
         config: CoreRendererConfiguration,
     ) -> Result<Self, CoreRendererConfigurationError> {
-        ensure!(config.iterations > 0, InvalidIterationsSnafu);
-        ensure!(config.spp_per_iteration > 0, InvalidSppPerIterationSnafu);
-        ensure!(config.max_depth > 0, InvalidMaxDepthSnafu);
-        ensure!(
-            config.max_invisible_depth > 0,
-            NonPositiveMaxInvisibleDepthSnafu,
-        );
-        ensure!(
-            config.max_invisible_depth <= config.max_depth,
-            ExceededMaxInvisibleDepthSnafu,
-        );
-
+        config.validate()?;
         Ok(Self {
             camera,
             entity_scene,
@@ -259,6 +248,23 @@ pub struct CoreRendererConfiguration {
     photons_caustic: usize,
     initial_num_nearest: usize,
     background_color: Spectrum,
+}
+
+impl CoreRendererConfiguration {
+    pub fn validate(&self) -> Result<(), CoreRendererConfigurationError> {
+        ensure!(self.iterations > 0, InvalidIterationsSnafu);
+        ensure!(self.spp_per_iteration > 0, InvalidSppPerIterationSnafu);
+        ensure!(self.max_depth > 0, InvalidMaxDepthSnafu);
+        ensure!(
+            self.max_invisible_depth > 0,
+            NonPositiveMaxInvisibleDepthSnafu,
+        );
+        ensure!(
+            self.max_invisible_depth <= self.max_depth,
+            ExceededMaxInvisibleDepthSnafu,
+        );
+        Ok(())
+    }
 }
 
 impl Default for CoreRendererConfiguration {
