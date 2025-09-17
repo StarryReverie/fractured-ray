@@ -106,9 +106,7 @@ impl ObjMaterialConverter for EmissiveObjMaterialConverter {
         &self,
         mtl: &mut ExtMaterial,
     ) -> Option<Result<DynMaterial, LoadEntityModelError>> {
-        let Some([ke_r, ke_g, ke_b]) = mtl.ke.map(map_f32_array) else {
-            return None;
-        };
+        let [ke_r, ke_g, ke_b] = mtl.ke.map(map_f32_array)?;
 
         take_all!(mtl.ke);
         wrap_result(MaterialKind::Emissive, &mtl.name, || {
@@ -126,19 +124,11 @@ impl ObjMaterialConverter for BlurryObjMaterialConverter {
         &self,
         mtl: &mut ExtMaterial,
     ) -> Option<Result<DynMaterial, LoadEntityModelError>> {
-        let Some(ni) = mtl.ni.map(map_f32) else {
-            return None;
-        };
-
-        let Some(ns) = mtl.ns.map(map_f32) else {
-            return None;
-        };
-        let roughness = convert_ns_to_roughness(ns);
+        let ni = mtl.ni.map(map_f32)?;
+        let roughness = mtl.ns.map(map_f32).map(convert_ns_to_roughness)?;
 
         if mtl.d.is_some() {
-            let Some([ks_r, ks_g, ks_b]) = mtl.ks.map(map_f32_array) else {
-                return None;
-            };
+            let [ks_r, ks_g, ks_b] = mtl.ks.map(map_f32_array)?;
 
             take_all!(mtl.ni, mtl.ns, mtl.d, mtl.ks);
             wrap_result(MaterialKind::Blurry, &mtl.name, || {
@@ -166,14 +156,10 @@ impl ObjMaterialConverter for RefractiveObjMaterialConverter {
         &self,
         mtl: &mut ExtMaterial,
     ) -> Option<Result<DynMaterial, LoadEntityModelError>> {
-        let Some(ni) = mtl.ni.map(map_f32) else {
-            return None;
-        };
+        let ni = mtl.ni.map(map_f32)?;
 
         if mtl.d.is_some() {
-            let Some([ks_r, ks_g, ks_b]) = mtl.ks.map(map_f32_array) else {
-                return None;
-            };
+            let [ks_r, ks_g, ks_b] = mtl.ks.map(map_f32_array)?;
 
             take_all!(mtl.ni, mtl.d, mtl.ks);
             wrap_result(MaterialKind::Refractive, &mtl.name, || {
@@ -202,15 +188,8 @@ impl ObjMaterialConverter for GlossyObjMaterialConverter {
         mtl: &mut ExtMaterial,
     ) -> Option<Result<DynMaterial, LoadEntityModelError>> {
         let metalness = mtl.km.map(map_f32).unwrap_or(Val(0.0));
-
-        let Some(ns) = mtl.ns.map(map_f32) else {
-            return None;
-        };
-        let roughness = convert_ns_to_roughness(ns);
-
-        let Some([ks_r, ks_g, ks_b]) = mtl.ks.map(map_f32_array) else {
-            return None;
-        };
+        let roughness = mtl.ns.map(map_f32).map(convert_ns_to_roughness)?;
+        let [ks_r, ks_g, ks_b] = mtl.ks.map(map_f32_array)?;
 
         take_all!(mtl.km, mtl.ns, mtl.ks);
         wrap_result(MaterialKind::Glossy, &mtl.name, || {
@@ -228,9 +207,7 @@ impl ObjMaterialConverter for SpecularObjMaterialConverter {
         &self,
         mtl: &mut ExtMaterial,
     ) -> Option<Result<DynMaterial, LoadEntityModelError>> {
-        let Some([ks_r, ks_g, ks_b]) = mtl.ks.map(map_f32_array) else {
-            return None;
-        };
+        let [ks_r, ks_g, ks_b] = mtl.ks.map(map_f32_array)?;
 
         take_all!(mtl.ks);
         wrap_result(MaterialKind::Specular, &mtl.name, || {
@@ -248,9 +225,7 @@ impl ObjMaterialConverter for DiffuseObjMaterialConverter {
         &self,
         mtl: &mut ExtMaterial,
     ) -> Option<Result<DynMaterial, LoadEntityModelError>> {
-        let Some([kd_r, kd_g, kd_b]) = mtl.kd.map(map_f32_array) else {
-            return None;
-        };
+        let [kd_r, kd_g, kd_b] = mtl.kd.map(map_f32_array)?;
 
         take_all!(mtl.kd);
         wrap_result(MaterialKind::Diffuse, &mtl.name, || {
