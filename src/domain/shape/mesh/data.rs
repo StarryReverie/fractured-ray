@@ -7,13 +7,46 @@ use crate::domain::math::geometry::Point;
 use crate::domain::math::transformation::Sequential;
 use crate::domain::shape::primitive::{TryNewPolygonError, TryNewTriangleError};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MeshData {
-    pub(in crate::domain::shape) vertices: Arc<[Point]>,
-    pub(in crate::domain::shape) triangles: Arc<[(u32, u32, u32)]>,
-    pub(in crate::domain::shape) polygons: Arc<[SmallVec<[u32; 5]>]>,
-    pub(in crate::domain::shape) transformation: Option<Sequential>,
-    pub(in crate::domain::shape) inv_transformation: Option<Sequential>,
+    vertices: Arc<[Point]>,
+    triangles: Arc<[(u32, u32, u32)]>,
+    polygons: Arc<[SmallVec<[u32; 5]>]>,
+    transformation: Option<Sequential>,
+}
+
+impl MeshData {
+    pub fn vertices(&self) -> &[Point] {
+        &self.vertices
+    }
+
+    pub fn triangles(&self) -> &[(u32, u32, u32)] {
+        &self.triangles
+    }
+
+    pub fn polygons(&self) -> &[SmallVec<[u32; 5]>] {
+        &self.polygons
+    }
+
+    pub fn transformation(&self) -> Option<&Sequential> {
+        self.transformation.as_ref()
+    }
+}
+
+impl MeshData {
+    pub fn new(
+        vertices: Arc<[Point]>,
+        triangles: Arc<[(u32, u32, u32)]>,
+        polygons: Arc<[SmallVec<[u32; 5]>]>,
+        transformation: Option<Sequential>,
+    ) -> Self {
+        Self {
+            vertices,
+            triangles,
+            polygons,
+            transformation,
+        }
+    }
 }
 
 #[derive(Debug, Snafu, Clone, PartialEq, Eq)]

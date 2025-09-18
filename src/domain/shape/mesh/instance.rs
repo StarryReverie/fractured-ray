@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::domain::math::transformation::{Rotation, Sequential, Transformation, Translation};
+use crate::domain::math::transformation::{Rotation, Sequential, Translation};
 use crate::domain::shape::mesh::MeshConstructor;
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
@@ -46,11 +46,10 @@ impl MeshInstanceConstructor {
 
 impl ShapeConstructor for MeshInstanceConstructor {
     fn construct(self: Box<Self>, container: &mut dyn ShapeContainer) -> Vec<ShapeId> {
-        let inv_transformation = Some(self.transformation.clone().inverse());
         let transformation = Some(self.transformation);
 
         let prototype = Arc::unwrap_or_clone(self.prototype);
-        let (triangles, polygons) = prototype.construct_impl(transformation, inv_transformation);
+        let (triangles, polygons) = prototype.construct_impl(transformation);
 
         let mut ids = Vec::with_capacity(triangles.len() + polygons.len());
         for triangle in triangles {

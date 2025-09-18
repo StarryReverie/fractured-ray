@@ -29,8 +29,8 @@ impl MeshTriangle {
     }
 
     fn get_vertices(&self) -> (&Point, &Point, &Point) {
-        let vertices = &self.data.vertices;
-        let triangles = &self.data.triangles;
+        let vertices = self.data.vertices();
+        let triangles = self.data.triangles();
         let v0 = &vertices[triangles[self.index].0 as usize];
         let v1 = &vertices[triangles[self.index].1 as usize];
         let v2 = &vertices[triangles[self.index].2 as usize];
@@ -39,7 +39,7 @@ impl MeshTriangle {
 
     fn to_triangle(&self) -> Triangle {
         let (v0, v1, v2) = self.get_vertices();
-        if let Some(tr) = &self.data.transformation {
+        if let Some(tr) = self.data.transformation() {
             Triangle::new(v0.transform(tr), v1.transform(tr), v2.transform(tr)).unwrap()
         } else {
             Triangle::new(*v0, *v1, *v2).unwrap()
@@ -54,7 +54,7 @@ impl Shape for MeshTriangle {
 
     fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>> {
         let (v0, v1, v2) = self.get_vertices();
-        if let Some(tr) = &self.data.transformation {
+        if let Some(tr) = self.data.transformation() {
             let (v0_tr, v1_tr, v2_tr) = (v0.transform(tr), v1.transform(tr), v2.transform(tr));
             Triangle::calc_ray_intersection_part(ray, range, &v0_tr, &v1_tr, &v2_tr)
         } else {
@@ -64,7 +64,7 @@ impl Shape for MeshTriangle {
 
     fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
         let (v0, v1, v2) = self.get_vertices();
-        if let Some(tr) = &self.data.transformation {
+        if let Some(tr) = self.data.transformation() {
             let (v0_tr, v1_tr, v2_tr) = (v0.transform(tr), v1.transform(tr), v2.transform(tr));
             Triangle::complete_ray_intersection_part(part, &v0_tr, &v1_tr, &v2_tr)
         } else {
@@ -90,7 +90,7 @@ impl Shape for MeshTriangle {
         let min = v0.component_min(v1).component_min(v2);
         let max = v0.component_max(v1).component_max(v2);
 
-        match &self.data.transformation {
+        match self.data.transformation() {
             None => Some(BoundingBox::new(min, max)),
             Some(tr) => Some(BoundingBox::new(min, max).transform(tr)),
         }
@@ -141,7 +141,7 @@ mod tests {
             vec![vec![0, 1, 2]],
         )
         .unwrap()
-        .construct_impl(None, None);
+        .construct_impl(None);
 
         assert_eq!(
             triangles[0].bounding_box(),

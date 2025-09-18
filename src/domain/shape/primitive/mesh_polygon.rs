@@ -31,8 +31,8 @@ impl MeshPolygon {
     }
 
     fn get_vertices(&self) -> SmallVec<[&Point; 5]> {
-        let vertices = &self.data.vertices;
-        let polygons = &self.data.polygons;
+        let vertices = self.data.vertices();
+        let polygons = self.data.polygons();
         polygons[self.index]
             .iter()
             .map(|index| &vertices[*index as usize])
@@ -40,7 +40,7 @@ impl MeshPolygon {
     }
 
     fn to_polygon(&self) -> Polygon {
-        if let Some(tr) = &self.data.transformation {
+        if let Some(tr) = self.data.transformation() {
             let vertices = self.get_vertices().into_iter().map(|v| v.transform(tr));
             Polygon::new(vertices).unwrap()
         } else {
@@ -64,7 +64,7 @@ impl Shape for MeshPolygon {
             .normalize()
             .expect("normal existence has been checked during mesh construction");
 
-        if let Some(tr) = &self.data.transformation {
+        if let Some(tr) = self.data.transformation() {
             let vertices_tr = (vertices.iter())
                 .map(|v| v.transform(tr))
                 .collect::<SmallVec<[_; 6]>>();
@@ -85,7 +85,7 @@ impl Shape for MeshPolygon {
             .normalize()
             .expect("normal existence has been checked during mesh construction");
 
-        if let Some(tr) = &self.data.transformation {
+        if let Some(tr) = self.data.transformation() {
             let normal_tr = normal.transform(tr);
             Polygon::complete_ray_intersection_part(part, &normal_tr)
         } else {
@@ -108,8 +108,8 @@ impl Shape for MeshPolygon {
     }
 
     fn normal(&self, _position: Point) -> UnitVector {
-        let vertices = &self.data.vertices;
-        let polygon = &self.data.polygons[self.index];
+        let vertices = self.data.vertices();
+        let polygon = &self.data.polygons()[self.index];
         assert!(polygon.len() > 3);
         let v0 = vertices[polygon[0] as usize];
         let v1 = vertices[polygon[1] as usize];
@@ -127,7 +127,7 @@ impl Shape for MeshPolygon {
             (min.component_min(vertex), max.component_max(vertex))
         });
 
-        match &self.data.transformation {
+        match self.data.transformation() {
             None => Some(BoundingBox::new(min, max)),
             Some(tr) => Some(BoundingBox::new(min, max).transform(tr)),
         }
@@ -179,7 +179,7 @@ mod tests {
             vec![vec![0, 1, 2, 3]],
         )
         .unwrap()
-        .construct_impl(None, None);
+        .construct_impl(None);
 
         assert_eq!(
             polygons[0].bounding_box(),

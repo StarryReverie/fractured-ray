@@ -102,21 +102,19 @@ impl MeshConstructor {
     pub fn construct_impl(
         self,
         transformation: Option<Sequential>,
-        inv_transformation: Option<Sequential>,
     ) -> (Vec<MeshTriangle>, Vec<MeshPolygon>) {
-        let data = Arc::new(MeshData {
-            vertices: Arc::clone(&self.vertices),
-            triangles: Arc::clone(&self.triangles),
-            polygons: Arc::clone(&self.polygons),
+        let data = Arc::new(MeshData::new(
+            Arc::clone(&self.vertices),
+            Arc::clone(&self.triangles),
+            Arc::clone(&self.polygons),
             transformation,
-            inv_transformation,
-        });
+        ));
 
-        let mesh_triangles = (0..data.triangles.len())
+        let mesh_triangles = (0..data.triangles().len())
             .map(|index| MeshTriangle::new(data.clone(), index))
             .collect();
 
-        let mesh_polygons = (0..data.polygons.len())
+        let mesh_polygons = (0..data.polygons().len())
             .map(|index| MeshPolygon::new(data.clone(), index))
             .collect();
 
@@ -126,7 +124,7 @@ impl MeshConstructor {
 
 impl ShapeConstructor for MeshConstructor {
     fn construct(self: Box<Self>, container: &mut dyn ShapeContainer) -> Vec<ShapeId> {
-        let (triangles, polygons) = self.construct_impl(None, None);
+        let (triangles, polygons) = self.construct_impl(None);
 
         let mut ids = Vec::with_capacity(triangles.len() + polygons.len());
         for triangle in triangles {
@@ -164,7 +162,7 @@ mod tests {
             ],
         )
         .unwrap()
-        .construct_impl(None, None);
+        .construct_impl(None);
 
         assert_eq!(triangles.len(), 4);
         assert_eq!(polygons.len(), 1);
