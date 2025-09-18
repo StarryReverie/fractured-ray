@@ -4,7 +4,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 use crate::domain::math::numeric::Val;
 use crate::domain::math::transformation::{Rotation, Transform, Translation};
 
-use super::{Product, Quaternion, TryIntoUnitVectorError, UnitVector};
+use super::{Product, Quaternion, TryNormalizeVectorError, UnitVector};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Vector(Val, Val, Val);
@@ -60,7 +60,7 @@ impl Vector {
     }
 
     #[inline]
-    pub fn normalize(self) -> Result<UnitVector, TryIntoUnitVectorError> {
+    pub fn normalize(self) -> Result<UnitVector, TryNormalizeVectorError> {
         self.try_into()
     }
 

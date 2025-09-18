@@ -1,11 +1,8 @@
-use std::ops::{Add, Div, Mul, Neg, Sub};
-
 use rand::prelude::*;
 use rand_distr::UnitSphere;
 use snafu::prelude::*;
 
 use crate::domain::math::numeric::Val;
-use crate::domain::math::transformation::{Rotation, Transform, Translation};
 
 use super::{Product, Vector};
 
@@ -13,6 +10,17 @@ use super::{Product, Vector};
 pub struct UnitVector(Vector);
 
 impl UnitVector {
+    #[inline]
+    pub fn normalize(vector: Vector) -> Result<Self, TryNormalizeVectorError> {
+        let norm_squared = vector.norm_squared();
+        if norm_squared == Val(1.0) {
+            Ok(UnitVector(vector))
+        } else {
+            ensure!(norm_squared > Val(0.0), ZeroVectorSnafu);
+            Ok(UnitVector(vector / norm_squared.sqrt()))
+        }
+    }
+
     pub fn random(rng: &mut dyn RngCore) -> Self {
         let [x, y, z] = UnitSphere.sample(rng);
         Self(Vector::new(Val(x), Val(y), Val(z)))
@@ -43,21 +51,6 @@ impl UnitVector {
     }
 
     #[inline]
-    pub fn x(&self) -> Val {
-        self.0.x()
-    }
-
-    #[inline]
-    pub fn y(&self) -> Val {
-        self.0.y()
-    }
-
-    #[inline]
-    pub fn z(&self) -> Val {
-        self.0.z()
-    }
-
-    #[inline]
     pub fn norm(&self) -> Val {
         Val(1.0)
     }
@@ -68,7 +61,7 @@ impl UnitVector {
     }
 
     #[inline]
-    pub fn to_vector(&self) -> Vector {
+    pub fn to_vector(self) -> Vector {
         self.0
     }
 
@@ -79,127 +72,49 @@ impl UnitVector {
         let basis2 = UnitVector(self.cross(basis1));
         (basis1, basis2)
     }
-
-    #[inline]
-    pub fn is_perpendicular_to<V>(&self, rhs: V) -> bool
-    where
-        Self: Product<V, Output = Self>,
-    {
-        self.dot(rhs) == Val(0.0)
-    }
-
-    #[inline]
-    pub fn is_parallel_to<V>(&self, rhs: V) -> bool
-    where
-        Self: Product<V, Output = Self>,
-    {
-        self.cross(rhs).norm_squared() == Val(0.0)
-    }
 }
 
 impl TryFrom<Vector> for UnitVector {
-    type Error = TryIntoUnitVectorError;
+    type Error = TryNormalizeVectorError;
 
+    #[inline]
     fn try_from(value: Vector) -> Result<Self, Self::Error> {
-        let norm_squared = value.norm_squared();
-        if norm_squared == Val(1.0) {
-            Ok(UnitVector(value))
-        } else {
-            ensure!(norm_squared > Val(0.0), ZeroVectorSnafu);
-            Ok(UnitVector(value / norm_squared.sqrt()))
-        }
+        Self::normalize(value)
     }
 }
 
 impl From<UnitVector> for Vector {
+    #[inline]
     fn from(value: UnitVector) -> Self {
         value.0
     }
 }
 
-macro_rules! impl_operations {
-    ($lhs_type:ty, $rhs_type:ty) => {
-        impl Add<$rhs_type> for $lhs_type {
-            type Output = Vector;
+crate::impl_common_methods_for_wrapper_vector!(UnitVector);
 
-            fn add(self, rhs: $rhs_type) -> Self::Output {
-                Vector::from(self) + Vector::from(rhs)
-            }
-        }
+crate::impl_add_for_wrapper_vector!(UnitVector, UnitVector);
+crate::impl_add_for_wrapper_vector!(UnitVector, Vector);
+crate::impl_add_for_wrapper_vector!(Vector, UnitVector);
 
-        impl Sub<$rhs_type> for $lhs_type {
-            type Output = Vector;
+crate::impl_sub_for_wrapper_vector!(UnitVector, UnitVector);
+crate::impl_sub_for_wrapper_vector!(UnitVector, Vector);
+crate::impl_sub_for_wrapper_vector!(Vector, UnitVector);
 
-            fn sub(self, rhs: $rhs_type) -> Self::Output {
-                Vector::from(self) - Vector::from(rhs)
-            }
-        }
+crate::impl_product_for_wrapper_vector!(UnitVector, UnitVector);
+crate::impl_product_for_wrapper_vector!(UnitVector, Vector);
+crate::impl_product_for_wrapper_vector!(Vector, UnitVector);
 
-        impl Product<$rhs_type> for $lhs_type {
-            type Output = Vector;
+crate::impl_neg_for_wrapper_vector!(UnitVector);
 
-            fn dot(self, rhs: $rhs_type) -> Val {
-                Vector::from(self).dot(Vector::from(rhs))
-            }
+crate::impl_commutative_mul_for_wrapper_vector_and_scalar!(UnitVector, Val);
 
-            fn cross(self, rhs: $rhs_type) -> Self::Output {
-                Vector::from(self).cross(Vector::from(rhs))
-            }
-        }
-    };
-}
+crate::impl_div_for_wrapper_vector_and_scalar!(UnitVector, Val);
 
-impl_operations!(UnitVector, UnitVector);
-impl_operations!(UnitVector, Vector);
-impl_operations!(Vector, UnitVector);
-
-impl Neg for UnitVector {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        Self(-self.0)
-    }
-}
-
-impl Mul<Val> for UnitVector {
-    type Output = Vector;
-
-    fn mul(self, rhs: Val) -> Self::Output {
-        self.0 * rhs
-    }
-}
-
-impl Mul<UnitVector> for Val {
-    type Output = Vector;
-
-    fn mul(self, rhs: UnitVector) -> Self::Output {
-        self * rhs.0
-    }
-}
-
-impl Div<Val> for UnitVector {
-    type Output = Vector;
-
-    fn div(self, rhs: Val) -> Self::Output {
-        self.0 / rhs
-    }
-}
-
-impl Transform<Rotation> for UnitVector {
-    fn transform(&self, transformation: &Rotation) -> Self {
-        Self(self.0.transform(transformation))
-    }
-}
-
-impl Transform<Translation> for UnitVector {
-    fn transform(&self, transformation: &Translation) -> Self {
-        Self(self.0.transform(transformation))
-    }
-}
+crate::impl_common_transformation_for_wrapper_vector!(UnitVector);
 
 #[derive(Debug, Snafu, PartialEq, Eq)]
 #[non_exhaustive]
-pub enum TryIntoUnitVectorError {
+pub enum TryNormalizeVectorError {
     #[snafu(display("couldn't convert a zero vector to a unit vector"))]
     ZeroVector,
 }
@@ -253,7 +168,7 @@ mod tests {
         );
         assert_eq!(
             Vector::new(Val(0.0), Val(0.0), Val(0.0)).normalize(),
-            Err(TryIntoUnitVectorError::ZeroVector),
+            Err(TryNormalizeVectorError::ZeroVector),
         );
     }
 }
