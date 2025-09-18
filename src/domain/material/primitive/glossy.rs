@@ -4,7 +4,7 @@ use snafu::prelude::*;
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
-use crate::domain::math::geometry::Frame;
+use crate::domain::math::geometry::{Frame, Normal};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, SurfaceSide};
@@ -23,25 +23,23 @@ pub(super) trait MicrofacetMaterial: Material {
     fn generate_microfacet_normal(
         &self,
         dir: UnitVector,
-        normal: UnitVector,
+        normal: Normal,
         rng: &mut dyn RngCore,
-    ) -> UnitVector {
+    ) -> Normal {
         let frame = Frame::new(normal);
         let local_dir = frame.to_local_unit(dir);
         let local_mn = self.generate_local_microfacet_normal(local_dir, rng);
-        frame.to_canonical_unit(local_mn)
+        frame.to_canonical_unit(local_mn.to_unit_vector()).into()
     }
 
     fn generate_local_microfacet_normal(
         &self,
         local_dir: UnitVector,
         rng: &mut dyn RngCore,
-    ) -> UnitVector {
+    ) -> Normal {
         let alpha = self.alpha();
 
-        let ldir_tr = Vector::new(alpha * local_dir.x(), alpha * local_dir.y(), local_dir.z())
-            .normalize()
-            .unwrap();
+        let ldir_tr = Vector::new(alpha * local_dir.x(), alpha * local_dir.y(), local_dir.z());
 
         let r = Val(rng.random()).sqrt();
         let phi = Val(2.0) * Val::PI * Val(rng.random());
@@ -50,13 +48,14 @@ pub(super) trait MicrofacetMaterial: Material {
         let t2 = (Val(1.0) - s) * (Val(1.0) - t1.powi(2)).sqrt() + s * t2;
 
         let t3 = (Val(1.0) - t1.powi(2) - t2.powi(2)).max(Val(0.0)).sqrt();
-        let mn_tr = Frame::new(ldir_tr).to_canonical(Vector::new(t1, t2, t3));
+        let mn_tr =
+            Frame::new(Normal::normalize(ldir_tr).unwrap()).to_canonical(Vector::new(t1, t2, t3));
         let mn = Vector::new(
             alpha * mn_tr.x(),
             alpha * mn_tr.y(),
             mn_tr.z().max(Val(0.0)),
         );
-        mn.normalize().unwrap()
+        Normal::normalize(mn).unwrap()
     }
 
     fn calc_reflectance(&self, cos: Val, side: SurfaceSide) -> Spectrum {
@@ -64,19 +63,19 @@ pub(super) trait MicrofacetMaterial: Material {
         r0 + (Spectrum::broadcast(Val(1.0)) - r0) * (Val(1.0) - cos).powi(5)
     }
 
-    fn calc_ndf(&self, normal: UnitVector, mn: UnitVector) -> Val {
+    fn calc_ndf(&self, normal: Normal, mn: Normal) -> Val {
         let alpha_squared = self.alpha().powi(2);
         let cos = normal.dot(mn);
         alpha_squared / (Val::PI * (cos.powi(2) * (alpha_squared - Val(1.0)) + Val(1.0)).powi(2))
     }
 
-    fn calc_g1(&self, dir: UnitVector, normal: UnitVector) -> Val {
+    fn calc_g1(&self, dir: UnitVector, normal: Normal) -> Val {
         let tan = dir.dot(normal).abs().acos().tan();
         let tmp = (Val(1.0) + (self.alpha() * tan).powi(2)).sqrt();
         Val(2.0) / (Val(1.0) + tmp)
     }
 
-    fn calc_g2(&self, dir: UnitVector, dir_next: UnitVector, normal: UnitVector) -> Val {
+    fn calc_g2(&self, dir: UnitVector, dir_next: UnitVector, normal: Normal) -> Val {
         let alpha = self.alpha();
         let tan = dir.dot(normal).abs().acos().tan();
         let tan_next = dir_next.dot(normal).abs().acos().tan();
@@ -195,7 +194,7 @@ impl BsdfMaterial for Glossy {
     ) -> Spectrum {
         let normal = intersection.normal();
         if normal.dot(dir_in) > Val(0.0) {
-            let mn = (dir_out + dir_in).normalize().unwrap();
+            let mn = Normal::normalize(dir_out + dir_in).unwrap();
 
             let reflectance = self.calc_reflectance(dir_in.dot(mn), intersection.side());
             let ndf = self.calc_ndf(normal, mn);
@@ -236,7 +235,7 @@ impl BsdfSampling for Glossy {
 
     fn pdf_bsdf(&self, ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         let (dir, dir_next) = (-ray.direction(), ray_next.direction());
-        let Ok(mn) = (dir + dir_next).normalize() else {
+        let Ok(mn) = Normal::normalize(dir + dir_next) else {
             return Val(0.0);
         };
 

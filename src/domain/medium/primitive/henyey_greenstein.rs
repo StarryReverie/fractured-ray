@@ -181,7 +181,7 @@ impl PhaseSampling for HenyeyGreenstein {
         };
         let sin_theta = (Val(1.0) - cos_theta * cos_theta).sqrt();
 
-        let frame = Frame::new(ray.direction());
+        let frame = Frame::new(ray.direction().into());
         let dir_next_local = Vector::new(cos_phi * sin_theta, sin_phi * sin_theta, cos_theta);
         let dir_next = frame.to_canonical(dir_next_local).normalize().unwrap();
 

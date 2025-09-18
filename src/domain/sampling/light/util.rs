@@ -138,7 +138,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::domain::math::algebra::UnitVector;
-    use crate::domain::math::geometry::Point;
+    use crate::domain::math::geometry::{Normal, Point};
     use crate::domain::ray::event::SurfaceSide;
     use crate::domain::sampling::point::TrianglePointSampler;
     use crate::domain::shape::def::ShapeKind;
@@ -162,7 +162,7 @@ mod tests {
         let intersection = RayIntersection::new(
             Val(1.0),
             Point::new(Val(0.0), Val(0.0), Val(1.0)),
-            UnitVector::y_direction(),
+            Normal::y_direction(),
             SurfaceSide::Front,
         );
 

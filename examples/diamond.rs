@@ -7,7 +7,7 @@ use fractured_ray::domain::material::primitive::{
     Emissive, Glossy, GlossyPredefinition, Refractive,
 };
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
-use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
+use fractured_ray::domain::math::geometry::{Normal, Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::math::transformation::{Rotation, Translation};
 use fractured_ray::domain::medium::primitive::Isotropic;
@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     scene.add(
         Plane::new(
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
-            UnitVector::y_direction(),
+            Normal::y_direction(),
         ),
         Glossy::lookup(GlossyPredefinition::Iron, Val(0.3))?,
     );

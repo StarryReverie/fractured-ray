@@ -3,8 +3,8 @@ use std::ops::{Bound, RangeBounds};
 use getset::CopyGetters;
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -97,21 +97,21 @@ impl Shape for Aabb {
         Val(2.0) * (a * b + a * c + b * c)
     }
 
-    fn normal(&self, position: Point) -> UnitVector {
+    fn normal(&self, position: Point) -> Normal {
         if position.x() == self.min.x() {
-            -UnitVector::x_direction()
+            -Normal::x_direction()
         } else if position.x() == self.max.x() {
-            UnitVector::x_direction()
+            Normal::x_direction()
         } else if position.y() == self.min.y() {
-            -UnitVector::y_direction()
+            -Normal::y_direction()
         } else if position.y() == self.max.y() {
-            UnitVector::y_direction()
+            Normal::y_direction()
         } else if position.z() == self.min.z() {
-            -UnitVector::z_direction()
+            -Normal::z_direction()
         } else if position.z() == self.max.z() {
-            UnitVector::z_direction()
+            Normal::z_direction()
         } else {
-            UnitVector::x_direction()
+            Normal::x_direction()
         }
     }
 
@@ -182,27 +182,27 @@ mod tests {
 
         assert_eq!(
             aabb.normal(Point::new(Val(0.0), Val(1.0), Val(1.0))),
-            -UnitVector::x_direction(),
+            -Normal::x_direction(),
         );
         assert_eq!(
             aabb.normal(Point::new(Val(2.0), Val(1.0), Val(1.0))),
-            UnitVector::x_direction(),
+            Normal::x_direction(),
         );
         assert_eq!(
             aabb.normal(Point::new(Val(1.0), Val(0.0), Val(1.0))),
-            -UnitVector::y_direction(),
+            -Normal::y_direction(),
         );
         assert_eq!(
             aabb.normal(Point::new(Val(1.0), Val(3.0), Val(1.0))),
-            UnitVector::y_direction(),
+            Normal::y_direction(),
         );
         assert_eq!(
             aabb.normal(Point::new(Val(1.0), Val(1.0), Val(0.0))),
-            -UnitVector::z_direction(),
+            -Normal::z_direction(),
         );
         assert_eq!(
             aabb.normal(Point::new(Val(1.0), Val(1.0), Val(2.0))),
-            UnitVector::z_direction(),
+            Normal::z_direction(),
         );
     }
 }

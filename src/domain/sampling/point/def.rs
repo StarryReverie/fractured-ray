@@ -3,8 +3,7 @@ use std::fmt::Debug;
 use getset::CopyGetters;
 use rand::prelude::*;
 
-use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::shape::def::RefDynShape;
@@ -24,13 +23,13 @@ pub trait PointSampling: Debug + Send + Sync {
 #[getset(get_copy = "pub")]
 pub struct PointSample {
     point: Point,
-    normal: UnitVector,
+    normal: Normal,
     pdf: Val,
     shape_id: ShapeId,
 }
 
 impl PointSample {
-    pub fn new(point: Point, normal: UnitVector, pdf: Val, shape_id: ShapeId) -> Self {
+    pub fn new(point: Point, normal: Normal, pdf: Val, shape_id: ShapeId) -> Self {
         Self {
             point,
             normal,
@@ -51,7 +50,7 @@ impl<T> Transform<T> for PointSample
 where
     T: AtomTransformation,
     Point: Transform<T>,
-    UnitVector: Transform<T>,
+    Normal: Transform<T>,
 {
     fn transform(&self, transformation: &T) -> Self {
         Self::new(

@@ -2,20 +2,20 @@ use getset::{CopyGetters, Getters};
 
 use crate::domain::math::algebra::{Product, UnitVector, Vector};
 
-use super::Point;
+use super::{Normal, Point};
 
 #[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct Frame {
     tangent: UnitVector,
     cross: UnitVector,
-    normal: UnitVector,
+    normal: Normal,
 }
 
 impl Frame {
     #[inline]
-    pub fn new(normal: UnitVector) -> Self {
-        let (tangent, cross) = normal.orthonormal_basis();
+    pub fn new(normal: Normal) -> Self {
+        let (tangent, cross) = UnitVector::from(normal).orthonormal_basis();
         Self {
             tangent,
             cross,
@@ -50,9 +50,9 @@ impl Frame {
     #[inline]
     pub fn permute_axes(self) -> Self {
         Self {
-            tangent: self.normal,
+            tangent: self.normal.into(),
             cross: self.tangent,
-            normal: self.cross,
+            normal: self.cross.into(),
         }
     }
 }
@@ -67,7 +67,7 @@ pub struct PositionedFrame {
 
 impl PositionedFrame {
     #[inline]
-    pub fn new(origin: Point, normal: UnitVector) -> Self {
+    pub fn new(origin: Point, normal: Normal) -> Self {
         let unpositioned = Frame::new(normal);
         Self {
             origin,
@@ -86,7 +86,7 @@ impl PositionedFrame {
     }
 
     #[inline]
-    pub fn normal(&self) -> UnitVector {
+    pub fn normal(&self) -> Normal {
         self.unpositioned.normal()
     }
 

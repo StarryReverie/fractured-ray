@@ -1,8 +1,7 @@
 use enum_dispatch::enum_dispatch;
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
@@ -114,7 +113,7 @@ impl<'a> Shape for RefDynShape<'a> {
         impl_dispatch!(Self, self.area())
     }
 
-    fn normal(&self, position: Point) -> UnitVector {
+    fn normal(&self, position: Point) -> Normal {
         impl_dispatch!(Self, self.normal(position))
     }
 

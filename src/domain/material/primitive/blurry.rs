@@ -4,6 +4,7 @@ use snafu::prelude::*;
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::{Product, UnitVector};
+use crate::domain::math::geometry::Normal;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, SurfaceSide};
@@ -112,7 +113,7 @@ impl BsdfMaterial for Blurry {
         let ri = self.calc_current_refractive_index(side);
 
         if dir_in.dot(normal) > Val(0.0) {
-            let Ok(mn) = (dir_out + dir_in).normalize() else {
+            let Ok(mn) = Normal::normalize(dir_out + dir_in) else {
                 return Spectrum::zero();
             };
 
@@ -125,7 +126,7 @@ impl BsdfMaterial for Blurry {
 
             self.albedo * (reflectance * ndf * g2) / (Val(4.0) * cos * cos_next).abs()
         } else {
-            let Ok(mn) = (-dir_out - ri * dir_in).normalize() else {
+            let Ok(mn) = Normal::normalize(-dir_out - ri * dir_in) else {
                 return Spectrum::zero();
             };
 
@@ -189,12 +190,12 @@ impl BsdfSampling for Blurry {
 
         let normal = intersection.normal();
         let (mn, is_reflective) = if dir_next.dot(normal) > Val(0.0) {
-            let Ok(mn) = (dir + dir_next).normalize() else {
+            let Ok(mn) = Normal::normalize(dir + dir_next) else {
                 return Val(0.0);
             };
             (mn, true)
         } else {
-            let Ok(mn) = (-dir - ri * dir_next).normalize() else {
+            let Ok(mn) = Normal::normalize(-dir - ri * dir_next) else {
                 return Val(0.0);
             };
             (mn, false)

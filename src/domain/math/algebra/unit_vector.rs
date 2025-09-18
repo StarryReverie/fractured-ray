@@ -2,6 +2,7 @@ use rand::prelude::*;
 use rand_distr::UnitSphere;
 use snafu::prelude::*;
 
+use crate::domain::math::geometry::Normal;
 use crate::domain::math::numeric::Val;
 
 use super::{Product, Vector};
@@ -26,7 +27,7 @@ impl UnitVector {
         Self(Vector::new(Val(x), Val(y), Val(z)))
     }
 
-    pub fn random_cosine_hemisphere(normal: Self, rng: &mut dyn RngCore) -> Self {
+    pub fn random_cosine_hemisphere(normal: Normal, rng: &mut dyn RngCore) -> Self {
         loop {
             let unit = Self::random(rng);
             if let Ok(direction) = (normal + unit).normalize() {

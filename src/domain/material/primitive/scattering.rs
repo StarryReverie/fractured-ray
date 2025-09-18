@@ -122,7 +122,7 @@ impl Scattering {
 
         let proj_ray_max_len = Val(2.0) * (radius_max.powi(2) - radius.powi(2)).sqrt();
         let proj_ray_start = point_disk + (Val(0.5) * proj_ray_max_len) * frame.normal();
-        let proj_ray = Ray::new(proj_ray_start, -frame.normal());
+        let proj_ray = Ray::new(proj_ray_start, -UnitVector::from(frame.normal()));
 
         let mut range = DisRange::inclusive(Val(0.0), proj_ray_max_len);
         while let Some((intersection, id)) = scene.find_intersection(&proj_ray, range) {

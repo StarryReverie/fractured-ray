@@ -1,7 +1,7 @@
 use getset::CopyGetters;
 
 use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
@@ -24,12 +24,12 @@ impl<'a> RayIntersectionPart<'a> {
 pub struct RayIntersection {
     distance: Val,
     position: Point,
-    normal: UnitVector,
+    normal: Normal,
     side: SurfaceSide,
 }
 
 impl RayIntersection {
-    pub fn new(distance: Val, position: Point, normal: UnitVector, side: SurfaceSide) -> Self {
+    pub fn new(distance: Val, position: Point, normal: Normal, side: SurfaceSide) -> Self {
         Self {
             distance,
             position,
@@ -48,7 +48,7 @@ impl<T> Transform<T> for RayIntersection
 where
     T: AtomTransformation,
     Point: Transform<T>,
-    UnitVector: Transform<T>,
+    Normal: Transform<T>,
 {
     fn transform(&self, transformation: &T) -> Self {
         Self::new(

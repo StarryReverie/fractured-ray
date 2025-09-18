@@ -4,7 +4,7 @@ use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
 use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
@@ -124,7 +124,7 @@ impl LightSample {
         position: Point,
         direction_next: UnitVector,
         position_next: Point,
-        normal_next: UnitVector,
+        normal_next: Normal,
         pdf_point: Val,
     ) -> Val {
         let cos = normal_next.dot(direction_next).abs();

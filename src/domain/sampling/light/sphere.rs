@@ -43,7 +43,7 @@ impl SphereLightSampler {
         let local_at_sphere = Vector::new(x, y, z) * self.sphere.radius();
 
         let global_dir = -to_center.normalize().unwrap_or(UnitVector::z_direction());
-        let frame = Frame::new(global_dir);
+        let frame = Frame::new(global_dir.into());
         let at_sphere = frame.to_canonical(local_at_sphere);
         let Ok(direction) = (to_center + at_sphere).normalize() else {
             return None;
@@ -150,7 +150,7 @@ impl LightSampling for SphereLightSampler {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::geometry::Point;
+    use crate::domain::math::geometry::{Normal, Point};
     use crate::domain::ray::event::SurfaceSide;
     use crate::domain::shape::def::{Shape, ShapeKind};
 
@@ -166,7 +166,7 @@ mod tests {
         let intersection = RayIntersection::new(
             Val(1.0),
             Point::new(Val(4.0), Val(0.0), Val(0.0)),
-            -UnitVector::x_direction(),
+            -Normal::x_direction(),
             SurfaceSide::Front,
         );
 

@@ -1,8 +1,8 @@
 use rand::prelude::*;
 use rand_distr::weighted::WeightedIndex;
 
-use crate::domain::math::algebra::{UnitVector, Vector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::algebra::Vector;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{Val, WrappedVal};
 use crate::domain::shape::def::{RefDynShape, Shape};
 use crate::domain::shape::primitive::Aabb;
@@ -83,14 +83,14 @@ impl AabbPointSampler {
         }
     }
 
-    fn get_normal_for_face(face_index: usize) -> UnitVector {
+    fn get_normal_for_face(face_index: usize) -> Normal {
         match face_index {
-            Self::POSITIVE_X => UnitVector::x_direction(),
-            Self::NEGATIVE_X => -UnitVector::x_direction(),
-            Self::POSITIVE_Y => UnitVector::y_direction(),
-            Self::NEGATIVE_Y => -UnitVector::y_direction(),
-            Self::POSITIVE_Z => UnitVector::z_direction(),
-            Self::NEGATIVE_Z => -UnitVector::z_direction(),
+            Self::POSITIVE_X => Normal::x_direction(),
+            Self::NEGATIVE_X => -Normal::x_direction(),
+            Self::POSITIVE_Y => Normal::y_direction(),
+            Self::NEGATIVE_Y => -Normal::y_direction(),
+            Self::POSITIVE_Z => Normal::z_direction(),
+            Self::NEGATIVE_Z => -Normal::z_direction(),
             _ => unreachable!("face_index should be in [0, 6)"),
         }
     }

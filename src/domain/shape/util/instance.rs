@@ -3,8 +3,7 @@ use std::sync::Arc;
 use getset::Getters;
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::{
     Rotation, Sequential, Transform, Transformation, Translation,
@@ -87,7 +86,7 @@ impl Shape for Instance {
         self.prototype.area()
     }
 
-    fn normal(&self, position: Point) -> UnitVector {
+    fn normal(&self, position: Point) -> Normal {
         self.prototype
             .normal(position)
             .transform(&self.transformation)
@@ -161,7 +160,7 @@ mod tests {
             intersection.position(),
             Point::new(Val(0.0), Val(2.0).sqrt(), Val(0.0))
         );
-        assert_eq!(intersection.normal(), -UnitVector::z_direction());
+        assert_eq!(intersection.normal(), -Normal::z_direction());
         assert_eq!(intersection.side(), SurfaceSide::Front);
     }
 }

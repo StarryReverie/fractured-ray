@@ -1,7 +1,8 @@
 use getset::CopyGetters;
 use rand::prelude::*;
 
-use crate::domain::math::algebra::{Product, UnitVector};
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::Normal;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
@@ -11,7 +12,7 @@ pub fn reflect(ray: &Ray, intersection: &RayIntersection) -> Ray {
     reflect_microfacet(ray, intersection, intersection.normal())
 }
 
-pub fn reflect_microfacet(ray: &Ray, intersection: &RayIntersection, mn: UnitVector) -> Ray {
+pub fn reflect_microfacet(ray: &Ray, intersection: &RayIntersection, mn: Normal) -> Ray {
     let dir_next = (ray.direction() - Val(2.0) * ray.direction().dot(mn) * mn)
         .normalize()
         .expect("reflective ray's direction should not be zero vector");
@@ -26,7 +27,7 @@ pub fn pure_refract(ray: &Ray, intersection: &RayIntersection, ri: Val) -> Optio
 pub fn pure_refract_microfacet(
     ray: &Ray,
     intersection: &RayIntersection,
-    mn: UnitVector,
+    mn: Normal,
     ri: Val,
 ) -> Option<Ray> {
     let cos = mn.dot(-ray.direction());
@@ -57,7 +58,7 @@ pub fn fresnel_refract(
 pub fn fresnel_refract_microfacet(
     ray: &Ray,
     intersection: &RayIntersection,
-    mn: UnitVector,
+    mn: Normal,
     ri: Val,
     rng: &mut dyn RngCore,
 ) -> (Ray, ScatteringKind) {
@@ -118,7 +119,7 @@ mod tests {
         let intersection = RayIntersection::new(
             Val(1.0),
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
-            UnitVector::y_direction(),
+            Normal::y_direction(),
             SurfaceSide::Back,
         );
 
@@ -144,7 +145,7 @@ mod tests {
         let intersection = RayIntersection::new(
             Val(1.0),
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
-            UnitVector::y_direction(),
+            Normal::y_direction(),
             SurfaceSide::Front,
         );
 

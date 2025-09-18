@@ -5,7 +5,7 @@ use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::{Albedo, Spectrum};
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::{UnitVector, Vector};
-use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
+use fractured_ray::domain::math::geometry::{Normal, Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::math::transformation::{Rotation, Translation};
 use fractured_ray::domain::renderer::{CoreRenderer, CoreRendererConfiguration, Renderer};
@@ -31,42 +31,42 @@ fn main() -> Result<(), Box<dyn Error>> {
     builder.add(
         Plane::new(
             Point::new(Val(-4.0), Val(0.0), Val(0.0)),
-            UnitVector::x_direction(),
+            Normal::x_direction(),
         ),
         Diffuse::new(Albedo::GREEN),
     );
     builder.add(
         Plane::new(
             Point::new(Val(4.0), Val(0.0), Val(0.0)),
-            -UnitVector::x_direction(),
+            -Normal::x_direction(),
         ),
         Diffuse::new(Albedo::RED),
     );
     builder.add(
         Plane::new(
             Point::new(Val(0.0), Val(0.0), Val(15.0)),
-            -UnitVector::z_direction(),
+            -Normal::z_direction(),
         ),
         Diffuse::new(Albedo::WHITE),
     );
     builder.add(
         Plane::new(
             Point::new(Val(0.0), Val(0.0), Val(-5.0)),
-            UnitVector::z_direction(),
+            Normal::z_direction(),
         ),
         Diffuse::new(Albedo::WHITE),
     );
     builder.add(
         Plane::new(
             Point::new(Val(0.0), Val(0.0), Val(-2.0)),
-            UnitVector::y_direction(),
+            Normal::y_direction(),
         ),
         Specular::new((Albedo::WHITE * Val(0.4)).into()),
     );
     builder.add(
         Plane::new(
             Point::new(Val(0.0), Val(4.0), Val(-0.0)),
-            -UnitVector::y_direction(),
+            -Normal::y_direction(),
         ),
         Diffuse::new(Albedo::WHITE),
     );

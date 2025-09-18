@@ -3,8 +3,8 @@ use std::sync::Arc;
 use smallvec::SmallVec;
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::Transform;
 use crate::domain::ray::Ray;
@@ -59,10 +59,9 @@ impl Shape for MeshPolygon {
         let vertices = self.get_vertices();
 
         assert!(vertices.len() > 3);
-        let normal = (*vertices[1] - *vertices[0])
-            .cross(*vertices[2] - *vertices[1])
-            .normalize()
-            .expect("normal existence has been checked during mesh construction");
+        let normal =
+            Normal::normalize((*vertices[1] - *vertices[0]).cross(*vertices[2] - *vertices[1]))
+                .expect("normal existence has been checked during mesh construction");
 
         if let Some(tr) = self.data.transformation() {
             let vertices_tr = (vertices.iter())
@@ -80,10 +79,9 @@ impl Shape for MeshPolygon {
         let vertices = self.get_vertices();
 
         assert!(vertices.len() > 3);
-        let normal = (*vertices[1] - *vertices[0])
-            .cross(*vertices[2] - *vertices[1])
-            .normalize()
-            .expect("normal existence has been checked during mesh construction");
+        let normal =
+            Normal::normalize((*vertices[1] - *vertices[0]).cross(*vertices[2] - *vertices[1]))
+                .expect("normal existence has been checked during mesh construction");
 
         if let Some(tr) = self.data.transformation() {
             let normal_tr = normal.transform(tr);
@@ -107,16 +105,14 @@ impl Shape for MeshPolygon {
         sum * Val(0.5)
     }
 
-    fn normal(&self, _position: Point) -> UnitVector {
+    fn normal(&self, _position: Point) -> Normal {
         let vertices = self.data.vertices();
         let polygon = &self.data.polygons()[self.index];
         assert!(polygon.len() > 3);
         let v0 = vertices[polygon[0] as usize];
         let v1 = vertices[polygon[1] as usize];
         let v2 = vertices[polygon[2] as usize];
-        (v1 - v0)
-            .cross(v2 - v0)
-            .normalize()
+        Normal::normalize((v1 - v0).cross(v2 - v0))
             .expect("triangle's two sides should not parallel")
     }
 

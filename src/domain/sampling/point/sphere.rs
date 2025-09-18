@@ -1,11 +1,12 @@
 use rand::prelude::*;
 
-use crate::domain::math::geometry::Point;
+use crate::domain::math::algebra::UnitVector;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::Val;
+use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::def::Shape;
 use crate::domain::shape::primitive::Sphere;
 use crate::domain::shape::util::ShapeId;
-use crate::domain::{math::algebra::UnitVector, shape::def::RefDynShape};
 
 use super::{PointSample, PointSampling};
 
@@ -37,11 +38,11 @@ impl PointSampling for SpherePointSampler {
     }
 
     fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {
-        let dir = UnitVector::random(rng);
-        let point = dir * self.sphere.radius() + self.sphere.center();
+        let normal = Normal::from(UnitVector::random(rng));
+        let point = normal * self.sphere.radius() + self.sphere.center();
         Some(PointSample::new(
             point,
-            dir,
+            normal,
             self.pdf_point(point, true),
             self.id,
         ))

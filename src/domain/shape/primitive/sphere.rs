@@ -4,8 +4,8 @@ use getset::CopyGetters;
 use snafu::prelude::*;
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::algebra::{Product, UnitVector, Vector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::algebra::{Product, Vector};
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -74,9 +74,8 @@ impl Shape for Sphere {
 
     fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
         let position = part.ray().at(part.distance());
-        let normal = (position - self.center)
-            .normalize()
-            .expect("normal should not be zero vector");
+        let normal =
+            Normal::normalize(position - self.center).expect("normal should not be zero vector");
         let (normal, side) = if part.ray().direction().dot(normal) < Val(0.0) {
             (normal, SurfaceSide::Front)
         } else {
@@ -89,10 +88,8 @@ impl Shape for Sphere {
         Val(4.0) * Val::PI * self.radius.powi(2)
     }
 
-    fn normal(&self, position: Point) -> UnitVector {
-        (position - self.center)
-            .normalize()
-            .unwrap_or(UnitVector::x_direction())
+    fn normal(&self, position: Point) -> Normal {
+        Normal::normalize(position - self.center).unwrap_or(Normal::x_direction())
     }
 
     fn bounding_box(&self) -> Option<BoundingBox> {
@@ -157,7 +154,7 @@ mod tests {
             intersection.position(),
             Point::new(Val(1.0), Val(1.0), Val(0.0)),
         );
-        assert_eq!(intersection.normal(), UnitVector::x_direction());
+        assert_eq!(intersection.normal(), Normal::x_direction());
         assert_eq!(intersection.side(), SurfaceSide::Front);
     }
 
@@ -187,7 +184,7 @@ mod tests {
             intersection.position(),
             Point::new(Val(1.0), Val(1.0), Val(0.0)),
         );
-        assert_eq!(intersection.normal(), -UnitVector::x_direction());
+        assert_eq!(intersection.normal(), -Normal::x_direction());
         assert_eq!(intersection.side(), SurfaceSide::Back);
     }
 

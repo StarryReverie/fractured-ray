@@ -4,7 +4,7 @@ use spade::{DelaunayTriangulation, Point2, Triangulation};
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::math::transformation::{Rotation, Transform, Transformation};
 use crate::domain::ray::Ray;
@@ -26,7 +26,7 @@ pub enum PolygonInner {
     Triangle(Triangle),
     General {
         vertices: Vec<Point>,
-        normal: UnitVector,
+        normal: Normal,
     },
 }
 
@@ -84,9 +84,7 @@ impl Polygon {
             .all(|(next, prev)| !prev.is_parallel_to(*next));
         ensure!(no_parallel, ParallelAdjacentSidesSnafu);
 
-        let normal = sides[0]
-            .cross(sides[1])
-            .normalize()
+        let normal = Normal::normalize(sides[0].cross(sides[1]))
             .expect("side[0] and side[1] should not be zero vectors and should not be parallel");
         let is_flat = sides.iter().all(|s| s.is_perpendicular_to(normal));
         ensure!(is_flat, NotFlatSnafu);
@@ -98,7 +96,7 @@ impl Polygon {
         ray: &'a Ray,
         range: DisRange,
         vertices: &[&Point],
-        normal: &UnitVector,
+        normal: &Normal,
     ) -> Option<RayIntersectionPart<'a>> {
         assert!(vertices.len() > 3);
         let part = Plane::calc_ray_intersection_part(ray, range, vertices[0], normal)?;
@@ -111,14 +109,14 @@ impl Polygon {
 
     pub fn complete_ray_intersection_part(
         part: RayIntersectionPart,
-        normal: &UnitVector,
+        normal: &Normal,
     ) -> RayIntersection {
         Plane::complete_ray_intersection_part(part, normal)
     }
 
     fn is_intersection_part_inside_polygon(
         part: &RayIntersectionPart,
-        normal: &UnitVector,
+        normal: &Normal,
         vertices: &[&Point],
     ) -> bool {
         let projection_axis = Self::select_projection_axis(*normal);
@@ -126,7 +124,7 @@ impl Polygon {
         Self::calc_angle_sum(to_vertices) != Val(0.0)
     }
 
-    fn select_projection_axis(normal: UnitVector) -> usize {
+    fn select_projection_axis(normal: Normal) -> usize {
         let max_component = (normal.x().abs())
             .max(normal.y().abs())
             .max(normal.z().abs());
@@ -175,7 +173,11 @@ impl Polygon {
             PolygonInner::General { vertices, normal } => {
                 assert!(vertices.len() >= 3);
 
-                let tr = Rotation::new(*normal, UnitVector::z_direction(), Val(0.0));
+                let tr = Rotation::new(
+                    UnitVector::from(*normal),
+                    UnitVector::z_direction(),
+                    Val(0.0),
+                );
                 let z = vertices[0].transform(&tr).z();
                 let vertices_2d = vertices
                     .iter()
@@ -246,7 +248,7 @@ impl Shape for Polygon {
         }
     }
 
-    fn normal(&self, position: Point) -> UnitVector {
+    fn normal(&self, position: Point) -> Normal {
         match &self.0 {
             PolygonInner::Triangle(triangle) => triangle.normal(position),
             PolygonInner::General { normal, .. } => *normal,
@@ -413,12 +415,11 @@ mod tests {
         );
         assert_eq!(
             intersection.normal(),
-            Vector::new(
+            Normal::normalize(Vector::new(
                 Val(-0.8451542547285166),
                 Val(-0.1690308509457033),
                 Val(-0.50709255283711),
-            )
-            .normalize()
+            ))
             .unwrap(),
         );
         assert_eq!(intersection.side(), SurfaceSide::Back);

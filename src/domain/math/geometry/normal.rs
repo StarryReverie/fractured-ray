@@ -13,6 +13,21 @@ impl Normal {
     }
 
     #[inline]
+    pub fn x_direction() -> Self {
+        UnitVector::x_direction().into()
+    }
+
+    #[inline]
+    pub fn y_direction() -> Self {
+        UnitVector::y_direction().into()
+    }
+
+    #[inline]
+    pub fn z_direction() -> Self {
+        UnitVector::z_direction().into()
+    }
+
+    #[inline]
     pub fn norm(&self) -> Val {
         self.0.norm()
     }

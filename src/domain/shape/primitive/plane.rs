@@ -3,8 +3,8 @@ use std::ops::RangeBounds;
 use getset::CopyGetters;
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -19,11 +19,11 @@ use crate::domain::shape::util::ShapeId;
 pub struct Plane {
     #[getset(get_copy = "pub")]
     point: Point,
-    normal: UnitVector,
+    normal: Normal,
 }
 
 impl Plane {
-    pub fn new(point: Point, normal: UnitVector) -> Self {
+    pub fn new(point: Point, normal: Normal) -> Self {
         Self { point, normal }
     }
 
@@ -31,7 +31,7 @@ impl Plane {
         ray: &'a Ray,
         range: DisRange,
         point: &Point,
-        normal: &UnitVector,
+        normal: &Normal,
     ) -> Option<RayIntersectionPart<'a>> {
         let den = ray.direction().dot(*normal);
         let distance = if den != Val(0.0) {
@@ -50,7 +50,7 @@ impl Plane {
 
     pub fn complete_ray_intersection_part(
         part: RayIntersectionPart,
-        normal: &UnitVector,
+        normal: &Normal,
     ) -> RayIntersection {
         let position = part.ray().at(part.distance());
         let (normal, side) = if normal.dot(part.ray().direction()) < Val(0.0) {
@@ -79,7 +79,7 @@ impl Shape for Plane {
         Val::INFINITY
     }
 
-    fn normal(&self, _position: Point) -> UnitVector {
+    fn normal(&self, _position: Point) -> Normal {
         self.normal
     }
 
@@ -116,7 +116,7 @@ mod tests {
     fn plane_hit_succeeds() {
         let plane = Plane::new(
             Point::new(Val(-1.0), Val(0.0), Val(0.0)),
-            UnitVector::x_direction(),
+            Normal::x_direction(),
         );
         let ray = Ray::new(
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
@@ -130,7 +130,7 @@ mod tests {
             intersection.position(),
             Point::new(Val(-1.0), Val(0.0), Val(-1.0))
         );
-        assert_eq!(intersection.normal(), UnitVector::x_direction());
+        assert_eq!(intersection.normal(), Normal::x_direction());
         assert_eq!(intersection.side(), SurfaceSide::Front);
     }
 }

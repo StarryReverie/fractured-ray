@@ -83,7 +83,7 @@ where
             let dir = UnitVector::random_cosine_hemisphere(normal, rng);
             (dir, Val::FRAC_1_PI)
         } else if beam_angle.is_directional() {
-            (normal, Val(1.0))
+            (normal.into(), Val(1.0))
         } else {
             let sin2_beam = beam_angle.angle().sin().powi(2);
             let (u1_sin, u2) = (Val(rng.random()) * sin2_beam, Val(rng.random()));

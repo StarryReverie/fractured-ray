@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::Transform;
 use crate::domain::ray::Ray;
@@ -77,11 +77,9 @@ impl Shape for MeshTriangle {
         Val(0.5) * (*v1 - *v0).cross(*v2 - *v0).norm()
     }
 
-    fn normal(&self, _position: Point) -> UnitVector {
+    fn normal(&self, _position: Point) -> Normal {
         let (v0, v1, v2) = self.get_vertices();
-        (*v1 - *v0)
-            .cross(*v2 - *v0)
-            .normalize()
+        Normal::normalize((*v1 - *v0).cross(*v2 - *v0))
             .expect("triangle's two sides should not parallel")
     }
 

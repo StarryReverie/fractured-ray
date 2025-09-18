@@ -1,7 +1,7 @@
 use rand::prelude::*;
 
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::shape::def::{RefDynShape, Shape};
 use crate::domain::shape::primitive::Triangle;
@@ -13,7 +13,7 @@ use super::{PointSample, PointSampling};
 pub struct TrianglePointSampler {
     id: ShapeId,
     shape: Triangle,
-    normal: UnitVector,
+    normal: Normal,
     area_inv: Val,
 }
 

@@ -4,8 +4,8 @@ use getset::CopyGetters;
 use snafu::prelude::*;
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -96,9 +96,7 @@ impl Triangle {
         vertex2: &Point,
     ) -> RayIntersection {
         let position = part.ray().at(part.distance());
-        let normal = (*vertex1 - *vertex0)
-            .cross(*vertex2 - *vertex0)
-            .normalize()
+        let normal = Normal::normalize((*vertex1 - *vertex0).cross(*vertex2 - *vertex0))
             .expect("`*vertex1 - *vertex0` and `*vertex2 - *vertex0` should not be zero vectors and should not be parallel");
         let (normal, side) = if part.ray().direction().dot(normal) < Val(0.0) {
             (normal, SurfaceSide::Front)
@@ -128,10 +126,8 @@ impl Shape for Triangle {
         Val(0.5) * side1.cross(side2).norm()
     }
 
-    fn normal(&self, _position: Point) -> UnitVector {
-        (self.vertex1 - self.vertex0)
-            .cross(self.vertex2 - self.vertex0)
-            .normalize()
+    fn normal(&self, _position: Point) -> Normal {
+        Normal::normalize((self.vertex1 - self.vertex0).cross(self.vertex2 - self.vertex0))
             .expect("triangle's two sides should not parallel")
     }
 
