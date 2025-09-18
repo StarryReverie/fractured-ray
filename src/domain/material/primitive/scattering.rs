@@ -6,8 +6,8 @@ use crate::domain::material::def::{
     BsdfMaterial, BsdfMaterialExt, BssrdfMaterial, BssrdfMaterialExt, Material, MaterialKind,
 };
 use crate::domain::material::primitive::Specular;
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::{Point, PositionedFrame};
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{Direction, Point, PositionedFrame};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, SurfaceSide};
@@ -122,7 +122,10 @@ impl Scattering {
 
         let proj_ray_max_len = Val(2.0) * (radius_max.powi(2) - radius.powi(2)).sqrt();
         let proj_ray_start = point_disk + (Val(0.5) * proj_ray_max_len) * frame.normal();
-        let proj_ray = Ray::new(proj_ray_start, -UnitVector::from(frame.normal()));
+        let proj_ray = Ray::new(
+            proj_ray_start,
+            -Direction::from(frame.normal().to_unit_vector()),
+        );
 
         let mut range = DisRange::inclusive(Val(0.0), proj_ray_max_len);
         while let Some((intersection, id)) = scene.find_intersection(&proj_ray, range) {
@@ -292,7 +295,7 @@ impl Material for Scattering {
 }
 
 impl BssrdfMaterial for Scattering {
-    fn bssrdf_direction(&self, intersection_in: &RayIntersection, dir_in: UnitVector) -> Spectrum {
+    fn bssrdf_direction(&self, intersection_in: &RayIntersection, dir_in: Direction) -> Spectrum {
         let normal = if intersection_in.side() == SurfaceSide::Front {
             intersection_in.normal()
         } else {
@@ -376,7 +379,7 @@ impl BssrdfSampling for Scattering {
         } else {
             -intersection_in.normal()
         };
-        let direction = UnitVector::random_cosine_hemisphere(normal, rng);
+        let direction = Direction::random_cosine_hemisphere(normal, rng);
         let ray_next = intersection_in.spawn(direction);
 
         let cos = ray_next.direction().dot(normal);
@@ -454,9 +457,9 @@ impl<'a> Material for BackFaceTransmissionAdapter<'a> {
 impl<'a> BsdfMaterial for BackFaceTransmissionAdapter<'a> {
     fn bsdf(
         &self,
-        _dir_out: UnitVector,
+        _dir_out: Direction,
         intersection: &RayIntersection,
-        dir_in: UnitVector,
+        dir_in: Direction,
     ) -> Spectrum {
         self.inner.albedo * self.inner.bssrdf_direction(intersection, dir_in)
     }

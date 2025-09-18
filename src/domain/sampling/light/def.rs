@@ -3,8 +3,8 @@ use std::fmt::Debug;
 use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{Direction, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
@@ -43,8 +43,7 @@ pub trait LightSampling: Debug + Send + Sync {
         if self.id().is_none_or(|id| id != light.shape_id()) {
             return false;
         }
-        (light.point() - ray_next.start())
-            .normalize()
+        Direction::normalize(light.point() - ray_next.start())
             .is_ok_and(|dir| dir == ray_next.direction())
     }
 }
@@ -84,9 +83,9 @@ impl LightSample {
         ray_spawner: RS,
     ) -> Option<Self>
     where
-        RS: Fn(UnitVector) -> Ray,
+        RS: Fn(Direction) -> Ray,
     {
-        let Ok(direction) = (sample.point() - position).normalize() else {
+        let Ok(direction) = Direction::normalize(sample.point() - position) else {
             return None;
         };
         let ray_next = ray_spawner(direction);
@@ -122,7 +121,7 @@ impl LightSample {
     #[inline]
     pub fn point_pdf_to_solid_angle_pdf(
         position: Point,
-        direction_next: UnitVector,
+        direction_next: Direction,
         position_next: Point,
         normal_next: Normal,
         pdf_point: Val,

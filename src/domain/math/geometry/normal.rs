@@ -69,6 +69,13 @@ impl From<Normal> for Vector {
     }
 }
 
+impl From<Direction> for Normal {
+    #[inline]
+    fn from(value: Direction) -> Self {
+        value.to_unit_vector().into()
+    }
+}
+
 crate::impl_common_methods_for_wrapper_vector!(Normal);
 
 crate::impl_add_for_wrapper_vector!(Normal, Normal);

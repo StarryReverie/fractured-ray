@@ -2,7 +2,8 @@ use rand::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
-use crate::domain::math::algebra::{Product, UnitVector};
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
@@ -75,9 +76,9 @@ impl Material for Diffuse {
 impl BsdfMaterial for Diffuse {
     fn bsdf(
         &self,
-        _dir_out: UnitVector,
+        _dir_out: Direction,
         intersection: &RayIntersection,
-        dir_in: UnitVector,
+        dir_in: Direction,
     ) -> Spectrum {
         if intersection.normal().dot(dir_in) > Val(0.0) {
             Val::FRAC_1_PI * self.albedo
@@ -95,7 +96,7 @@ impl BsdfSampling for Diffuse {
         rng: &mut dyn RngCore,
     ) -> BsdfSample {
         let normal = intersection.normal();
-        let direction = UnitVector::random_cosine_hemisphere(normal, rng);
+        let direction = Direction::random_cosine_hemisphere(normal, rng);
 
         let ray_next = intersection.spawn(direction);
         let pdf = self.pdf_bsdf(ray, intersection, &ray_next);

@@ -4,7 +4,7 @@ use enum_dispatch::enum_dispatch;
 
 use crate::domain::color::Spectrum;
 use crate::domain::material::primitive::*;
-use crate::domain::math::algebra::UnitVector;
+use crate::domain::math::geometry::Direction;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::ray::photon::PhotonRay;
@@ -37,14 +37,14 @@ pub trait Material: Debug + Send + Sync {
 pub trait BsdfMaterial: Material + BsdfSampling {
     fn bsdf(
         &self,
-        dir_out: UnitVector,
+        dir_out: Direction,
         intersection: &RayIntersection,
-        dir_in: UnitVector,
+        dir_in: Direction,
     ) -> Spectrum;
 }
 
 pub trait BssrdfMaterial: Material + BssrdfSampling {
-    fn bssrdf_direction(&self, intersection_in: &RayIntersection, dir_in: UnitVector) -> Spectrum;
+    fn bssrdf_direction(&self, intersection_in: &RayIntersection, dir_in: Direction) -> Spectrum;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

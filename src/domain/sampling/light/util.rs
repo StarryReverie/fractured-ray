@@ -137,8 +137,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::algebra::UnitVector;
-    use crate::domain::math::geometry::{Normal, Point};
+    use crate::domain::math::geometry::{Direction, Normal, Point};
     use crate::domain::ray::event::SurfaceSide;
     use crate::domain::sampling::point::TrianglePointSampler;
     use crate::domain::shape::def::ShapeKind;
@@ -166,13 +165,13 @@ mod tests {
             SurfaceSide::Front,
         );
 
-        let ray_next = intersection.spawn(-UnitVector::z_direction());
+        let ray_next = intersection.spawn(-Direction::z_direction());
         assert_eq!(
             sampler.pdf_light_surface(&intersection, &ray_next),
             Val(2.0).powi(2) / Val(1.5) / Val(0.6666666667),
         );
 
-        let ray_next = intersection.spawn(UnitVector::y_direction());
+        let ray_next = intersection.spawn(Direction::y_direction());
         assert_eq!(
             sampler.pdf_light_surface(&intersection, &ray_next),
             Val(0.0)

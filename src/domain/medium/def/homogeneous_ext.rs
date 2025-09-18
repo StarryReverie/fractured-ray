@@ -1,3 +1,4 @@
+use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
@@ -124,7 +125,7 @@ pub trait HomogeneousMediumExt: HomogeneousMedium {
         phase_sampler: &dyn PhaseSampling,
     ) -> Val {
         let light_point = preselected_light.point();
-        let Ok(direction) = (light_point - scattering.position()).normalize() else {
+        let Ok(direction) = Direction::normalize(light_point - scattering.position()) else {
             return Val(0.0);
         };
         let ray_next = scattering.spawn(direction);

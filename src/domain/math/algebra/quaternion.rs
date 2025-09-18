@@ -3,7 +3,7 @@ use std::ops::Mul;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
 
-use super::{UnitVector, Vector};
+use super::Vector;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Quaternion(Val, Val, Val, Val);
@@ -36,12 +36,6 @@ impl Quaternion {
 
 impl From<Vector> for Quaternion {
     fn from(value: Vector) -> Self {
-        Self::new(Val(0.0), value.x(), value.y(), value.z())
-    }
-}
-
-impl From<UnitVector> for Quaternion {
-    fn from(value: UnitVector) -> Self {
         Self::new(Val(0.0), value.x(), value.y(), value.z())
     }
 }

@@ -145,6 +145,7 @@ impl Sampleable for Aabb {
 #[cfg(test)]
 mod tests {
     use crate::domain::math::algebra::Vector;
+    use crate::domain::math::geometry::Direction;
 
     use super::*;
 
@@ -157,9 +158,7 @@ mod tests {
 
         let ray = Ray::new(
             Point::new(Val(-2.0), Val(0.0), Val(0.0)),
-            Vector::new(Val(2.0), Val(2.0), Val(1.0))
-                .normalize()
-                .unwrap(),
+            Direction::normalize(Vector::new(Val(2.0), Val(2.0), Val(1.0))).unwrap(),
         );
 
         let intersection = aabb.hit(&ray, DisRange::positive()).unwrap();

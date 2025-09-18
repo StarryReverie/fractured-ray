@@ -2,8 +2,8 @@ use rand::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
-use crate::domain::math::algebra::{Product, UnitVector, Vector};
-use crate::domain::math::geometry::Frame;
+use crate::domain::math::algebra::{Product, Vector};
+use crate::domain::math::geometry::{Direction, Frame};
 use crate::domain::math::numeric::Val;
 use crate::domain::medium::def::{HomogeneousMedium, HomogeneousMediumExt, Medium, MediumKind};
 use crate::domain::ray::Ray;
@@ -157,7 +157,7 @@ impl HomogeneousMedium for HenyeyGreenstein {
         self.sigma_s
     }
 
-    fn phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Spectrum {
+    fn phase(&self, dir_out: Direction, dir_in: Direction) -> Spectrum {
         Spectrum::broadcast(self.calc_hg(-dir_out.dot(dir_in)))
     }
 }
@@ -183,14 +183,14 @@ impl PhaseSampling for HenyeyGreenstein {
 
         let frame = Frame::new(ray.direction().into());
         let dir_next_local = Vector::new(cos_phi * sin_theta, sin_phi * sin_theta, cos_theta);
-        let dir_next = frame.to_canonical(dir_next_local).normalize().unwrap();
+        let dir_next = Direction::normalize(frame.to_canonical(dir_next_local)).unwrap();
 
         let ray_next = scattering.spawn(dir_next);
         let hg = self.calc_hg(cos_theta);
         PhaseSample::new(ray_next, Spectrum::broadcast(hg), hg)
     }
 
-    fn pdf_phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Val {
+    fn pdf_phase(&self, dir_out: Direction, dir_in: Direction) -> Val {
         self.calc_hg(-dir_out.dot(dir_in))
     }
 }

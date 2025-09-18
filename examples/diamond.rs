@@ -6,8 +6,8 @@ use fractured_ray::domain::color::{Albedo, Spectrum};
 use fractured_ray::domain::material::primitive::{
     Emissive, Glossy, GlossyPredefinition, Refractive,
 };
-use fractured_ray::domain::math::algebra::{UnitVector, Vector};
-use fractured_ray::domain::math::geometry::{Normal, Point, SpreadAngle};
+use fractured_ray::domain::math::algebra::Vector;
+use fractured_ray::domain::math::geometry::{Direction, Normal, Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::math::transformation::{Rotation, Translation};
 use fractured_ray::domain::medium::primitive::Isotropic;
@@ -30,8 +30,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     scene.add_constructor(
         MeshInstanceConstructor::wrap(diamond)
             .rotate(Rotation::new(
-                UnitVector::y_direction(),
-                Vector::new(Val(-2.0), Val(2.5), Val(2.0)).normalize()?,
+                Direction::y_direction(),
+                Direction::normalize(Vector::new(Val(-2.0), Val(2.5), Val(2.0)))?,
                 Val(0.0),
             ))
             .translate(Translation::new(Vector::new(Val(3.0), Val(0.0), Val(-2.0)))),
@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let camera = Camera::new(
         Point::new(Val(0.0), Val(5.0), Val(80.0)),
-        -UnitVector::z_direction(),
+        -Direction::z_direction(),
         Resolution::new(720, (16, 9))?,
         Val(2.0),
         Val(5.0),

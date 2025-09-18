@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use enum_dispatch::enum_dispatch;
 
 use crate::domain::color::Spectrum;
-use crate::domain::math::algebra::UnitVector;
+use crate::domain::math::geometry::Direction;
 use crate::domain::medium::primitive::*;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RaySegment;
@@ -30,7 +30,7 @@ pub trait Medium: Send + Sync {
 pub trait HomogeneousMedium: Medium + PhaseSampling {
     fn sigma_s(&self) -> Spectrum;
 
-    fn phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Spectrum;
+    fn phase(&self, dir_out: Direction, dir_in: Direction) -> Spectrum;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

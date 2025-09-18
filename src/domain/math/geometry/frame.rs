@@ -30,7 +30,7 @@ impl Frame {
 
     #[inline]
     pub fn to_canonical_unit(&self, coord: UnitVector) -> UnitVector {
-        self.to_canonical(coord.into()).normalize().unwrap()
+        UnitVector::normalize(self.to_canonical(coord.into())).unwrap()
     }
 
     #[inline]
@@ -44,7 +44,7 @@ impl Frame {
 
     #[inline]
     pub fn to_local_unit(&self, coord: UnitVector) -> UnitVector {
-        self.to_local(coord.into()).normalize().unwrap()
+        UnitVector::normalize(self.to_local(coord.into())).unwrap()
     }
 
     #[inline]

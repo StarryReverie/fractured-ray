@@ -4,8 +4,8 @@ use std::fs::File;
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::{Albedo, Spectrum};
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
-use fractured_ray::domain::math::algebra::{UnitVector, Vector};
-use fractured_ray::domain::math::geometry::{Normal, Point, SpreadAngle};
+use fractured_ray::domain::math::algebra::Vector;
+use fractured_ray::domain::math::geometry::{Direction, Normal, Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::math::transformation::{Rotation, Translation};
 use fractured_ray::domain::renderer::{CoreRenderer, CoreRendererConfiguration, Renderer};
@@ -20,7 +20,7 @@ use fractured_ray::infrastructure::image::PngWriter;
 fn main() -> Result<(), Box<dyn Error>> {
     let camera = Camera::new(
         Point::new(Val(0.0), Val(2.0), Val(14.0)),
-        -UnitVector::z_direction(),
+        -Direction::z_direction(),
         Resolution::new(1440, (16, 9))?,
         Val(2.0),
         Val(5.0),
@@ -112,8 +112,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             ],
         )?)
         .rotate(Rotation::new(
-            UnitVector::y_direction(),
-            UnitVector::z_direction(),
+            Direction::y_direction(),
+            Direction::z_direction(),
             Val::PI / Val(3.0),
         ))
         .translate(Translation::new(Vector::new(Val(2.0), Val(0.0), Val(0.0)))),

@@ -10,6 +10,7 @@ use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::Spectrum;
 use crate::domain::image::Image;
 use crate::domain::material::def::{FluxEstimation, Material, RefDynMaterial};
+use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::medium::def::Medium;
 use crate::domain::medium::util::AggregateMedium;
@@ -91,8 +92,7 @@ impl CoreRenderer {
         let point = (self.camera)
             .calc_point_in_pixel(row, column, offset)
             .expect("row and column should not be out of bound");
-        let direction = (point - self.camera.position())
-            .normalize()
+        let direction = Direction::normalize(point - self.camera.position())
             .expect("focal length should be positive");
         Ray::new(point, direction)
     }

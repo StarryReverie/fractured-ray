@@ -1,7 +1,8 @@
 use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
-use crate::domain::math::algebra::{Product, UnitVector};
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
@@ -107,9 +108,9 @@ where
 {
     fn bsdf(
         &self,
-        _dir_out: UnitVector,
+        _dir_out: Direction,
         intersection: &RayIntersection,
-        dir_in: UnitVector,
+        dir_in: Direction,
     ) -> Spectrum {
         self.inner.bssrdf_direction(intersection, dir_in)
     }

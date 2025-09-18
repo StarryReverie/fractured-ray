@@ -3,8 +3,8 @@ use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::Normal;
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{Direction, Normal};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, SurfaceSide};
@@ -104,9 +104,9 @@ impl MicrofacetMaterial for Blurry {
 impl BsdfMaterial for Blurry {
     fn bsdf(
         &self,
-        dir_out: UnitVector,
+        dir_out: Direction,
         intersection: &RayIntersection,
-        dir_in: UnitVector,
+        dir_in: Direction,
     ) -> Spectrum {
         let normal = intersection.normal();
         let side = intersection.side();

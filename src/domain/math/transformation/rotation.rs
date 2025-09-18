@@ -1,4 +1,5 @@
-use crate::domain::math::algebra::{Product, Quaternion, UnitVector};
+use crate::domain::math::algebra::{Product, Quaternion};
+use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
 
 use super::{AtomTransformation, Transformation};
@@ -9,8 +10,8 @@ pub struct Rotation {
 }
 
 impl Rotation {
-    pub fn new(init_dir: UnitVector, final_dir: UnitVector, roll: Val) -> Self {
-        if let Ok(axis) = init_dir.cross(final_dir).normalize() {
+    pub fn new(init_dir: Direction, final_dir: Direction, roll: Val) -> Self {
+        if let Ok(axis) = Direction::normalize(init_dir.cross(final_dir)) {
             let angle = init_dir.dot(final_dir).acos();
             let rotation1 = Self::get_rotation(axis, angle);
             let quaternion = if roll == Val(0.0) {
@@ -26,7 +27,7 @@ impl Rotation {
         }
     }
 
-    fn get_rotation(axis: UnitVector, angle: Val) -> Quaternion {
+    fn get_rotation(axis: Direction, angle: Val) -> Quaternion {
         let (sa, ca) = (Val(0.5) * angle).sin_cos();
         Quaternion::new(ca, sa * axis.x(), sa * axis.y(), sa * axis.z())
     }
@@ -67,10 +68,8 @@ mod tests {
     #[test]
     fn rotation_new_succeeds() {
         let rotation = Rotation::new(
-            -UnitVector::z_direction(),
-            Vector::new(Val(-1.0), Val(1.0), Val(0.0))
-                .normalize()
-                .unwrap(),
+            -Direction::z_direction(),
+            Direction::normalize(Vector::new(Val(-1.0), Val(1.0), Val(0.0))).unwrap(),
             Val::PI / Val(4.0),
         );
 
@@ -88,10 +87,8 @@ mod tests {
     #[test]
     fn rotation_inverse_succeeds() {
         let rotation = Rotation::new(
-            -UnitVector::z_direction(),
-            Vector::new(Val(-1.0), Val(1.0), Val(0.0))
-                .normalize()
-                .unwrap(),
+            -Direction::z_direction(),
+            Direction::normalize(Vector::new(Val(-1.0), Val(1.0), Val(0.0))).unwrap(),
             Val::PI / Val(4.0),
         );
 

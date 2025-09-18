@@ -172,7 +172,8 @@ pub enum TryNewTriangleError {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::algebra::{UnitVector, Vector};
+    use crate::domain::math::algebra::Vector;
+    use crate::domain::math::geometry::Direction;
     use crate::domain::math::numeric::Val;
 
     use super::*;
@@ -224,7 +225,7 @@ mod tests {
 
         let ray = Ray::new(
             Point::new(Val(0.0), Val(0.5), Val(1.0)),
-            UnitVector::x_direction(),
+            Direction::x_direction(),
         );
 
         let intersection = triangle.hit(&ray, DisRange::positive()).unwrap();
@@ -247,9 +248,7 @@ mod tests {
 
         let ray = Ray::new(
             Point::new(Val(0.0), Val(0.0), Val(0.5)),
-            Vector::new(Val(0.0), Val(1.0), Val(-0.5))
-                .normalize()
-                .unwrap(),
+            Direction::normalize(Vector::new(Val(0.0), Val(1.0), Val(-0.5))).unwrap(),
         );
 
         let intersection = triangle.hit(&ray, DisRange::positive());

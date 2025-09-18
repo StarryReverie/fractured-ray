@@ -2,7 +2,7 @@ use rand::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
-use crate::domain::math::algebra::UnitVector;
+use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
 use crate::domain::medium::def::{HomogeneousMedium, HomogeneousMediumExt, Medium, MediumKind};
 use crate::domain::ray::Ray;
@@ -96,7 +96,7 @@ impl HomogeneousMedium for Isotropic {
         self.sigma_s
     }
 
-    fn phase(&self, _dir_out: UnitVector, _dir_in: UnitVector) -> Spectrum {
+    fn phase(&self, _dir_out: Direction, _dir_in: Direction) -> Spectrum {
         const PHASE: Spectrum = Spectrum::broadcast(Val(0.25 * Val::FRAC_1_PI.0));
         PHASE
     }
@@ -109,13 +109,13 @@ impl PhaseSampling for Isotropic {
         scattering: &RayScattering,
         rng: &mut dyn RngCore,
     ) -> PhaseSample {
-        let ray_next = scattering.spawn(UnitVector::random(rng));
+        let ray_next = scattering.spawn(Direction::random(rng));
         let phase = self.phase(-ray.direction(), ray_next.direction());
         let pdf = self.pdf_phase(-ray.direction(), ray_next.direction());
         PhaseSample::new(ray_next, phase, pdf)
     }
 
-    fn pdf_phase(&self, _dir_out: UnitVector, _dir_in: UnitVector) -> Val {
+    fn pdf_phase(&self, _dir_out: Direction, _dir_in: Direction) -> Val {
         Val(0.25) * Val::FRAC_1_PI
     }
 }

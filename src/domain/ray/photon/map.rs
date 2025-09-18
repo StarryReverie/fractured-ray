@@ -1,8 +1,7 @@
 use std::collections::BinaryHeap;
 
 use crate::domain::color::Spectrum;
-use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Direction, Point};
 use crate::domain::math::numeric::Val;
 
 use super::Photon;
@@ -213,11 +212,7 @@ impl KdTreeNode {
 impl Default for KdTreeNode {
     fn default() -> Self {
         Self::new(
-            Photon::new(
-                Point::default(),
-                UnitVector::x_direction(),
-                Spectrum::zero(),
-            ),
+            Photon::new(Point::default(), Direction::x_direction(), Spectrum::zero()),
             0,
             None,
             None,
@@ -294,7 +289,7 @@ mod tests {
     fn create_photon(x: WrappedVal, y: WrappedVal, z: WrappedVal) -> Photon {
         Photon::new(
             Point::new(Val(x), Val(y), Val(z)),
-            UnitVector::x_direction(),
+            Direction::x_direction(),
             Spectrum::zero(),
         )
     }

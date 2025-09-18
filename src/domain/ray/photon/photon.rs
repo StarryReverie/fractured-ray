@@ -1,8 +1,7 @@
 use getset::{CopyGetters, Getters};
 
 use crate::domain::color::Spectrum;
-use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Direction, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 
@@ -30,7 +29,7 @@ impl PhotonRay {
         self.ray.start()
     }
 
-    pub fn direction(&self) -> UnitVector {
+    pub fn direction(&self) -> Direction {
         self.ray.direction()
     }
 }
@@ -39,12 +38,12 @@ impl PhotonRay {
 #[getset(get_copy = "pub")]
 pub struct Photon {
     position: Point,
-    direction: UnitVector,
+    direction: Direction,
     throughput: Spectrum,
 }
 
 impl Photon {
-    pub fn new(position: Point, direction: UnitVector, throughput: Spectrum) -> Self {
+    pub fn new(position: Point, direction: Direction, throughput: Spectrum) -> Self {
         Self {
             position,
             direction,

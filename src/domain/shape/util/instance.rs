@@ -122,8 +122,8 @@ impl Sampleable for Instance {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::algebra::{UnitVector, Vector};
-    use crate::domain::math::geometry::Point;
+    use crate::domain::math::algebra::Vector;
+    use crate::domain::math::geometry::{Direction, Point};
     use crate::domain::math::numeric::Val;
     use crate::domain::ray::event::SurfaceSide;
     use crate::domain::shape::primitive::Polygon;
@@ -142,15 +142,15 @@ mod tests {
 
         let instance = Instance::wrap(prototype)
             .rotate(Rotation::new(
-                UnitVector::x_direction(),
-                UnitVector::z_direction(),
+                Direction::x_direction(),
+                Direction::z_direction(),
                 Val::PI / Val(4.0),
             ))
             .translate(Translation::new(Vector::new(Val(0.0), Val(0.0), Val(-2.0))));
 
         let ray = Ray::new(
             Point::new(Val(0.0), Val(2.0).sqrt(), Val(-1.0)),
-            UnitVector::z_direction(),
+            Direction::z_direction(),
         );
 
         let intersection = instance.hit(&ray, DisRange::positive()).unwrap();

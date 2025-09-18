@@ -127,7 +127,8 @@ pub enum TryNewSphereError {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::algebra::{UnitVector, Vector};
+    use crate::domain::math::algebra::Vector;
+    use crate::domain::math::geometry::Direction;
 
     use super::*;
 
@@ -144,9 +145,7 @@ mod tests {
         let sphere = Sphere::new(Point::new(Val(0.0), Val(1.0), Val(0.0)), Val(1.0)).unwrap();
         let ray = Ray::new(
             Point::new(Val(2.0), Val(0.0), Val(0.0)),
-            Vector::new(Val(-1.0), Val(1.0), Val(0.0))
-                .normalize()
-                .unwrap(),
+            Direction::normalize(Vector::new(Val(-1.0), Val(1.0), Val(0.0))).unwrap(),
         );
         let intersection = sphere.hit(&ray, DisRange::positive()).unwrap();
         assert_eq!(intersection.distance(), Val(2.0).sqrt());
@@ -163,7 +162,7 @@ mod tests {
         let sphere = Sphere::new(Point::new(Val(1.0), Val(0.5), Val(-1.0)), Val(0.5)).unwrap();
         let ray = Ray::new(
             Point::new(Val(0.5), Val(0.5), Val(1.0)),
-            -UnitVector::z_direction(),
+            -Direction::z_direction(),
         );
         let intersection = sphere.hit(&ray, DisRange::positive()).unwrap();
         assert_eq!(intersection.distance(), Val(2.0));
@@ -174,9 +173,7 @@ mod tests {
         let sphere = Sphere::new(Point::new(Val(0.0), Val(1.0), Val(0.0)), Val(1.0)).unwrap();
         let ray = Ray::new(
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
-            Vector::new(Val(1.0), Val(1.0), Val(0.0))
-                .normalize()
-                .unwrap(),
+            Direction::normalize(Vector::new(Val(1.0), Val(1.0), Val(0.0))).unwrap(),
         );
         let intersection = sphere.hit(&ray, DisRange::positive()).unwrap();
         assert_eq!(intersection.distance(), Val(2.0).sqrt());
@@ -193,7 +190,7 @@ mod tests {
         let sphere = Sphere::new(Point::new(Val(0.0), Val(1.0), Val(0.0)), Val(1.0)).unwrap();
         let ray = Ray::new(
             Point::new(Val(0.0), Val(0.0), Val(1.000001)),
-            UnitVector::y_direction(),
+            Direction::y_direction(),
         );
         assert!(sphere.hit(&ray, DisRange::positive()).is_none());
     }

@@ -2,7 +2,7 @@ use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
-use crate::domain::math::algebra::UnitVector;
+use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayScattering;
@@ -15,7 +15,7 @@ pub trait PhaseSampling: Send + Sync {
         rng: &mut dyn RngCore,
     ) -> PhaseSample;
 
-    fn pdf_phase(&self, dir_out: UnitVector, dir_in: UnitVector) -> Val;
+    fn pdf_phase(&self, dir_out: Direction, dir_in: Direction) -> Val;
 }
 
 #[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]

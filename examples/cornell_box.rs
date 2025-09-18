@@ -4,8 +4,7 @@ use std::fs::File;
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::{Albedo, Spectrum};
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
-use fractured_ray::domain::math::algebra::UnitVector;
-use fractured_ray::domain::math::geometry::{Point, SpreadAngle};
+use fractured_ray::domain::math::geometry::{Direction, Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::medium::primitive::{HenyeyGreenstein, Vacuum};
 use fractured_ray::domain::renderer::{CoreRenderer, CoreRendererConfiguration, Renderer};
@@ -22,7 +21,7 @@ use fractured_ray::infrastructure::image::PngWriter;
 fn main() -> Result<(), Box<dyn Error>> {
     let camera = Camera::new(
         Point::new(Val(278.0), Val(273.0), Val(-800.0)),
-        UnitVector::z_direction(),
+        Direction::z_direction(),
         Resolution::new(800, (1, 1))?,
         Val(0.025),
         Val(0.035),

@@ -1,7 +1,6 @@
 use getset::CopyGetters;
 
-use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Direction, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
@@ -18,7 +17,7 @@ impl RayScattering {
         Self { distance, position }
     }
 
-    pub fn spawn(&self, direction: UnitVector) -> Ray {
+    pub fn spawn(&self, direction: Direction) -> Ray {
         Ray::new(self.position, direction)
     }
 }

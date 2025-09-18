@@ -3,7 +3,7 @@ use snafu::prelude::*;
 
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
-use crate::domain::math::algebra::UnitVector;
+use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, SurfaceSide};
@@ -60,9 +60,9 @@ impl Material for Refractive {
 impl BsdfMaterial for Refractive {
     fn bsdf(
         &self,
-        _dir_out: UnitVector,
+        _dir_out: Direction,
         _intersection: &RayIntersection,
-        _dir_in: UnitVector,
+        _dir_in: Direction,
     ) -> Spectrum {
         Spectrum::zero()
     }

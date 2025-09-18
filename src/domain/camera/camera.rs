@@ -1,8 +1,8 @@
 use getset::CopyGetters;
 use snafu::prelude::*;
 
-use crate::domain::math::algebra::{Product, UnitVector, Vector};
-use crate::domain::math::geometry::Point;
+use crate::domain::math::algebra::{Product, Vector};
+use crate::domain::math::geometry::{Direction, Point};
 use crate::domain::math::numeric::Val;
 
 use super::{Offset, Resolution, TryNewViewportError, Viewport};
@@ -12,7 +12,7 @@ pub struct Camera {
     #[getset(get_copy = "pub")]
     position: Point,
     #[getset(get_copy = "pub")]
-    orientation: UnitVector,
+    orientation: Direction,
     #[getset(get_copy = "pub")]
     focal_length: Val,
     viewport: Viewport,
@@ -23,7 +23,7 @@ pub struct Camera {
 impl Camera {
     pub fn new(
         position: Point,
-        orientation: UnitVector,
+        orientation: Direction,
         resolution: Resolution,
         height: Val,
         focal_length: Val,
@@ -33,20 +33,18 @@ impl Camera {
         let viewport = Viewport::new(resolution, height).context(ViewportSnafu)?;
 
         let (hdir, vdir) = if orientation.x() != Val(0.0) || orientation.z() != Val(0.0) {
-            let hdir = Vector::new(-orientation.z(), Val(0.0), orientation.x())
-                .normalize()
-                .expect("hdir shouldn't be zero vector");
-            let vdir = orientation
-                .cross(hdir)
-                .normalize()
+            let hdir =
+                Direction::normalize(Vector::new(-orientation.z(), Val(0.0), orientation.x()))
+                    .expect("hdir shouldn't be zero vector");
+            let vdir = Direction::normalize(orientation.cross(hdir))
                 .expect("vdir shouldn't be zero vector");
             (hdir, vdir)
         } else {
-            let hdir = UnitVector::x_direction();
+            let hdir = Direction::x_direction();
             let vdir = if orientation.y() > Val(0.0) {
-                -UnitVector::z_direction()
+                -Direction::z_direction()
             } else {
-                UnitVector::z_direction()
+                Direction::z_direction()
             };
             (hdir, vdir)
         };
@@ -94,7 +92,7 @@ mod tests {
     fn camera_new_succeeds() {
         let camera = Camera::new(
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
-            -UnitVector::z_direction(),
+            -Direction::z_direction(),
             Resolution::new(10, (2, 1)).unwrap(),
             Val(1.0),
             Val(1.0),
@@ -123,9 +121,7 @@ mod tests {
         assert_eq!(
             Camera::new(
                 Point::new(Val(0.0), Val(2.0), Val(0.0)),
-                Vector::new(Val(1.0), Val(-2.0), Val(2.0))
-                    .normalize()
-                    .unwrap(),
+                Direction::normalize(Vector::new(Val(1.0), Val(-2.0), Val(2.0))).unwrap(),
                 Resolution::new(10, (2, 1)).unwrap(),
                 Val(1.0),
                 Val(0.0),
@@ -138,9 +134,7 @@ mod tests {
     fn camera_calc_point_in_pixel_succeeds() {
         let camera = Camera::new(
             Point::new(Val(0.0), Val(2.0), Val(0.0)),
-            Vector::new(Val(1.0), Val(-2.0), Val(2.0))
-                .normalize()
-                .unwrap(),
+            Direction::normalize(Vector::new(Val(1.0), Val(-2.0), Val(2.0))).unwrap(),
             Resolution::new(10, (2, 1)).unwrap(),
             Val(1.0),
             Val(1.0),

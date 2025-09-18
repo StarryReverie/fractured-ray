@@ -2,7 +2,6 @@ use rand::prelude::*;
 use rand_distr::UnitSphere;
 use snafu::prelude::*;
 
-use crate::domain::math::geometry::Normal;
 use crate::domain::math::numeric::Val;
 
 use super::{Product, Vector};
@@ -25,15 +24,6 @@ impl UnitVector {
     pub fn random(rng: &mut dyn RngCore) -> Self {
         let [x, y, z] = UnitSphere.sample(rng);
         Self(Vector::new(Val(x), Val(y), Val(z)))
-    }
-
-    pub fn random_cosine_hemisphere(normal: Normal, rng: &mut dyn RngCore) -> Self {
-        loop {
-            let unit = Self::random(rng);
-            if let Ok(direction) = (normal + unit).normalize() {
-                return direction;
-            }
-        }
     }
 
     #[inline]
@@ -67,8 +57,7 @@ impl UnitVector {
     }
 
     pub fn orthonormal_basis(&self) -> (UnitVector, UnitVector) {
-        let basis1 = Vector::new(-self.0.y(), self.0.x(), Val(0.0))
-            .normalize()
+        let basis1 = UnitVector::normalize(Vector::new(-self.0.y(), self.0.x(), Val(0.0)))
             .unwrap_or(UnitVector::x_direction());
         let basis2 = UnitVector(self.cross(basis1));
         (basis1, basis2)
@@ -125,13 +114,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn unit_vector3d_linear_operations_succeed() {
-        let v1 = Vector::new(Val(1.0), Val(0.0), Val(0.0))
-            .normalize()
-            .unwrap();
-        let v2 = Vector::new(Val(0.0), Val(1.0), Val(0.0))
-            .normalize()
-            .unwrap();
+    fn unit_vector_linear_operations_succeed() {
+        let v1 = UnitVector::normalize(Vector::new(Val(1.0), Val(0.0), Val(0.0))).unwrap();
+        let v2 = UnitVector::normalize(Vector::new(Val(0.0), Val(1.0), Val(0.0))).unwrap();
         assert_eq!(
             v1 + v2.to_vector(),
             Vector::new(Val(1.0), Val(1.0), Val(0.0))
@@ -146,21 +131,17 @@ mod tests {
     }
 
     #[test]
-    fn unit_vector3d_products_succeed() {
-        let v1 = Vector::new(Val(1.0), Val(0.0), Val(0.0))
-            .normalize()
-            .unwrap();
-        let v2 = Vector::new(Val(0.0), Val(1.0), Val(0.0))
-            .normalize()
-            .unwrap();
+    fn unit_vector_products_succeed() {
+        let v1 = UnitVector::normalize(Vector::new(Val(1.0), Val(0.0), Val(0.0))).unwrap();
+        let v2 = UnitVector::normalize(Vector::new(Val(0.0), Val(1.0), Val(0.0))).unwrap();
         assert_eq!(v1.dot(v2), Val(0.0));
         assert_eq!(v1.cross(v2), Vector::new(Val(0.0), Val(0.0), Val(1.0)));
     }
 
     #[test]
-    fn unit_vector3d_try_from_succeeds() {
+    fn unit_vector_try_from_succeeds() {
         assert_eq!(
-            Vector::new(Val(1.0), Val(2.0), Val(2.0)).normalize(),
+            UnitVector::normalize(Vector::new(Val(1.0), Val(2.0), Val(2.0))),
             Ok(UnitVector(Vector::new(
                 Val(1.0) / Val(3.0),
                 Val(2.0) / Val(3.0),
@@ -168,7 +149,7 @@ mod tests {
             ))),
         );
         assert_eq!(
-            Vector::new(Val(0.0), Val(0.0), Val(0.0)).normalize(),
+            UnitVector::normalize(Vector::new(Val(0.0), Val(0.0), Val(0.0))),
             Err(TryNormalizeVectorError::ZeroVector),
         );
     }

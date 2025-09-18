@@ -1,7 +1,6 @@
 use getset::CopyGetters;
 
-use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Direction, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 
@@ -9,11 +8,11 @@ use crate::domain::math::transformation::{AtomTransformation, Transform};
 #[getset(get_copy = "pub")]
 pub struct Ray {
     start: Point,
-    direction: UnitVector,
+    direction: Direction,
 }
 
 impl Ray {
-    pub fn new(start: Point, direction: UnitVector) -> Self {
+    pub fn new(start: Point, direction: Direction) -> Self {
         Self { start, direction }
     }
 
@@ -26,7 +25,7 @@ impl<T> Transform<T> for Ray
 where
     T: AtomTransformation,
     Point: Transform<T>,
-    UnitVector: Transform<T>,
+    Direction: Transform<T>,
 {
     fn transform(&self, transformation: &T) -> Self {
         Ray::new(
@@ -44,7 +43,7 @@ mod tests {
     fn ray_at_succeeds() {
         let ray = Ray::new(
             Point::new(Val(0.0), Val(1.0), Val(0.0)),
-            UnitVector::x_direction(),
+            Direction::x_direction(),
         );
         assert_eq!(ray.at(Val(1.0)), Point::new(Val(1.0), Val(1.0), Val(0.0)));
     }

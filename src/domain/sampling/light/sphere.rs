@@ -1,7 +1,7 @@
 use rand::prelude::*;
 
-use crate::domain::math::algebra::{Product, UnitVector, Vector};
-use crate::domain::math::geometry::{Frame, Point};
+use crate::domain::math::algebra::{Product, Vector};
+use crate::domain::math::geometry::{Direction, Frame, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
@@ -26,7 +26,7 @@ impl SphereLightSampler {
     fn sample_light_impl(
         &self,
         position: Point,
-        ray_spawner: impl Fn(UnitVector) -> Ray,
+        ray_spawner: impl Fn(Direction) -> Ray,
         rng: &mut dyn RngCore,
     ) -> Option<LightSample> {
         let radius2 = self.sphere.radius().powi(2);
@@ -42,10 +42,10 @@ impl SphereLightSampler {
         let y = r1_2pi.sin() * tmp;
         let local_at_sphere = Vector::new(x, y, z) * self.sphere.radius();
 
-        let global_dir = -to_center.normalize().unwrap_or(UnitVector::z_direction());
+        let global_dir = -Direction::normalize(to_center).unwrap_or(Direction::z_direction());
         let frame = Frame::new(global_dir.into());
         let at_sphere = frame.to_canonical(local_at_sphere);
-        let Ok(direction) = (to_center + at_sphere).normalize() else {
+        let Ok(direction) = Direction::normalize(to_center + at_sphere) else {
             return None;
         };
         let ray_next = ray_spawner(direction);
@@ -61,7 +61,7 @@ impl SphereLightSampler {
         let to_center = self.sphere.center() - position;
         let cos_max_spread = (Val(1.0) - radius2 / to_center.norm_squared()).sqrt();
 
-        let cos_ray_center = ray_next.direction().dot(to_center.normalize().unwrap());
+        let cos_ray_center = (ray_next.direction()).dot(Direction::normalize(to_center).unwrap());
         if cos_ray_center >= cos_max_spread {
             let solid_angle = Val(2.0) * Val::PI * (Val(1.0) - cos_max_spread);
             solid_angle.recip()
@@ -104,7 +104,7 @@ impl LightSampling for SphereLightSampler {
                 return None;
             }
 
-            let Ok(dir_next) = (sample.point() - scattering.position()).normalize() else {
+            let Ok(dir_next) = Direction::normalize(sample.point() - scattering.position()) else {
                 return None;
             };
             let ray_next = scattering.spawn(dir_next);
@@ -113,7 +113,8 @@ impl LightSampling for SphereLightSampler {
             let to_center = self.sphere.center() - sample.point();
             let cos_max_spread = (Val(1.0) - radius2 / to_center.norm_squared()).sqrt();
 
-            let cos_ray_center = ray_next.direction().dot(to_center.normalize().unwrap());
+            let cos_ray_center =
+                (ray_next.direction()).dot(Direction::normalize(to_center).unwrap());
             if cos_ray_center >= cos_max_spread {
                 let solid_angle = Val(2.0) * Val::PI * (Val(1.0) - cos_max_spread);
                 let cond_pdf = solid_angle.recip() / sample.pdf();
@@ -172,9 +173,7 @@ mod tests {
 
         let ray_next = Ray::new(
             Point::new(Val(4.0), Val(0.0), Val(0.0)),
-            Vector::new(Val(-3.0), Val(1.7320508676), Val(0.0))
-                .normalize()
-                .unwrap(),
+            Direction::normalize(Vector::new(Val(-3.0), Val(1.7320508676), Val(0.0))).unwrap(),
         );
 
         assert_eq!(
@@ -202,7 +201,7 @@ mod tests {
             shape_id,
         );
 
-        let direction_next = (light_point - scattering.position()).normalize().unwrap();
+        let direction_next = Direction::normalize(light_point - scattering.position()).unwrap();
         let ray_next = scattering.spawn(direction_next);
 
         assert_eq!(
@@ -230,7 +229,7 @@ mod tests {
             shape_id,
         );
 
-        let ray_next = scattering.spawn(-UnitVector::x_direction());
+        let ray_next = scattering.spawn(-Direction::x_direction());
 
         assert_eq!(
             sampler.pdf_light_volume(&ray_next, Some(&preselected_light)),

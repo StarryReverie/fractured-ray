@@ -56,7 +56,7 @@ impl DistanceSampling for ExponentialDistanceSampler {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::{algebra::UnitVector, geometry::Point};
+    use crate::domain::math::geometry::{Direction, Point};
 
     use super::*;
 
@@ -65,7 +65,7 @@ mod tests {
         let sampler = ExponentialDistanceSampler::new(Val(0.1));
         let ray = Ray::new(
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
-            UnitVector::x_direction(),
+            Direction::x_direction(),
         );
 
         let segment = RaySegment::new(Val(1.0), Val(4.0));

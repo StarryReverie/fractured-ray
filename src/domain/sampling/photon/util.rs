@@ -2,9 +2,8 @@ use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::algebra::Vector;
-use crate::domain::math::geometry::Frame;
+use crate::domain::math::geometry::{Direction, Frame};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::PhotonRay;
@@ -80,7 +79,7 @@ where
         let normal = sample.normal();
         let beam_angle = self.emissive.beam_angle();
         let (dir, pdf_dir_div_cos) = if beam_angle.is_hemisphere() {
-            let dir = UnitVector::random_cosine_hemisphere(normal, rng);
+            let dir = Direction::random_cosine_hemisphere(normal, rng);
             (dir, Val::FRAC_1_PI)
         } else if beam_angle.is_directional() {
             (normal.into(), Val(1.0))
@@ -90,10 +89,10 @@ where
             let (sin_theta, cos_theta) = (u1_sin.sqrt(), (Val(1.0) - u1_sin).sqrt());
             let (sin_phi, cos_phi) = (Val(0.5) * u2 * Val::FRAC_1_PI).sin_cos();
             let (x, y, z) = (sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
-            let local_dir = Vector::new(x, y, z).normalize().unwrap();
+            let local_dir = Direction::normalize(Vector::new(x, y, z)).unwrap();
 
             let frame = Frame::new(normal);
-            let dir = frame.to_canonical_unit(local_dir);
+            let dir = frame.to_canonical_unit(local_dir.into()).into();
             (dir, Val::FRAC_1_PI / sin2_beam)
         };
 

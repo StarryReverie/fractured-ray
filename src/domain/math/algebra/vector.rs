@@ -4,7 +4,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 use crate::domain::math::numeric::Val;
 use crate::domain::math::transformation::{Rotation, Transform, Translation};
 
-use super::{Product, Quaternion, TryNormalizeVectorError, UnitVector};
+use super::{Product, Quaternion};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Vector(Val, Val, Val);
@@ -57,11 +57,6 @@ impl Vector {
     #[inline]
     pub fn norm_squared(&self) -> Val {
         self.dot(*self)
-    }
-
-    #[inline]
-    pub fn normalize(self) -> Result<UnitVector, TryNormalizeVectorError> {
-        self.try_into()
     }
 
     #[inline]
@@ -223,7 +218,7 @@ impl Transform<Translation> for Vector {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::numeric::Val;
+    use crate::domain::math::{geometry::Direction, numeric::Val};
 
     use super::*;
 
@@ -279,10 +274,8 @@ mod tests {
     #[test]
     fn vector_rotation_transform_succeeds() {
         let rotation = Rotation::new(
-            -UnitVector::z_direction(),
-            Vector::new(Val(-1.0), Val(1.0), Val(0.0))
-                .normalize()
-                .unwrap(),
+            -Direction::z_direction(),
+            Direction::normalize(Vector::new(Val(-1.0), Val(1.0), Val(0.0))).unwrap(),
             Val::PI / Val(4.0),
         );
         let v = Vector::new(Val(1.0), Val(0.0), Val(0.0)).transform(&rotation);

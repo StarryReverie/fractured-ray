@@ -3,7 +3,8 @@ use std::ops::{Bound, RangeBounds};
 
 use rand::prelude::*;
 
-use crate::domain::math::algebra::{Product, UnitVector};
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::medium::def::DynMedium;
 use crate::domain::medium::util::{MediumContainer, MediumId};
@@ -108,7 +109,7 @@ impl BvhVolumeScene {
 
                 let start_sample = sampler.sample_point(&mut rng).unwrap();
                 let direction = loop {
-                    let direction = UnitVector::random(&mut rng);
+                    let direction = Direction::random(&mut rng);
                     if direction.dot(start_sample.normal()) > Val(0.0) {
                         break direction;
                     }
@@ -213,7 +214,7 @@ mod tests {
 
         let ray = Ray::new(
             Point::new(Val(-0.5), Val(0.5), Val(0.5)),
-            UnitVector::x_direction(),
+            Direction::x_direction(),
         );
 
         let segments = scene.find_segments(&ray, DisRange::positive());
@@ -247,7 +248,7 @@ mod tests {
 
         let ray = Ray::new(
             Point::new(Val(0.1), Val(0.5), Val(0.5)),
-            UnitVector::x_direction(),
+            Direction::x_direction(),
         );
 
         let segments = scene.find_segments(&ray, DisRange::positive());

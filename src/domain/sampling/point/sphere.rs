@@ -1,7 +1,6 @@
 use rand::prelude::*;
 
-use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::geometry::{Direction, Normal, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::shape::def::RefDynShape;
 use crate::domain::shape::def::Shape;
@@ -38,7 +37,7 @@ impl PointSampling for SpherePointSampler {
     }
 
     fn sample_point(&self, rng: &mut dyn RngCore) -> Option<PointSample> {
-        let normal = Normal::from(UnitVector::random(rng));
+        let normal = Normal::from(Direction::random(rng));
         let point = normal * self.sphere.radius() + self.sphere.center();
         Some(PointSample::new(
             point,

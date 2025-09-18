@@ -66,7 +66,7 @@ impl DistanceSampling for EquiAngularDistanceSampler {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::algebra::UnitVector;
+    use crate::domain::math::geometry::Direction;
 
     use super::*;
 
@@ -75,7 +75,7 @@ mod tests {
         let sampler = EquiAngularDistanceSampler::new(Point::new(Val(0.0), Val(0.0), Val(0.0)));
         let ray = Ray::new(
             Point::new(Val(0.0), Val(-1.0), Val(1.0)),
-            UnitVector::y_direction(),
+            Direction::y_direction(),
         );
 
         let segment = RaySegment::new(Val(0.5), Val(2.5));

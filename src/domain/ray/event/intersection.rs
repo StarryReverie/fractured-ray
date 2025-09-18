@@ -1,7 +1,6 @@
 use getset::CopyGetters;
 
-use crate::domain::math::algebra::UnitVector;
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::geometry::{Direction, Normal, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
@@ -39,7 +38,7 @@ impl RayIntersection {
     }
 
     #[inline]
-    pub fn spawn(&self, direction: UnitVector) -> Ray {
+    pub fn spawn(&self, direction: Direction) -> Ray {
         Ray::new(self.position, direction)
     }
 }

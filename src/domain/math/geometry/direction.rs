@@ -16,14 +16,14 @@ impl Direction {
 
     #[inline]
     pub fn random(rng: &mut dyn RngCore) -> Self {
-        Self(UnitVector::random(rng))
+        UnitVector::random(rng).into()
     }
 
     pub fn random_cosine_hemisphere(normal: Normal, rng: &mut dyn RngCore) -> Self {
         loop {
-            let unit = Self::random(rng);
-            if let Ok(direction) = (normal + unit).normalize() {
-                return direction.into();
+            let dir = Self::random(rng);
+            if let Ok(direction) = Self::normalize(normal + dir) {
+                return direction;
             }
         }
     }
@@ -82,6 +82,13 @@ impl From<Direction> for Vector {
     #[inline]
     fn from(value: Direction) -> Self {
         value.to_vector()
+    }
+}
+
+impl From<Normal> for Direction {
+    #[inline]
+    fn from(value: Normal) -> Self {
+        value.to_unit_vector().into()
     }
 }
 

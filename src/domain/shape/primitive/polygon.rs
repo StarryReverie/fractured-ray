@@ -3,8 +3,8 @@ use snafu::prelude::*;
 use spade::{DelaunayTriangulation, Point2, Triangulation};
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::algebra::{Product, UnitVector};
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::algebra::Product;
+use crate::domain::math::geometry::{Direction, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::math::transformation::{Rotation, Transform, Transformation};
 use crate::domain::ray::Ray;
@@ -173,11 +173,7 @@ impl Polygon {
             PolygonInner::General { vertices, normal } => {
                 assert!(vertices.len() >= 3);
 
-                let tr = Rotation::new(
-                    UnitVector::from(*normal),
-                    UnitVector::z_direction(),
-                    Val(0.0),
-                );
+                let tr = Rotation::new((*normal).into(), Direction::z_direction(), Val(0.0));
                 let z = vertices[0].transform(&tr).z();
                 let vertices_2d = vertices
                     .iter()
@@ -404,7 +400,7 @@ mod tests {
 
         let ray = Ray::new(
             Point::new(Val(-2.0), Val(0.0), Val(2.0)),
-            UnitVector::x_direction(),
+            Direction::x_direction(),
         );
 
         let intersection = polygon.hit(&ray, DisRange::positive()).unwrap();
@@ -437,7 +433,7 @@ mod tests {
 
         let ray = Ray::new(
             Point::new(Val(0.0), Val(1.0), Val(0.0)),
-            UnitVector::x_direction(),
+            Direction::x_direction(),
         );
         assert!(polygon.hit(&ray, DisRange::positive()).is_none());
     }

@@ -2,7 +2,7 @@ use getset::CopyGetters;
 use rand::prelude::*;
 
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::Normal;
+use crate::domain::math::geometry::{Direction, Normal};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
@@ -13,8 +13,7 @@ pub fn reflect(ray: &Ray, intersection: &RayIntersection) -> Ray {
 }
 
 pub fn reflect_microfacet(ray: &Ray, intersection: &RayIntersection, mn: Normal) -> Ray {
-    let dir_next = (ray.direction() - Val(2.0) * ray.direction().dot(mn) * mn)
-        .normalize()
+    let dir_next = Direction::normalize(ray.direction() - Val(2.0) * ray.direction().dot(mn) * mn)
         .expect("reflective ray's direction should not be zero vector");
     intersection.spawn(dir_next)
 }
@@ -39,8 +38,7 @@ pub fn pure_refract_microfacet(
     }
 
     let dir_next_para = -tmp.sqrt() * mn;
-    let dir_next = (dir_next_para + dir_next_perp)
-        .normalize()
+    let dir_next = Direction::normalize(dir_next_para + dir_next_perp)
         .expect("refractive ray's direction should not be zero vector");
     Some(intersection.spawn(dir_next))
 }
@@ -111,9 +109,7 @@ mod tests {
 
         let ray = Ray::new(
             Point::new(sqrt3_2, Val(0.5), Val(0.0)),
-            Vector::new(-sqrt3_2, Val(-0.5), Val(0.0))
-                .normalize()
-                .unwrap(),
+            Direction::normalize(Vector::new(-sqrt3_2, Val(-0.5), Val(0.0))).unwrap(),
         );
 
         let intersection = RayIntersection::new(
@@ -126,9 +122,7 @@ mod tests {
         let ray_next = reflect(&ray, &intersection);
         assert_eq!(
             ray_next.direction(),
-            Vector::new(-sqrt3_2, Val(0.5), Val(0.0))
-                .normalize()
-                .unwrap(),
+            Direction::normalize(Vector::new(-sqrt3_2, Val(0.5), Val(0.0))).unwrap(),
         );
     }
 
@@ -137,9 +131,7 @@ mod tests {
         let sqrt3_2 = Val(3.0).sqrt() / Val(2.0);
         let ray = Ray::new(
             Point::new(sqrt3_2, Val(0.5), Val(0.0)),
-            Vector::new(-sqrt3_2, Val(-0.5), Val(0.0))
-                .normalize()
-                .unwrap(),
+            Direction::normalize(Vector::new(-sqrt3_2, Val(-0.5), Val(0.0))).unwrap(),
         );
 
         let intersection = RayIntersection::new(
@@ -152,9 +144,7 @@ mod tests {
         let ray_next = pure_refract(&ray, &intersection, Val(3.0).sqrt()).unwrap();
         assert_eq!(
             ray_next.direction(),
-            Vector::new(Val(-0.5), -sqrt3_2, Val(0.0))
-                .normalize()
-                .unwrap(),
+            Direction::normalize(Vector::new(Val(-0.5), -sqrt3_2, Val(0.0))).unwrap(),
         );
     }
 }
