@@ -2,7 +2,7 @@ use smallvec::SmallVec;
 
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::shape::def::{BoundingBox, Shape};
 use crate::domain::shape::util::{ShapeContainer, ShapeId};
 
@@ -190,14 +190,18 @@ where
                 self.search_boundeds(ray, range, shapes).unwrap_or(res)
             })
             .or_else(|| self.search_boundeds(ray, range, shapes))
+            .map(|(part, id)| {
+                let shape = shapes.get_shape(id.into()).unwrap();
+                (shape.complete_part(part), id)
+            })
     }
 
-    fn search_boundeds<SC>(
+    fn search_boundeds<'a, SC>(
         &self,
-        ray: &Ray,
+        ray: &'a Ray,
         range: DisRange,
         shapes: &SC,
-    ) -> Option<(RayIntersection, SI)>
+    ) -> Option<(RayIntersectionPart<'a>, SI)>
     where
         SC: ShapeContainer,
     {
@@ -209,13 +213,13 @@ where
         None
     }
 
-    fn search_impl<SC>(
+    fn search_impl<'a, SC>(
         &self,
         current: usize,
-        ray: &Ray,
+        ray: &'a Ray,
         range: DisRange,
         shapes: &SC,
-    ) -> Option<(RayIntersection, SI)>
+    ) -> Option<(RayIntersectionPart<'a>, SI)>
     where
         SC: ShapeContainer,
     {
@@ -252,7 +256,7 @@ where
             }
             BvhNode::Leaf { id, .. } => {
                 let shape = shapes.get_shape((*id).into()).unwrap();
-                shape.hit(ray, range).map(|res| (res, *id))
+                shape.hit_part(ray, range).map(|res| (res, *id))
             }
             BvhNode::ClusterLeaf { ids, .. } => {
                 let ids = ids.iter();
@@ -261,38 +265,38 @@ where
         }
     }
 
-    fn search_unboundeds<SC>(
+    fn search_unboundeds<'a, SC>(
         &self,
-        ray: &Ray,
+        ray: &'a Ray,
         range: DisRange,
         shapes: &SC,
-    ) -> Option<(RayIntersection, SI)>
+    ) -> Option<(RayIntersectionPart<'a>, SI)>
     where
         SC: ShapeContainer,
     {
         self.intersect_for_each(ray, range, self.unboundeds.iter(), shapes)
     }
 
-    fn intersect_for_each<'a, SC, I>(
+    fn intersect_for_each<'a, 'b, SC, I>(
         &self,
-        ray: &Ray,
+        ray: &'b Ray,
         mut range: DisRange,
         ids: I,
         shapes: &SC,
-    ) -> Option<(RayIntersection, SI)>
+    ) -> Option<(RayIntersectionPart<'b>, SI)>
     where
         I: Iterator<Item = &'a SI>,
         SC: ShapeContainer,
         SI: 'a,
     {
-        let mut closet: Option<(RayIntersection, SI)> = None;
+        let mut closet: Option<(RayIntersectionPart, SI)> = None;
         for id in ids {
             let shape = shapes.get_shape((*id).into()).unwrap();
             if let Some((closet, _)) = &closet {
                 range = range.shrink_end(closet.distance());
             }
-            if let Some(intersection) = shape.hit(ray, range) {
-                closet = Some((intersection, *id));
+            if let Some(part) = shape.hit_part(ray, range) {
+                closet = Some((part, *id));
             };
         }
         closet
