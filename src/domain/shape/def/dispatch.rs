@@ -5,7 +5,7 @@ use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
@@ -94,8 +94,20 @@ impl<'a> Shape for RefDynShape<'a> {
         impl_dispatch!(Self, self.kind())
     }
 
+    fn hit_part<'b>(&self, ray: &'b Ray, range: DisRange) -> Option<RayIntersectionPart<'b>> {
+        impl_dispatch!(Self, self.hit_part(ray, range))
+    }
+
     fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
         impl_dispatch!(Self, self.hit(ray, range))
+    }
+
+    fn hit_all(&self, ray: &Ray, range: DisRange) -> Vec<RayIntersection> {
+        impl_dispatch!(Self, self.hit_all(ray, range))
+    }
+
+    fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
+        impl_dispatch!(Self, self.complete_part(part))
     }
 
     fn area(&self) -> Val {

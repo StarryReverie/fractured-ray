@@ -7,7 +7,7 @@ use crate::domain::math::algebra::UnitVector;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::sampling::Sampleable;
 use crate::domain::shape::primitive::*;
 use crate::domain::shape::util::Instance;
@@ -18,7 +18,12 @@ use super::{BoundingBox, DynShape};
 pub trait Shape: Sampleable + Debug + Send + Sync {
     fn kind(&self) -> ShapeKind;
 
-    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection>;
+    fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>>;
+
+    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
+        self.hit_part(ray, range)
+            .map(|part| self.complete_part(part))
+    }
 
     fn hit_all(&self, ray: &Ray, mut range: DisRange) -> Vec<RayIntersection> {
         let mut res = Vec::new();
@@ -34,6 +39,8 @@ pub trait Shape: Sampleable + Debug + Send + Sync {
         }
         res
     }
+
+    fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection;
 
     fn area(&self) -> Val;
 

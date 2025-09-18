@@ -8,7 +8,7 @@ use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::Transform;
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
@@ -55,7 +55,7 @@ impl Shape for MeshPolygon {
         ShapeKind::MeshPolygon
     }
 
-    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
+    fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>> {
         let vertices = self.get_vertices();
 
         assert!(vertices.len() > 3);
@@ -64,16 +64,32 @@ impl Shape for MeshPolygon {
             .normalize()
             .expect("normal existence has been checked during mesh construction");
 
-        let tr = &self.data.transformation;
-        let inv_tr = &self.data.inv_transformation;
+        if let Some(tr) = &self.data.transformation {
+            let vertices_tr = (vertices.iter())
+                .map(|v| v.transform(tr))
+                .collect::<SmallVec<[_; 6]>>();
+            let vertices_tr_ref = vertices_tr.iter().collect::<SmallVec<[_; 6]>>();
+            let normal_tr = normal.transform(tr);
+            Polygon::calc_ray_intersection_part(ray, range, &vertices_tr_ref, &normal_tr)
+        } else {
+            Polygon::calc_ray_intersection_part(ray, range, &vertices, &normal)
+        }
+    }
 
-        match tr.as_ref().zip(inv_tr.as_ref()) {
-            None => Polygon::calc_ray_intersection(ray, range, &vertices, &normal),
-            Some((tr, inv_tr)) => {
-                let ray = ray.transform(inv_tr);
-                let res = Polygon::calc_ray_intersection(&ray, range, &vertices, &normal)?;
-                Some(res.transform(tr))
-            }
+    fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
+        let vertices = self.get_vertices();
+
+        assert!(vertices.len() > 3);
+        let normal = (*vertices[1] - *vertices[0])
+            .cross(*vertices[2] - *vertices[1])
+            .normalize()
+            .expect("normal existence has been checked during mesh construction");
+
+        if let Some(tr) = &self.data.transformation {
+            let normal_tr = normal.transform(tr);
+            Polygon::complete_ray_intersection_part(part, &normal_tr)
+        } else {
+            Polygon::complete_ray_intersection_part(part, &normal)
         }
     }
 

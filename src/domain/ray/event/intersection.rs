@@ -8,6 +8,19 @@ use crate::domain::ray::Ray;
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
 #[getset(get_copy = "pub")]
+pub struct RayIntersectionPart<'a> {
+    distance: Val,
+    ray: &'a Ray,
+}
+
+impl<'a> RayIntersectionPart<'a> {
+    pub fn new(distance: Val, ray: &'a Ray) -> Self {
+        Self { distance, ray }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, CopyGetters)]
+#[getset(get_copy = "pub")]
 pub struct RayIntersection {
     distance: Val,
     position: Point,
@@ -38,7 +51,7 @@ where
     UnitVector: Transform<T>,
 {
     fn transform(&self, transformation: &T) -> Self {
-        RayIntersection::new(
+        Self::new(
             self.distance(),
             self.position().transform(transformation),
             self.normal().transform(transformation),

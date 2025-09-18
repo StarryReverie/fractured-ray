@@ -8,7 +8,7 @@ use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::math::transformation::{Rotation, Transform, Transformation};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
 use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
@@ -94,24 +94,35 @@ impl Polygon {
         Ok(Self(PolygonInner::General { vertices, normal }))
     }
 
-    pub fn calc_ray_intersection(
-        ray: &Ray,
+    pub fn calc_ray_intersection_part<'a>(
+        ray: &'a Ray,
         range: DisRange,
         vertices: &[&Point],
         normal: &UnitVector,
-    ) -> Option<RayIntersection> {
+    ) -> Option<RayIntersectionPart<'a>> {
         assert!(vertices.len() > 3);
-        let intersection = Plane::calc_ray_intersection(ray, range, vertices[0], normal)?;
-        if Self::is_intersection_inside_polygon(&intersection, vertices) {
-            Some(intersection)
+        let part = Plane::calc_ray_intersection_part(ray, range, vertices[0], normal)?;
+        if Self::is_intersection_part_inside_polygon(&part, normal, vertices) {
+            Some(part)
         } else {
             None
         }
     }
 
-    fn is_intersection_inside_polygon(intersection: &RayIntersection, vertices: &[&Point]) -> bool {
-        let projection_axis = Self::select_projection_axis(intersection.normal());
-        let to_vertices = Self::project_vectors(intersection, vertices, projection_axis);
+    pub fn complete_ray_intersection_part(
+        part: RayIntersectionPart,
+        normal: &UnitVector,
+    ) -> RayIntersection {
+        Plane::complete_ray_intersection_part(part, normal)
+    }
+
+    fn is_intersection_part_inside_polygon(
+        part: &RayIntersectionPart,
+        normal: &UnitVector,
+        vertices: &[&Point],
+    ) -> bool {
+        let projection_axis = Self::select_projection_axis(*normal);
+        let to_vertices = Self::project_vectors(part, vertices, projection_axis);
         Self::calc_angle_sum(to_vertices) != Val(0.0)
     }
 
@@ -129,20 +140,18 @@ impl Polygon {
     }
 
     fn project_vectors(
-        intersection: &RayIntersection,
+        part: &RayIntersectionPart,
         vertices: &[&Point],
         projection_axis: usize,
     ) -> Vec<(Val, Val)> {
+        let p = part.ray().at(part.distance());
         vertices
             .iter()
-            .map(|v| {
-                let p = intersection.position();
-                match projection_axis {
-                    0 => (v.y() - p.y(), v.z() - p.z()),
-                    1 => (v.x() - p.x(), v.z() - p.z()),
-                    2 => (v.x() - p.x(), v.y() - p.y()),
-                    _ => unreachable!("projection_axis should only be 0, 1 or 2"),
-                }
+            .map(|v| match projection_axis {
+                0 => (v.y() - p.y(), v.z() - p.z()),
+                1 => (v.x() - p.x(), v.z() - p.z()),
+                2 => (v.x() - p.x(), v.y() - p.y()),
+                _ => unreachable!("projection_axis should only be 0, 1 or 2"),
             })
             .collect::<Vec<_>>()
     }
@@ -202,12 +211,21 @@ impl Shape for Polygon {
         ShapeKind::Polygon
     }
 
-    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
+    fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>> {
         match &self.0 {
-            PolygonInner::Triangle(triangle) => triangle.hit(ray, range),
+            PolygonInner::Triangle(triangle) => triangle.hit_part(ray, range),
             PolygonInner::General { vertices, normal } => {
                 let vertices = vertices.iter().collect::<SmallVec<[&Point; 6]>>();
-                Self::calc_ray_intersection(ray, range, &vertices, normal)
+                Self::calc_ray_intersection_part(ray, range, &vertices, normal)
+            }
+        }
+    }
+
+    fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
+        match &self.0 {
+            PolygonInner::Triangle(triangle) => triangle.complete_part(part),
+            PolygonInner::General { normal, .. } => {
+                Self::complete_ray_intersection_part(part, normal)
             }
         }
     }

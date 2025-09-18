@@ -7,7 +7,7 @@ use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::{RayIntersection, SurfaceSide};
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
@@ -27,30 +27,38 @@ impl Plane {
         Self { point, normal }
     }
 
-    pub fn calc_ray_intersection(
-        ray: &Ray,
+    pub fn calc_ray_intersection_part<'a>(
+        ray: &'a Ray,
         range: DisRange,
         point: &Point,
         normal: &UnitVector,
-    ) -> Option<RayIntersection> {
+    ) -> Option<RayIntersectionPart<'a>> {
         let den = ray.direction().dot(*normal);
-        if den != Val(0.0) {
+        let distance = if den != Val(0.0) {
             let num = (*point - ray.start()).dot(*normal);
             let distance = num / den;
             if distance > Val(0.0) && range.contains(&distance) {
-                let position = ray.at(distance);
-                let (normal, side) = if den < Val(0.0) {
-                    (*normal, SurfaceSide::Front)
-                } else {
-                    (-(*normal), SurfaceSide::Back)
-                };
-                Some(RayIntersection::new(distance, position, normal, side))
+                distance
             } else {
-                None
+                return None;
             }
         } else {
-            None
-        }
+            return None;
+        };
+        Some(RayIntersectionPart::new(distance, ray))
+    }
+
+    pub fn complete_ray_intersection_part(
+        part: RayIntersectionPart,
+        normal: &UnitVector,
+    ) -> RayIntersection {
+        let position = part.ray().at(part.distance());
+        let (normal, side) = if normal.dot(part.ray().direction()) < Val(0.0) {
+            (*normal, SurfaceSide::Front)
+        } else {
+            (-(*normal), SurfaceSide::Back)
+        };
+        RayIntersection::new(part.distance(), position, normal, side)
     }
 }
 
@@ -59,8 +67,12 @@ impl Shape for Plane {
         ShapeKind::Plane
     }
 
-    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
-        Self::calc_ray_intersection(ray, range, &self.point, &self.normal)
+    fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>> {
+        Self::calc_ray_intersection_part(ray, range, &self.point, &self.normal)
+    }
+
+    fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
+        Self::complete_ray_intersection_part(part, &self.normal)
     }
 
     fn area(&self) -> Val {

@@ -8,7 +8,7 @@ use crate::domain::math::algebra::{Product, UnitVector, Vector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::{RayIntersection, SurfaceSide};
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSampling, SphereLightSampler};
 use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
@@ -42,7 +42,7 @@ impl Shape for Sphere {
         ShapeKind::Sphere
     }
 
-    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
+    fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>> {
         let a = ray.direction().norm_squared();
         let b = Val(2.0) * (ray.start() - self.center).dot(ray.direction());
         let c = (ray.start() - self.center).norm_squared() - self.radius * self.radius;
@@ -69,17 +69,20 @@ impl Shape for Sphere {
             return None;
         };
 
-        let position = ray.at(distance);
+        Some(RayIntersectionPart::new(distance, ray))
+    }
+
+    fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
+        let position = part.ray().at(part.distance());
         let normal = (position - self.center)
             .normalize()
             .expect("normal should not be zero vector");
-        let (normal, side) = if ray.direction().dot(normal) < Val(0.0) {
+        let (normal, side) = if part.ray().direction().dot(normal) < Val(0.0) {
             (normal, SurfaceSide::Front)
         } else {
             (-normal, SurfaceSide::Back)
         };
-
-        Some(RayIntersection::new(distance, position, normal, side))
+        RayIntersection::new(part.distance(), position, normal, side)
     }
 
     fn area(&self) -> Val {

@@ -6,7 +6,7 @@ use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::Transform;
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::LightSampling;
 use crate::domain::sampling::photon::PhotonSampling;
@@ -52,18 +52,23 @@ impl Shape for MeshTriangle {
         ShapeKind::MeshTriangle
     }
 
-    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
+    fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>> {
         let (v0, v1, v2) = self.get_vertices();
-        let tr = &self.data.transformation;
-        let inv_tr = &self.data.inv_transformation;
+        if let Some(tr) = &self.data.transformation {
+            let (v0_tr, v1_tr, v2_tr) = (v0.transform(tr), v1.transform(tr), v2.transform(tr));
+            Triangle::calc_ray_intersection_part(ray, range, &v0_tr, &v1_tr, &v2_tr)
+        } else {
+            Triangle::calc_ray_intersection_part(ray, range, v0, v1, v2)
+        }
+    }
 
-        match tr.as_ref().zip(inv_tr.as_ref()) {
-            None => Triangle::calc_ray_intersection(ray, range, v0, v1, v2),
-            Some((tr, inv_tr)) => {
-                let ray = ray.transform(inv_tr);
-                let res = Triangle::calc_ray_intersection(&ray, range, v0, v1, v2)?;
-                Some(res.transform(tr))
-            }
+    fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
+        let (v0, v1, v2) = self.get_vertices();
+        if let Some(tr) = &self.data.transformation {
+            let (v0_tr, v1_tr, v2_tr) = (v0.transform(tr), v1.transform(tr), v2.transform(tr));
+            Triangle::complete_ray_intersection_part(part, &v0_tr, &v1_tr, &v2_tr)
+        } else {
+            Triangle::complete_ray_intersection_part(part, v0, v1, v2)
         }
     }
 

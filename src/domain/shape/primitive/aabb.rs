@@ -7,7 +7,7 @@ use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::{RayIntersection, SurfaceSide};
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
 use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
@@ -67,7 +67,7 @@ impl Shape for Aabb {
         ShapeKind::Aabb
     }
 
-    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
+    fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>> {
         let (left, right) = self.hit_range(ray)?;
         let distance = if range.contains(&left) {
             left
@@ -76,16 +76,18 @@ impl Shape for Aabb {
         } else {
             return None;
         };
+        Some(RayIntersectionPart::new(distance, ray))
+    }
 
-        let position = ray.at(distance);
+    fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
+        let position = part.ray().at(part.distance());
         let normal = self.normal(position);
-        let (normal, side) = if ray.direction().dot(normal) < Val(0.0) {
+        let (normal, side) = if part.ray().direction().dot(normal) < Val(0.0) {
             (normal, SurfaceSide::Front)
         } else {
             (-normal, SurfaceSide::Back)
         };
-
-        Some(RayIntersection::new(distance, position, normal, side))
+        RayIntersection::new(part.distance(), position, normal, side)
     }
 
     fn area(&self) -> Val {

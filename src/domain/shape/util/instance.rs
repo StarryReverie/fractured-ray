@@ -10,7 +10,7 @@ use crate::domain::math::transformation::{
     Rotation, Sequential, Transform, Transformation, Translation,
 };
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::RayIntersection;
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{InstanceLightSampler, LightSampling};
 use crate::domain::sampling::photon::{InstancePhotonSampler, PhotonSampling};
@@ -65,11 +65,22 @@ impl Shape for Instance {
         ShapeKind::Instance
     }
 
-    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
+    fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>> {
+        // TODO: transform `range` as well after introducing scaling transformation
         let inv_transformation = self.transformation.clone().inverse();
-        let ray = ray.transform(&inv_transformation);
-        let intersection = self.prototype.hit(&ray, range)?;
-        Some(intersection.transform(&self.transformation))
+        let ray_tr = ray.transform(&inv_transformation);
+        let part_tr = self.prototype.hit_part(&ray_tr, range)?;
+        // TODO: transform `part_tr.distance()` as well after introducing scaling transformation
+        Some(RayIntersectionPart::new(part_tr.distance(), ray))
+    }
+
+    fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
+        let inv_transformation = self.transformation.clone().inverse();
+        let ray_tr = part.ray().transform(&inv_transformation);
+        // TODO: transform `part.distance()` as well after introducing scaling transformation
+        let part_tr = RayIntersectionPart::new(part.distance(), &ray_tr);
+        let intersection_tr = self.prototype.complete_part(part_tr);
+        intersection_tr.transform(&self.transformation)
     }
 
     fn area(&self) -> Val {

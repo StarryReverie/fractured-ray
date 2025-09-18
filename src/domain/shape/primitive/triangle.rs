@@ -8,7 +8,7 @@ use crate::domain::math::algebra::{Product, UnitVector};
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::{RayIntersection, SurfaceSide};
+use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
 use crate::domain::sampling::Sampleable;
 use crate::domain::sampling::light::{LightSamplerAdapter, LightSampling};
 use crate::domain::sampling::photon::{PhotonSamplerAdapter, PhotonSampling};
@@ -54,13 +54,13 @@ impl Triangle {
         Ok(())
     }
 
-    pub fn calc_ray_intersection(
-        ray: &Ray,
+    pub fn calc_ray_intersection_part<'a>(
+        ray: &'a Ray,
         range: DisRange,
         vertex0: &Point,
         vertex1: &Point,
         vertex2: &Point,
-    ) -> Option<RayIntersection> {
+    ) -> Option<RayIntersectionPart<'a>> {
         let side1 = *vertex1 - *vertex0;
         let side2 = *vertex2 - *vertex0;
         let vec0 = ray.direction().cross(side2);
@@ -86,18 +86,26 @@ impl Triangle {
         if !range.contains(&distance) {
             return None;
         }
+        Some(RayIntersectionPart::new(distance, ray))
+    }
 
-        let position = ray.at(distance);
-        let normal = side1
-            .cross(side2)
+    pub fn complete_ray_intersection_part(
+        part: RayIntersectionPart,
+        vertex0: &Point,
+        vertex1: &Point,
+        vertex2: &Point,
+    ) -> RayIntersection {
+        let position = part.ray().at(part.distance());
+        let normal = (*vertex1 - *vertex0)
+            .cross(*vertex2 - *vertex0)
             .normalize()
-            .expect("side1 and side2 should not be zero vectors and should not be parallel");
-        let (normal, side) = if ray.direction().dot(normal) < Val(0.0) {
+            .expect("`*vertex1 - *vertex0` and `*vertex2 - *vertex0` should not be zero vectors and should not be parallel");
+        let (normal, side) = if part.ray().direction().dot(normal) < Val(0.0) {
             (normal, SurfaceSide::Front)
         } else {
             (-normal, SurfaceSide::Back)
         };
-        Some(RayIntersection::new(distance, position, normal, side))
+        RayIntersection::new(part.distance(), position, normal, side)
     }
 }
 
@@ -106,8 +114,12 @@ impl Shape for Triangle {
         ShapeKind::Triangle
     }
 
-    fn hit(&self, ray: &Ray, range: DisRange) -> Option<RayIntersection> {
-        Self::calc_ray_intersection(ray, range, &self.vertex0, &self.vertex1, &self.vertex2)
+    fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>> {
+        Self::calc_ray_intersection_part(ray, range, &self.vertex0, &self.vertex1, &self.vertex2)
+    }
+
+    fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection {
+        Self::complete_ray_intersection_part(part, &self.vertex0, &self.vertex1, &self.vertex2)
     }
 
     fn area(&self) -> Val {
