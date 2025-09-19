@@ -5,7 +5,7 @@ use snafu::prelude::*;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, Vector};
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::geometry::{Distance, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -51,20 +51,16 @@ impl Shape for Sphere {
         let distance = if discriminant > Val(0.0) {
             let x1 = (-b - discriminant.sqrt()) / (Val(2.0) * a);
             let x2 = (-b + discriminant.sqrt()) / (Val(2.0) * a);
-            if x1 > Val(0.0) && range.contains(&x1) {
+            if let Some(x1) = Distance::new(x1).ok().filter(|x| range.contains(x)) {
                 x1
-            } else if x2 > Val(0.0) && range.contains(&x2) {
+            } else if let Some(x2) = Distance::new(x2).ok().filter(|x| range.contains(x)) {
                 x2
             } else {
                 return None;
             }
         } else if discriminant == Val(0.0) {
             let x = -b / (Val(2.0) * a);
-            if x > Val(0.0) && range.contains(&x) {
-                x
-            } else {
-                return None;
-            }
+            Distance::new(x).ok().filter(|x| range.contains(x))?
         } else {
             return None;
         };
@@ -128,7 +124,7 @@ pub enum TryNewSphereError {
 #[cfg(test)]
 mod tests {
     use crate::domain::math::algebra::Vector;
-    use crate::domain::math::geometry::Direction;
+    use crate::domain::math::geometry::{Direction, Distance};
 
     use super::*;
 
@@ -148,7 +144,10 @@ mod tests {
             Direction::normalize(Vector::new(Val(-1.0), Val(1.0), Val(0.0))).unwrap(),
         );
         let intersection = sphere.hit(&ray, DisRange::positive()).unwrap();
-        assert_eq!(intersection.distance(), Val(2.0).sqrt());
+        assert_eq!(
+            intersection.distance(),
+            Distance::new(Val(2.0).sqrt()).unwrap()
+        );
         assert_eq!(
             intersection.position(),
             Point::new(Val(1.0), Val(1.0), Val(0.0)),
@@ -165,7 +164,7 @@ mod tests {
             -Direction::z_direction(),
         );
         let intersection = sphere.hit(&ray, DisRange::positive()).unwrap();
-        assert_eq!(intersection.distance(), Val(2.0));
+        assert_eq!(intersection.distance(), Distance::new(Val(2.0)).unwrap());
     }
 
     #[test]
@@ -176,7 +175,10 @@ mod tests {
             Direction::normalize(Vector::new(Val(1.0), Val(1.0), Val(0.0))).unwrap(),
         );
         let intersection = sphere.hit(&ray, DisRange::positive()).unwrap();
-        assert_eq!(intersection.distance(), Val(2.0).sqrt());
+        assert_eq!(
+            intersection.distance(),
+            Distance::new(Val(2.0).sqrt()).unwrap()
+        );
         assert_eq!(
             intersection.position(),
             Point::new(Val(1.0), Val(1.0), Val(0.0)),

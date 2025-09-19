@@ -1,19 +1,18 @@
 use getset::CopyGetters;
 
-use crate::domain::math::geometry::{Direction, Normal, Point};
-use crate::domain::math::numeric::Val;
+use crate::domain::math::geometry::{Direction, Distance, Normal, Point};
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct RayIntersectionPart<'a> {
-    distance: Val,
+    distance: Distance,
     ray: &'a Ray,
 }
 
 impl<'a> RayIntersectionPart<'a> {
-    pub fn new(distance: Val, ray: &'a Ray) -> Self {
+    pub fn new(distance: Distance, ray: &'a Ray) -> Self {
         Self { distance, ray }
     }
 }
@@ -21,14 +20,14 @@ impl<'a> RayIntersectionPart<'a> {
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct RayIntersection {
-    distance: Val,
+    distance: Distance,
     position: Point,
     normal: Normal,
     side: SurfaceSide,
 }
 
 impl RayIntersection {
-    pub fn new(distance: Val, position: Point, normal: Normal, side: SurfaceSide) -> Self {
+    pub fn new(distance: Distance, position: Point, normal: Normal, side: SurfaceSide) -> Self {
         Self {
             distance,
             position,

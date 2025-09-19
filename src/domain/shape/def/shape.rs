@@ -3,7 +3,7 @@ use std::ops::{Bound, RangeBounds};
 
 use enum_dispatch::enum_dispatch;
 
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::geometry::{Distance, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
@@ -31,7 +31,7 @@ pub trait Shape: Sampleable + Debug + Send + Sync {
             Bound::Unbounded => unreachable!("range's start bound should not be unbounded"),
         };
         while let Some(intersection) = self.hit(ray, range) {
-            let offset = intersection.distance() - last_distance;
+            let offset = Distance::new(intersection.distance() - last_distance).unwrap();
             last_distance = intersection.distance();
             range = range.advance_start(offset);
             res.push(intersection);

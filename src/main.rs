@@ -5,7 +5,7 @@ use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::{Albedo, Spectrum};
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::Vector;
-use fractured_ray::domain::math::geometry::{Direction, Normal, Point, SpreadAngle};
+use fractured_ray::domain::math::geometry::{Direction, Distance, Normal, Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
 use fractured_ray::domain::math::transformation::{Rotation, Translation};
 use fractured_ray::domain::renderer::{CoreRenderer, CoreRendererConfiguration, Renderer};
@@ -22,9 +22,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         Point::new(Val(0.0), Val(2.0), Val(14.0)),
         -Direction::z_direction(),
         Resolution::new(1440, (16, 9))?,
-        Val(2.0),
-        Val(5.0),
-    )?;
+        Distance::new(Val(2.0))?,
+        Distance::new(Val(5.0))?,
+    );
 
     let mut builder = BvhEntitySceneBuilder::new();
 

@@ -1,4 +1,4 @@
-use crate::domain::math::geometry::Direction;
+use crate::domain::math::geometry::{Direction, Distance};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
@@ -44,7 +44,7 @@ pub trait HomogeneousMediumExt: HomogeneousMedium {
             return Contribution::new();
         };
 
-        let length = scattering.distance() - segment.start();
+        let length = Distance::new(scattering.distance() - segment.start()).unwrap();
         let tr = self.transmittance(ray, &RaySegment::new(segment.start(), length));
 
         let phase = self.phase(-ray.direction(), ray_next.direction());
@@ -79,7 +79,7 @@ pub trait HomogeneousMediumExt: HomogeneousMedium {
         };
 
         let scattering = distance_sample.scattering();
-        let length = scattering.distance() - segment.start();
+        let length = Distance::new(scattering.distance() - segment.start()).unwrap();
         let tr = self.transmittance(ray, &RaySegment::new(segment.start(), length));
 
         let ray_next = phase_sample.ray_next();

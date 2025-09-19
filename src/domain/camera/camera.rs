@@ -1,11 +1,10 @@
 use getset::CopyGetters;
-use snafu::prelude::*;
 
 use crate::domain::math::algebra::{Product, Vector};
-use crate::domain::math::geometry::{Direction, Point};
+use crate::domain::math::geometry::{Direction, Distance, Point};
 use crate::domain::math::numeric::Val;
 
-use super::{Offset, Resolution, TryNewViewportError, Viewport};
+use super::{Offset, Resolution, Viewport};
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
 pub struct Camera {
@@ -14,7 +13,7 @@ pub struct Camera {
     #[getset(get_copy = "pub")]
     orientation: Direction,
     #[getset(get_copy = "pub")]
-    focal_length: Val,
+    focal_length: Distance,
     viewport: Viewport,
     viewport_horizontal_edge: Vector,
     viewport_vertical_edge: Vector,
@@ -25,12 +24,10 @@ impl Camera {
         position: Point,
         orientation: Direction,
         resolution: Resolution,
-        height: Val,
-        focal_length: Val,
-    ) -> Result<Camera, TryNewCameraError> {
-        ensure!(focal_length > Val(0.0), InvalidFocalLengthSnafu);
-
-        let viewport = Viewport::new(resolution, height).context(ViewportSnafu)?;
+        height: Distance,
+        focal_length: Distance,
+    ) -> Camera {
+        let viewport = Viewport::new(resolution, height);
 
         let (hdir, vdir) = if orientation.x() != Val(0.0) || orientation.z() != Val(0.0) {
             let hdir =
@@ -49,17 +46,17 @@ impl Camera {
             (hdir, vdir)
         };
 
-        let viewport_horizontal_edge = hdir * viewport.width();
-        let viewport_vertical_edge = vdir * viewport.height();
+        let viewport_horizontal_edge = hdir * viewport.width().value();
+        let viewport_vertical_edge = vdir * viewport.height().value();
 
-        Ok(Self {
+        Self {
             position,
             orientation,
             focal_length,
             viewport,
             viewport_horizontal_edge,
             viewport_vertical_edge,
-        })
+        }
     }
 
     pub fn resolution(&self) -> &Resolution {
@@ -68,20 +65,12 @@ impl Camera {
 
     pub fn calc_point_in_pixel(&self, row: usize, column: usize, offset: Offset) -> Option<Point> {
         let (vp, hp) = self.viewport.index_to_percentage(row, column, offset)?;
-        let viewport_center = self.position + self.focal_length * self.orientation;
+        let viewport_center = self.position + self.focal_length.value() * self.orientation;
         let point = viewport_center
             + (hp - Val(0.5)) * self.viewport_horizontal_edge
             + (vp - Val(0.5)) * self.viewport_vertical_edge;
         Some(point)
     }
-}
-
-#[derive(Debug, Snafu, Clone, PartialEq, Eq)]
-pub enum TryNewCameraError {
-    #[snafu(display("could not create a viewport"))]
-    Viewport { source: TryNewViewportError },
-    #[snafu(display("focal length is not positive"))]
-    InvalidFocalLength,
 }
 
 #[cfg(test)]
@@ -94,10 +83,10 @@ mod tests {
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
             -Direction::z_direction(),
             Resolution::new(10, (2, 1)).unwrap(),
-            Val(1.0),
-            Val(1.0),
-        )
-        .unwrap();
+            Distance::new(Val(1.0)).unwrap(),
+            Distance::new(Val(1.0)).unwrap(),
+        );
+
         assert_eq!(
             camera.calc_point_in_pixel(0, 0, Offset::new(Val(0.0), Val(0.0)).unwrap()),
             Some(Point::new(Val(-1.0), Val(0.5), Val(-1.0))),
@@ -117,29 +106,15 @@ mod tests {
     }
 
     #[test]
-    fn camera_new_fails_when_focal_length_is_invalid() {
-        assert_eq!(
-            Camera::new(
-                Point::new(Val(0.0), Val(2.0), Val(0.0)),
-                Direction::normalize(Vector::new(Val(1.0), Val(-2.0), Val(2.0))).unwrap(),
-                Resolution::new(10, (2, 1)).unwrap(),
-                Val(1.0),
-                Val(0.0),
-            ),
-            Err(TryNewCameraError::InvalidFocalLength)
-        );
-    }
-
-    #[test]
     fn camera_calc_point_in_pixel_succeeds() {
         let camera = Camera::new(
             Point::new(Val(0.0), Val(2.0), Val(0.0)),
             Direction::normalize(Vector::new(Val(1.0), Val(-2.0), Val(2.0))).unwrap(),
             Resolution::new(10, (2, 1)).unwrap(),
-            Val(1.0),
-            Val(1.0),
-        )
-        .unwrap();
+            Distance::new(Val(1.0)).unwrap(),
+            Distance::new(Val(1.0)).unwrap(),
+        );
+
         assert_eq!(
             camera.calc_point_in_pixel(0, 0, Offset::center()).unwrap(),
             Point::new(

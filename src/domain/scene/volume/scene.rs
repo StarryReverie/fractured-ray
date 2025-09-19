@@ -4,7 +4,7 @@ use std::ops::{Bound, RangeBounds};
 use rand::prelude::*;
 
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::Direction;
+use crate::domain::math::geometry::{Direction, Distance};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::medium::def::DynMedium;
 use crate::domain::medium::util::{MediumContainer, MediumId};
@@ -170,8 +170,8 @@ impl VolumeScene for BvhVolumeScene {
 
         for (isect, id) in &isects {
             if let Some(current_medium) = current_medium {
-                let length = isect.distance() - last_distance;
-                if length > Val(0.0) {
+                let length = Distance::new(isect.distance() - last_distance).unwrap();
+                if length > Distance::zero() {
                     res.push((RaySegment::new(last_distance, length), current_medium));
                 }
             }
@@ -187,10 +187,10 @@ impl VolumeScene for BvhVolumeScene {
         if let Some(current_medium) = current_medium {
             let max_distance = match range.end_bound() {
                 Bound::Included(v) | Bound::Excluded(v) => *v,
-                Bound::Unbounded => Val::INFINITY,
+                Bound::Unbounded => Distance::infinity(),
             };
-            let length = max_distance - last_distance;
-            if length > Val(0.0) {
+            let length = Distance::new(max_distance - last_distance).unwrap();
+            if length > Distance::zero() {
                 res.push((RaySegment::new(last_distance, length), current_medium));
             }
         }
@@ -221,24 +221,24 @@ mod tests {
         let mut iter = segments.iter();
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.0.start(), Val(0.5));
-        assert_eq!(segment.0.length(), Val(1.0));
+        assert_eq!(segment.0.start(), Distance::new(Val(0.5)).unwrap());
+        assert_eq!(segment.0.length(), Distance::new(Val(1.0)).unwrap());
         assert_eq!(segment.1, ids[0].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.0.length(), Val(3.0));
+        assert_eq!(segment.0.length(), Distance::new(Val(3.0)).unwrap());
         assert_eq!(segment.1, ids[1].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.0.length(), Val(1.0));
+        assert_eq!(segment.0.length(), Distance::new(Val(1.0)).unwrap());
         assert_eq!(segment.1, ids[0].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.0.length(), Val(4.0));
+        assert_eq!(segment.0.length(), Distance::new(Val(4.0)).unwrap());
         assert_eq!(segment.1, ids[2].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.0.length(), Val(1.0));
+        assert_eq!(segment.0.length(), Distance::new(Val(1.0)).unwrap());
         assert_eq!(segment.1, ids[0].medium_id());
     }
 
@@ -255,24 +255,24 @@ mod tests {
         let mut iter = segments.iter();
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.0.start(), Val(0.0));
-        assert_eq!(segment.0.length(), Val(0.9));
+        assert_eq!(segment.0.start(), Distance::new(Val(0.0)).unwrap());
+        assert_eq!(segment.0.length(), Distance::new(Val(0.9)).unwrap());
         assert_eq!(segment.1, ids[0].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.0.length(), Val(3.0));
+        assert_eq!(segment.0.length(), Distance::new(Val(3.0)).unwrap());
         assert_eq!(segment.1, ids[1].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.0.length(), Val(1.0));
+        assert_eq!(segment.0.length(), Distance::new(Val(1.0)).unwrap());
         assert_eq!(segment.1, ids[0].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.0.length(), Val(4.0));
+        assert_eq!(segment.0.length(), Distance::new(Val(4.0)).unwrap());
         assert_eq!(segment.1, ids[2].medium_id());
 
         let segment = iter.next().unwrap();
-        assert_eq!(segment.0.length(), Val(1.0));
+        assert_eq!(segment.0.length(), Distance::new(Val(1.0)).unwrap());
         assert_eq!(segment.1, ids[0].medium_id());
     }
 

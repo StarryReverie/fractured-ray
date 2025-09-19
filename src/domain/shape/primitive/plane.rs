@@ -4,7 +4,7 @@ use getset::CopyGetters;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::geometry::{Distance, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -36,12 +36,9 @@ impl Plane {
         let den = ray.direction().dot(*normal);
         let distance = if den != Val(0.0) {
             let num = (*point - ray.start()).dot(*normal);
-            let distance = num / den;
-            if distance > Val(0.0) && range.contains(&distance) {
-                distance
-            } else {
-                return None;
-            }
+            Distance::new(num / den)
+                .ok()
+                .filter(|d| range.contains(d))?
         } else {
             return None;
         };
@@ -124,7 +121,10 @@ mod tests {
             Direction::normalize(Vector::new(Val(-1.0), Val(0.0), Val(-1.0))).unwrap(),
         );
         let intersection = plane.hit(&ray, DisRange::positive()).unwrap();
-        assert_eq!(intersection.distance(), Val(2.0).sqrt());
+        assert_eq!(
+            intersection.distance(),
+            Distance::new(Val(2.0).sqrt()).unwrap()
+        );
         assert_eq!(
             intersection.position(),
             Point::new(Val(-1.0), Val(0.0), Val(-1.0))

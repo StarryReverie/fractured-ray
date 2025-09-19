@@ -4,4 +4,4 @@ mod viewport;
 
 pub use camera::Camera;
 pub use resolution::Resolution;
-pub use viewport::{Offset, TryNewViewportError, Viewport};
+pub use viewport::{Offset, Viewport};

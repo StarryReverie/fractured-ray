@@ -3,7 +3,8 @@ use std::ops::Bound;
 use getset::{CopyGetters, Getters};
 
 use crate::domain::material::def::{Material, MaterialKind, RefDynMaterial};
-use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::math::geometry::Distance;
+use crate::domain::math::numeric::DisRange;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::scene::entity::EntityScene;
@@ -19,10 +20,10 @@ impl<'s, 'r> VisibilityTester<'s, 'r> {
         Self { scene, ray_next }
     }
 
-    pub fn test(&self, distance: Val, target_id: ShapeId) -> Option<LightTarget<'s>> {
+    pub fn test(&self, distance: Distance, target_id: ShapeId) -> Option<LightTarget<'s>> {
         let scene = &self.scene;
 
-        let range = (Bound::Excluded(Val(0.0)), Bound::Included(distance));
+        let range = (Bound::Excluded(Distance::zero()), Bound::Included(distance));
         let range = DisRange::from(range);
 
         let res = scene.test_intersection(self.ray_next, range, target_id);

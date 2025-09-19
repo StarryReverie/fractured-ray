@@ -137,7 +137,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::geometry::{Direction, Normal, Point};
+    use crate::domain::math::geometry::{Direction, Distance, Normal, Point};
     use crate::domain::ray::event::SurfaceSide;
     use crate::domain::sampling::point::TrianglePointSampler;
     use crate::domain::shape::def::ShapeKind;
@@ -159,7 +159,7 @@ mod tests {
         let sampler = LightSamplerAdapter::new(sampler);
 
         let intersection = RayIntersection::new(
-            Val(1.0),
+            Distance::new(Val(1.0)).unwrap(),
             Point::new(Val(0.0), Val(0.0), Val(1.0)),
             Normal::y_direction(),
             SurfaceSide::Front,

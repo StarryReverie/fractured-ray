@@ -4,7 +4,7 @@ use getset::CopyGetters;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::geometry::{Distance, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -30,7 +30,7 @@ impl Aabb {
         }
     }
 
-    pub fn hit_range(&self, ray: &Ray) -> Option<(Val, Val)> {
+    pub fn hit_range(&self, ray: &Ray) -> Option<(Distance, Distance)> {
         let (s, d) = (ray.start(), ray.direction());
         let xr = Self::calc_axis_range(s.x(), d.x(), self.min.x(), self.max.x());
         let yr = Self::calc_axis_range(s.y(), d.y(), self.min.y(), self.max.y());
@@ -48,8 +48,8 @@ impl Aabb {
 
     fn calc_axis_range(start: Val, direction: Val, min: Val, max: Val) -> DisRange {
         if direction != Val(0.0) {
-            let mut dis1 = (min - start) / direction;
-            let mut dis2 = (max - start) / direction;
+            let mut dis1 = Distance::clamp((min - start) / direction);
+            let mut dis2 = Distance::clamp((max - start) / direction);
             if dis1 > dis2 {
                 std::mem::swap(&mut dis1, &mut dis2);
             }
@@ -162,13 +162,16 @@ mod tests {
         );
 
         let intersection = aabb.hit(&ray, DisRange::positive()).unwrap();
-        assert_eq!(intersection.distance(), Val(3.0));
+        assert_eq!(intersection.distance(), Distance::new(Val(3.0)).unwrap());
         assert_eq!(intersection.side(), SurfaceSide::Front);
 
         let intersection = aabb
-            .hit(&ray, DisRange::positive().advance_start(Val(3.0)))
+            .hit(
+                &ray,
+                DisRange::positive().advance_start(Distance::new(Val(3.0)).unwrap()),
+            )
             .unwrap();
-        assert_eq!(intersection.distance(), Val(4.5));
+        assert_eq!(intersection.distance(), Distance::new(Val(4.5)).unwrap());
         assert_eq!(intersection.side(), SurfaceSide::Back);
     }
 

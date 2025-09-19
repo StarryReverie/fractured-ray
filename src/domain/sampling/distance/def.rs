@@ -1,7 +1,7 @@
 use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Distance, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
@@ -14,7 +14,7 @@ pub trait DistanceSampling: Send + Sync {
         rng: &mut dyn RngCore,
     ) -> DistanceSample;
 
-    fn pdf_distance(&self, ray: &Ray, segment: &RaySegment, distance: Val) -> Val;
+    fn pdf_distance(&self, ray: &Ray, segment: &RaySegment, distance: Distance) -> Val;
 }
 
 #[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]
@@ -31,7 +31,7 @@ impl DistanceSample {
     }
 
     #[inline]
-    pub fn distance(&self) -> Val {
+    pub fn distance(&self) -> Distance {
         self.scattering.distance()
     }
 

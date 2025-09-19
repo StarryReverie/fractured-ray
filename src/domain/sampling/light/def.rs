@@ -4,7 +4,7 @@ use getset::{CopyGetters, Getters};
 use rand::prelude::*;
 
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Direction, Normal, Point};
+use crate::domain::math::geometry::{Direction, Distance, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
@@ -55,13 +55,13 @@ pub struct LightSample {
     #[getset(get_copy = "pub")]
     pdf: Val,
     #[getset(get_copy = "pub")]
-    distance: Val,
+    distance: Distance,
     #[getset(get_copy = "pub")]
     shape_id: ShapeId,
 }
 
 impl LightSample {
-    pub fn new(ray_next: Ray, pdf: Val, distance: Val, shape_id: ShapeId) -> Self {
+    pub fn new(ray_next: Ray, pdf: Val, distance: Distance, shape_id: ShapeId) -> Self {
         Self {
             ray_next,
             pdf,
@@ -93,7 +93,7 @@ impl LightSample {
         let cos = sample.normal().dot(direction).abs();
         let dis_squared = (sample.point() - position).norm_squared();
         let pdf = sample.pdf() * dis_squared / cos;
-        let distance = (sample.point() - position).norm();
+        let distance = Distance::between(sample.point(), position);
         Some(LightSample::new(ray_next, pdf, distance, sample.shape_id()))
     }
 

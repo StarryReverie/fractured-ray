@@ -7,7 +7,7 @@ use crate::domain::material::def::{
 };
 use crate::domain::material::primitive::Specular;
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Direction, Point, PositionedFrame};
+use crate::domain::math::geometry::{Direction, Distance, Point, PositionedFrame};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, SurfaceSide};
@@ -120,14 +120,15 @@ impl Scattering {
         let (x_local, y_local) = (radius * phi.cos(), radius * phi.sin());
         let point_disk = frame.to_canonical(Point::new(x_local, y_local, Val(0.0)));
 
-        let proj_ray_max_len = Val(2.0) * (radius_max.powi(2) - radius.powi(2)).sqrt();
-        let proj_ray_start = point_disk + (Val(0.5) * proj_ray_max_len) * frame.normal();
+        let proj_ray_max_len =
+            Distance::new(Val(2.0) * (radius_max.powi(2) - radius.powi(2)).sqrt()).unwrap();
+        let proj_ray_start = point_disk + (Val(0.5) * proj_ray_max_len.value()) * frame.normal();
         let proj_ray = Ray::new(
             proj_ray_start,
             -Direction::from(frame.normal().to_unit_vector()),
         );
 
-        let mut range = DisRange::inclusive(Val(0.0), proj_ray_max_len);
+        let mut range = DisRange::inclusive(Distance::zero(), proj_ray_max_len);
         while let Some((intersection, id)) = scene.find_intersection(&proj_ray, range) {
             range = range.advance_start(intersection.distance());
             let is_scattering = id.material_id().kind() == MaterialKind::Scattering;
@@ -248,7 +249,7 @@ impl Scattering {
         };
 
         let distance = intersection_back.distance();
-        let volume_transmittance = (-distance / self.mean_free_path).exp();
+        let volume_transmittance = (-distance.value() / self.mean_free_path).exp();
         if volume_transmittance < Self::IGNORE_BACK_THRESHOLD {
             return None;
         }

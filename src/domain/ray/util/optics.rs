@@ -98,7 +98,7 @@ impl ScatteringKind {
 #[cfg(test)]
 mod tests {
     use crate::domain::math::algebra::Vector;
-    use crate::domain::math::geometry::Point;
+    use crate::domain::math::geometry::{Distance, Point};
     use crate::domain::ray::event::SurfaceSide;
 
     use super::*;
@@ -113,7 +113,7 @@ mod tests {
         );
 
         let intersection = RayIntersection::new(
-            Val(1.0),
+            Distance::new(Val(1.0)).unwrap(),
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
             Normal::y_direction(),
             SurfaceSide::Back,
@@ -135,7 +135,7 @@ mod tests {
         );
 
         let intersection = RayIntersection::new(
-            Val(1.0),
+            Distance::new(Val(1.0)).unwrap(),
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
             Normal::y_direction(),
             SurfaceSide::Front,

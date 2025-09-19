@@ -123,7 +123,7 @@ impl Sampleable for Instance {
 #[cfg(test)]
 mod tests {
     use crate::domain::math::algebra::Vector;
-    use crate::domain::math::geometry::{Direction, Point};
+    use crate::domain::math::geometry::{Direction, Distance, Point};
     use crate::domain::math::numeric::Val;
     use crate::domain::ray::event::SurfaceSide;
     use crate::domain::shape::primitive::Polygon;
@@ -155,7 +155,7 @@ mod tests {
 
         let intersection = instance.hit(&ray, DisRange::positive()).unwrap();
 
-        assert_eq!(intersection.distance(), Val(1.0));
+        assert_eq!(intersection.distance(), Distance::new(Val(1.0)).unwrap());
         assert_eq!(
             intersection.position(),
             Point::new(Val(0.0), Val(2.0).sqrt(), Val(0.0))

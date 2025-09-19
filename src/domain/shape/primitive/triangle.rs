@@ -5,7 +5,7 @@ use snafu::prelude::*;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::geometry::{Distance, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -83,9 +83,7 @@ impl Triangle {
         }
 
         let distance = side2.dot(vec2) * inv_det;
-        if !range.contains(&distance) {
-            return None;
-        }
+        let distance = Distance::new(distance).ok().filter(|d| range.contains(d))?;
         Some(RayIntersectionPart::new(distance, ray))
     }
 
@@ -229,7 +227,10 @@ mod tests {
         );
 
         let intersection = triangle.hit(&ray, DisRange::positive()).unwrap();
-        assert_eq!(intersection.distance(), Val(0.41666666666666663));
+        assert_eq!(
+            intersection.distance(),
+            Distance::new(Val(0.41666666666666663)).unwrap()
+        );
         assert_eq!(
             intersection.position(),
             Point::new(Val(0.41666666666666663), Val(0.5), Val(1.0))

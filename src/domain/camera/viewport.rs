@@ -1,6 +1,7 @@
 use getset::{CopyGetters, Getters};
 use snafu::prelude::*;
 
+use crate::domain::math::geometry::Distance;
 use crate::domain::math::numeric::Val;
 
 use super::Resolution;
@@ -10,27 +11,25 @@ pub struct Viewport {
     #[getset(get = "pub")]
     resolution: Resolution,
     #[getset(get_copy = "pub")]
-    width: Val,
+    width: Distance,
     #[getset(get_copy = "pub")]
-    height: Val,
+    height: Distance,
     #[getset(get_copy = "pub")]
     pixel_size: Val,
 }
 
 impl Viewport {
-    pub fn new(resolution: Resolution, height: Val) -> Result<Self, TryNewViewportError> {
-        ensure!(height > Val(0.0), InvalidHeightSnafu);
-
+    pub fn new(resolution: Resolution, height: Distance) -> Self {
         let aspect_ratio = Val::from(resolution.width()) / Val::from(resolution.height());
-        let width = height * aspect_ratio;
-        let pixel_size = height / Val::from(resolution.height());
+        let width = Distance::new(height.value() * aspect_ratio).unwrap();
+        let pixel_size = height.value() / Val::from(resolution.height());
 
-        Ok(Self {
+        Self {
             resolution,
             width,
             height,
             pixel_size,
-        })
+        }
     }
 
     pub fn index_to_percentage(
@@ -53,13 +52,6 @@ impl Viewport {
         (0..self.resolution.height()).contains(&row)
             && (0..self.resolution.width()).contains(&column)
     }
-}
-
-#[derive(Debug, Snafu, Clone, PartialEq, Eq)]
-#[non_exhaustive]
-pub enum TryNewViewportError {
-    #[snafu(display("viewport height is not positive"))]
-    InvalidHeight,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

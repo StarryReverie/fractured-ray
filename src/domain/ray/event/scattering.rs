@@ -1,19 +1,18 @@
 use getset::CopyGetters;
 
-use crate::domain::math::geometry::{Direction, Point};
-use crate::domain::math::numeric::Val;
+use crate::domain::math::geometry::{Direction, Distance, Point};
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
 
 #[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct RayScattering {
-    distance: Val,
+    distance: Distance,
     position: Point,
 }
 
 impl RayScattering {
-    pub fn new(distance: Val, position: Point) -> Self {
+    pub fn new(distance: Distance, position: Point) -> Self {
         Self { distance, position }
     }
 

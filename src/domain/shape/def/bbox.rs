@@ -2,7 +2,7 @@ use std::ops::{Bound, RangeBounds};
 
 use getset::CopyGetters;
 
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Distance, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
@@ -49,7 +49,7 @@ impl BoundingBox {
         self.0.area()
     }
 
-    pub fn try_hit(&self, ray: &Ray, range: DisRange) -> Option<Val> {
+    pub fn try_hit(&self, ray: &Ray, range: DisRange) -> Option<Distance> {
         if let Some((left, right)) = self.0.hit_range(ray) {
             let range = range.intersect(DisRange::inclusive(left, right));
             if range.not_empty() {

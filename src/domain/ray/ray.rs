@@ -1,7 +1,6 @@
 use getset::CopyGetters;
 
-use crate::domain::math::geometry::{Direction, Point};
-use crate::domain::math::numeric::Val;
+use crate::domain::math::geometry::{Direction, Distance, Point};
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
@@ -16,8 +15,8 @@ impl Ray {
         Self { start, direction }
     }
 
-    pub fn at(&self, distance: Val) -> Point {
-        self.start + distance * self.direction
+    pub fn at(&self, distance: Distance) -> Point {
+        self.start + distance.value() * self.direction
     }
 }
 
@@ -37,6 +36,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::math::numeric::Val;
+
     use super::*;
 
     #[test]
@@ -45,6 +46,9 @@ mod tests {
             Point::new(Val(0.0), Val(1.0), Val(0.0)),
             Direction::x_direction(),
         );
-        assert_eq!(ray.at(Val(1.0)), Point::new(Val(1.0), Val(1.0), Val(0.0)));
+        assert_eq!(
+            ray.at(Distance::new(Val(1.0)).unwrap()),
+            Point::new(Val(1.0), Val(1.0), Val(0.0))
+        );
     }
 }

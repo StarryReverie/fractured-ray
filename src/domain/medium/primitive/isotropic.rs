@@ -42,9 +42,9 @@ impl Medium for Isotropic {
 
     fn transmittance(&self, _ray: &Ray, segment: &RaySegment) -> Spectrum {
         Spectrum::new(
-            (-self.sigma_t.red() * segment.length()).exp(),
-            (-self.sigma_t.green() * segment.length()).exp(),
-            (-self.sigma_t.blue() * segment.length()).exp(),
+            (-self.sigma_t.red() * segment.length().value()).exp(),
+            (-self.sigma_t.green() * segment.length().value()).exp(),
+            (-self.sigma_t.blue() * segment.length().value()).exp(),
         )
     }
 

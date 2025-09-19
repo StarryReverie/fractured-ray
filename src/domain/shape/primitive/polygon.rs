@@ -313,6 +313,7 @@ pub enum TryNewPolygonError {
 #[cfg(test)]
 mod tests {
     use crate::domain::math::algebra::Vector;
+    use crate::domain::math::geometry::Distance;
     use crate::domain::ray::event::SurfaceSide;
 
     use super::*;
@@ -404,7 +405,7 @@ mod tests {
         );
 
         let intersection = polygon.hit(&ray, DisRange::positive()).unwrap();
-        assert_eq!(intersection.distance(), Val(1.8));
+        assert_eq!(intersection.distance(), Distance::new(Val(1.8)).unwrap());
         assert_eq!(
             intersection.position(),
             Point::new(Val(-0.2), Val(0.0), Val(2.0)),

@@ -464,7 +464,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::domain::math::algebra::Vector;
-    use crate::domain::math::geometry::{Direction, Point};
+    use crate::domain::math::geometry::{Direction, Distance, Point};
     use crate::domain::math::numeric::Val;
     use crate::domain::scene::pool::ShapePool;
     use crate::domain::shape::def::Shape;
@@ -502,9 +502,18 @@ mod tests {
         intersections.sort_by_key(|i| i.distance());
 
         assert_eq!(intersections.len(), 3);
-        assert_eq!(intersections[0].distance(), Val(0.75));
-        assert_eq!(intersections[1].distance(), Val(2.333333333));
-        assert_eq!(intersections[2].distance(), Val(3.0));
+        assert_eq!(
+            intersections[0].distance(),
+            Distance::new(Val(0.75)).unwrap()
+        );
+        assert_eq!(
+            intersections[1].distance(),
+            Distance::new(Val(2.333333333)).unwrap()
+        );
+        assert_eq!(
+            intersections[2].distance(),
+            Distance::new(Val(3.0)).unwrap()
+        );
     }
 
     fn get_test_bvh() -> (ShapePool, Bvh<ShapeId>) {

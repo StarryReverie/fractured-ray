@@ -1,16 +1,18 @@
 use std::ops::{Bound, RangeBounds};
 
+use crate::domain::math::geometry::Distance;
+
 use super::Val;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct DisRange((Bound<Val>, Bound<Val>));
+pub struct DisRange((Bound<Distance>, Bound<Distance>));
 
 impl DisRange {
     pub fn positive() -> Self {
-        Self((Bound::Excluded(Val(0.0)), Bound::Unbounded))
+        Self((Bound::Excluded(Distance::zero()), Bound::Unbounded))
     }
 
-    pub fn inclusive(min: Val, max: Val) -> Self {
+    pub fn inclusive(min: Distance, max: Distance) -> Self {
         Self((Bound::Included(min), Bound::Included(max)))
     }
 
@@ -19,10 +21,13 @@ impl DisRange {
     }
 
     pub fn empty() -> Self {
-        Self((Bound::Excluded(Val(0.0)), Bound::Excluded(Val(0.0))))
+        Self((
+            Bound::Excluded(Distance::zero()),
+            Bound::Excluded(Distance::zero()),
+        ))
     }
 
-    pub fn advance_start(self, offset: Val) -> Self {
+    pub fn advance_start(self, offset: Distance) -> Self {
         let start = match self.0.0 {
             Bound::Included(o) => Bound::Excluded(o + offset),
             Bound::Excluded(o) => Bound::Excluded(o + offset),
@@ -31,7 +36,7 @@ impl DisRange {
         (start, self.0.1).into()
     }
 
-    pub fn shrink_end(self, end: Val) -> Self {
+    pub fn shrink_end(self, end: Distance) -> Self {
         let end = match self.0.1 {
             b @ Bound::Included(o) if o < end => b,
             b @ Bound::Excluded(o) if o < end => b,
@@ -87,24 +92,30 @@ impl DisRange {
     }
 }
 
-impl From<(Bound<Val>, Bound<Val>)> for DisRange {
-    fn from(value: (Bound<Val>, Bound<Val>)) -> Self {
+impl From<(Bound<Distance>, Bound<Distance>)> for DisRange {
+    fn from(value: (Bound<Distance>, Bound<Distance>)) -> Self {
         Self(value)
     }
 }
 
-impl From<DisRange> for (Bound<Val>, Bound<Val>) {
+impl From<DisRange> for (Bound<Distance>, Bound<Distance>) {
     fn from(value: DisRange) -> Self {
         value.0
     }
 }
 
-impl RangeBounds<Val> for DisRange {
-    fn start_bound(&self) -> Bound<&Val> {
+impl From<DisRange> for (Bound<Val>, Bound<Val>) {
+    fn from(value: DisRange) -> Self {
+        (value.0.0.map(Into::into), value.0.1.map(Into::into))
+    }
+}
+
+impl RangeBounds<Distance> for DisRange {
+    fn start_bound(&self) -> Bound<&Distance> {
         self.0.start_bound()
     }
 
-    fn end_bound(&self) -> Bound<&Val> {
+    fn end_bound(&self) -> Bound<&Distance> {
         self.0.end_bound()
     }
 }
@@ -117,9 +128,21 @@ mod tests {
     fn dis_range_shrink_end_succeeds() {
         let range = DisRange::positive();
         assert_eq!(range.end_bound(), Bound::Unbounded);
-        let range = range.shrink_end(Val(10.0));
-        assert_eq!(range.end_bound(), Bound::Excluded(&Val(10.0)));
-        let range = range.shrink_end(Val(20.0));
-        assert_eq!(range.end_bound(), Bound::Excluded(&Val(10.0)));
+        let range = range.shrink_end({
+            let value = Val(10.0);
+            Distance::new(value).unwrap()
+        });
+        assert_eq!(
+            range.end_bound(),
+            Bound::Excluded(&Distance::new(Val(10.0)).unwrap())
+        );
+        let range = range.shrink_end({
+            let value = Val(20.0);
+            Distance::new(value).unwrap()
+        });
+        assert_eq!(
+            range.end_bound(),
+            Bound::Excluded(&Distance::new(Val(10.0)).unwrap())
+        );
     }
 }

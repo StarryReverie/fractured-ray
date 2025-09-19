@@ -1,7 +1,7 @@
 use rand::prelude::*;
 
 use crate::domain::math::algebra::{Product, Vector};
-use crate::domain::math::geometry::{Direction, Frame, Point};
+use crate::domain::math::geometry::{Direction, Distance, Frame, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayScattering};
@@ -52,7 +52,7 @@ impl SphereLightSampler {
 
         let solid_angle = Val(2.0) * Val::PI * (Val(1.0) - cos_max_spread);
         let pdf = solid_angle.recip();
-        let distance = (self.sphere.center() + at_sphere - position).norm();
+        let distance = Distance::between(self.sphere.center() + at_sphere, position);
         Some(LightSample::new(ray_next, pdf, distance, self.id))
     }
 
@@ -119,7 +119,7 @@ impl LightSampling for SphereLightSampler {
                 let solid_angle = Val(2.0) * Val::PI * (Val(1.0) - cos_max_spread);
                 let cond_pdf = solid_angle.recip() / sample.pdf();
 
-                let distance = (sample.point() - scattering.position()).norm();
+                let distance = Distance::between(sample.point(), scattering.position());
                 Some(LightSample::new(
                     ray_next,
                     cond_pdf,
@@ -165,7 +165,7 @@ mod tests {
         );
 
         let intersection = RayIntersection::new(
-            Val(1.0),
+            Distance::new(Val(1.0)).unwrap(),
             Point::new(Val(4.0), Val(0.0), Val(0.0)),
             -Normal::x_direction(),
             SurfaceSide::Front,
@@ -190,7 +190,10 @@ mod tests {
             Sphere::new(Point::new(Val(0.0), Val(0.0), Val(0.0)), Val(2.0)).unwrap(),
         );
 
-        let scattering = RayScattering::new(Val(1.0), Point::new(Val(4.0), Val(0.0), Val(0.0)));
+        let scattering = RayScattering::new(
+            Distance::new(Val(1.0)).unwrap(),
+            Point::new(Val(4.0), Val(0.0), Val(0.0)),
+        );
 
         let light_point = Point::new(Val(1.0), Val(1.7320508676), Val(0.0));
         let light_point_pdf = sampler.sphere.area().recip();
@@ -218,7 +221,10 @@ mod tests {
             Sphere::new(Point::new(Val(0.0), Val(0.0), Val(0.0)), Val(2.0)).unwrap(),
         );
 
-        let scattering = RayScattering::new(Val(1.0), Point::new(Val(4.0), Val(0.0), Val(0.0)));
+        let scattering = RayScattering::new(
+            Distance::new(Val(1.0)).unwrap(),
+            Point::new(Val(4.0), Val(0.0), Val(0.0)),
+        );
 
         let light_point = Point::new(Val(1.0), Val(1.7320508676), Val(0.0));
         let light_point_pdf = sampler.sphere.area().recip();

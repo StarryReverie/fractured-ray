@@ -1,7 +1,7 @@
 use rand::prelude::*;
 
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::Point;
+use crate::domain::math::geometry::{Distance, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayScattering, RaySegment};
@@ -38,14 +38,14 @@ impl DistanceSampling for EquiAngularDistanceSampler {
         let u = Val(rng.random());
         let angle_sample = Val::lerp(angle_start, angle_end, u);
         let bottom_len = perp_dis * angle_sample.tan();
-        let distance = vertex_proj + bottom_len;
+        let distance = Distance::new(vertex_proj + bottom_len).unwrap();
 
         let scattering = RayScattering::new(distance, ray.at(distance));
         let pdf = perp_dis / ((angle_end - angle_start) * (perp_dis.powi(2) + bottom_len.powi(2)));
         DistanceSample::new(scattering, pdf)
     }
 
-    fn pdf_distance(&self, ray: &Ray, segment: &RaySegment, distance: Val) -> Val {
+    fn pdf_distance(&self, ray: &Ray, segment: &RaySegment, distance: Distance) -> Val {
         if segment.contains(distance) {
             let (start, end) = (segment.start(), segment.end());
 
@@ -78,11 +78,17 @@ mod tests {
             Direction::y_direction(),
         );
 
-        let segment = RaySegment::new(Val(0.5), Val(2.5));
+        let segment = RaySegment::new(
+            Distance::new(Val(0.5)).unwrap(),
+            Distance::new(Val(2.5)).unwrap(),
+        );
         assert_eq!(
-            sampler.pdf_distance(&ray, &segment, Val(1.0)),
+            sampler.pdf_distance(&ray, &segment, Distance::new(Val(1.0)).unwrap()),
             Val(0.63661977),
         );
-        assert_eq!(sampler.pdf_distance(&ray, &segment, Val(0.2)), Val(0.0));
+        assert_eq!(
+            sampler.pdf_distance(&ray, &segment, Distance::new(Val(0.2)).unwrap()),
+            Val(0.0)
+        );
     }
 }
