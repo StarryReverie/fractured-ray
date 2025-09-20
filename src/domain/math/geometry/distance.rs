@@ -4,7 +4,7 @@ use snafu::prelude::*;
 
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::Val;
-use crate::domain::math::transformation::{Rotation, Transform, Translation};
+use crate::domain::math::transformation::{Rotation, Scaling, Transform, Translation};
 
 use super::Point;
 
@@ -105,6 +105,13 @@ impl Transform<Rotation> for Distance {
     #[inline]
     fn transform(&self, _transformation: &Rotation) -> Self {
         *self
+    }
+}
+
+impl Transform<Scaling> for Distance {
+    #[inline]
+    fn transform(&self, transformation: &Scaling) -> Self {
+        Self(self.0 * transformation.scale())
     }
 }
 

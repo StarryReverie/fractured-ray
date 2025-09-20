@@ -3,7 +3,7 @@ use std::ops::{Add, Mul, Sub};
 use snafu::prelude::*;
 
 use crate::domain::math::numeric::Val;
-use crate::domain::math::transformation::{Rotation, Transform, Translation};
+use crate::domain::math::transformation::{Rotation, Scaling, Transform, Translation};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Area(Val);
@@ -88,6 +88,13 @@ impl Transform<Rotation> for Area {
     #[inline]
     fn transform(&self, _transformation: &Rotation) -> Self {
         *self
+    }
+}
+
+impl Transform<Scaling> for Area {
+    #[inline]
+    fn transform(&self, transformation: &Scaling) -> Self {
+        Self(self.0 * transformation.scale().powi(2))
     }
 }
 

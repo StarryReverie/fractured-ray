@@ -3,7 +3,7 @@ use std::ops::{Add, Sub};
 
 use crate::domain::math::algebra::{UnitVector, Vector};
 use crate::domain::math::numeric::Val;
-use crate::domain::math::transformation::{Rotation, Transform, Translation};
+use crate::domain::math::transformation::{Rotation, Scaling, Transform, Translation};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Point(Vector);
@@ -113,6 +113,12 @@ impl Sub for Point {
 
 impl Transform<Rotation> for Point {
     fn transform(&self, transformation: &Rotation) -> Self {
+        Self(self.0.transform(transformation))
+    }
+}
+
+impl Transform<Scaling> for Point {
+    fn transform(&self, transformation: &Scaling) -> Self {
         Self(self.0.transform(transformation))
     }
 }

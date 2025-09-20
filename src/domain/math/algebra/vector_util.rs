@@ -160,6 +160,20 @@ macro_rules! impl_common_transformation_for_wrapper_vector {
 
         impl
             $crate::domain::math::transformation::Transform<
+                $crate::domain::math::transformation::Scaling,
+            > for $type
+        {
+            #[inline]
+            fn transform(
+                &self,
+                _transformation: &$crate::domain::math::transformation::Scaling,
+            ) -> Self {
+                *self
+            }
+        }
+
+        impl
+            $crate::domain::math::transformation::Transform<
                 $crate::domain::math::transformation::Translation,
             > for $type
         {

@@ -2,7 +2,7 @@ use std::iter::Sum;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use crate::domain::math::numeric::Val;
-use crate::domain::math::transformation::{Rotation, Transform, Translation};
+use crate::domain::math::transformation::{Rotation, Scaling, Transform, Translation};
 
 use super::{Product, Quaternion};
 
@@ -207,6 +207,12 @@ impl Transform<Rotation> for Vector {
 
         let p = q * p * q_inv;
         Self(p.x(), p.y(), p.z())
+    }
+}
+
+impl Transform<Scaling> for Vector {
+    fn transform(&self, transformation: &Scaling) -> Self {
+        transformation.scale() * *self
     }
 }
 

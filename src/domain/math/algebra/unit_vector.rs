@@ -56,10 +56,10 @@ impl UnitVector {
         self.0
     }
 
-    pub fn orthonormal_basis(&self) -> (UnitVector, UnitVector) {
-        let basis1 = UnitVector::normalize(Vector::new(-self.0.y(), self.0.x(), Val(0.0)))
-            .unwrap_or(UnitVector::x_direction());
-        let basis2 = UnitVector(self.cross(basis1));
+    pub fn orthonormal_basis(&self) -> (Self, Self) {
+        let basis1 = Self::normalize(Vector::new(-self.0.y(), self.0.x(), Val(0.0)))
+            .unwrap_or(Self::x_direction());
+        let basis2 = Self(self.cross(basis1));
         (basis1, basis2)
     }
 }

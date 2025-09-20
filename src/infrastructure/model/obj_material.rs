@@ -299,7 +299,7 @@ mod tests {
             ..get_initial_ext_material()
         };
         assert!(matches!(
-            dbg!(converter.convert(&mtl)),
+            converter.convert(&mtl),
             Ok(DynMaterial::Blurry(_)),
         ));
 
