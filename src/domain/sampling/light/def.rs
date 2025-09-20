@@ -136,12 +136,13 @@ impl<T> Transform<T> for LightSample
 where
     T: AtomTransformation,
     Ray: Transform<T>,
+    Distance: Transform<T>,
 {
     fn transform(&self, transformation: &T) -> Self {
         LightSample::new(
             self.ray_next.transform(transformation),
             self.pdf,
-            self.distance,
+            self.distance.transform(transformation),
             self.shape_id,
         )
     }

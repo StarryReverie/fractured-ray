@@ -4,6 +4,7 @@ use snafu::prelude::*;
 
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::numeric::Val;
+use crate::domain::math::transformation::{Rotation, Transform, Translation};
 
 use super::Point;
 
@@ -17,7 +18,7 @@ impl Distance {
             value.is_sign_positive() || value == Val(0.0),
             NegativeValueSnafu
         );
-        Ok(Self(value))
+        Ok(Self(value.abs()))
     }
 
     #[inline]
@@ -85,6 +86,7 @@ impl_trait_for_distance!(Mul, mul, Distance, Val);
 impl_trait_for_distance!(Mul, mul, Val, Distance);
 
 impl From<Distance> for Val {
+    #[inline]
     fn from(value: Distance) -> Self {
         value.value()
     }
@@ -93,8 +95,23 @@ impl From<Distance> for Val {
 impl TryFrom<Val> for Distance {
     type Error = TryNewDistanceError;
 
+    #[inline]
     fn try_from(value: Val) -> Result<Self, Self::Error> {
         Self::new(value)
+    }
+}
+
+impl Transform<Rotation> for Distance {
+    #[inline]
+    fn transform(&self, _transformation: &Rotation) -> Self {
+        *self
+    }
+}
+
+impl Transform<Translation> for Distance {
+    #[inline]
+    fn transform(&self, _transformation: &Translation) -> Self {
+        *self
     }
 }
 
