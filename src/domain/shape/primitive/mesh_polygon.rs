@@ -4,7 +4,7 @@ use smallvec::SmallVec;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::geometry::{Area, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::Transform;
 use crate::domain::ray::Ray;
@@ -91,7 +91,7 @@ impl Shape for MeshPolygon {
         }
     }
 
-    fn area(&self) -> Val {
+    fn area(&self) -> Area {
         let vertices = self.get_vertices();
         let normal = self.normal(*vertices[0]);
 
@@ -102,7 +102,7 @@ impl Shape for MeshPolygon {
             let cross = side1.cross(side2);
             sum += cross.norm() * cross.dot(normal).signum();
         }
-        sum * Val(0.5)
+        Area::new(sum * Val(0.5)).unwrap()
     }
 
     fn normal(&self, _position: Point) -> Normal {

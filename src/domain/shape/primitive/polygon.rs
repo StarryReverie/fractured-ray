@@ -4,7 +4,7 @@ use spade::{DelaunayTriangulation, Point2, Triangulation};
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Direction, Normal, Point};
+use crate::domain::math::geometry::{Area, Direction, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val, WrappedVal};
 use crate::domain::math::transformation::{Rotation, Transform, Transformation};
 use crate::domain::ray::Ray;
@@ -228,7 +228,7 @@ impl Shape for Polygon {
         }
     }
 
-    fn area(&self) -> Val {
+    fn area(&self) -> Area {
         match &self.0 {
             PolygonInner::Triangle(triangle) => triangle.area(),
             PolygonInner::General { vertices, normal } => {
@@ -239,7 +239,7 @@ impl Shape for Polygon {
                     let cross = side1.cross(side2);
                     sum += cross.norm() * cross.dot(*normal).signum();
                 }
-                sum * Val(0.5)
+                Area::new(sum * Val(0.5)).unwrap()
             }
         }
     }
@@ -449,7 +449,7 @@ mod tests {
             Point::new(Val(1.0), Val(2.0), Val(0.0)),
         ])
         .unwrap();
-        assert_eq!(polygon.area(), Val(3.0));
+        assert_eq!(polygon.area(), Area::new(Val(3.0)).unwrap());
     }
 
     #[test]

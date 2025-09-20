@@ -145,7 +145,7 @@ mod tests {
             Point::new(Val(0.0), Val(0.0), Val(0.0)),
             Point::new(Val(1.0), Val(2.0), Val(3.0)),
         );
-        let pdf = aabb.area().recip();
+        let pdf = aabb.area().value().recip();
         let sampler = AabbPointSampler::new(ShapeId::new(ShapeKind::Aabb, 0), aabb);
 
         assert_eq!(

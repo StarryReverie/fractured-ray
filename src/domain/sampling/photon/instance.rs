@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::numeric::Val;
+use crate::domain::math::geometry::Area;
 use crate::domain::math::transformation::{Sequential, Transform};
 use crate::domain::sampling::Sampleable;
 use crate::domain::shape::util::{Instance, ShapeId};
@@ -33,10 +33,10 @@ impl PhotonSampling for InstancePhotonSampler {
             .map_or(Spectrum::zero(), |sampler| sampler.radiance())
     }
 
-    fn area(&self) -> Val {
+    fn area(&self) -> Area {
         self.sampler
             .as_ref()
-            .map_or(Val(0.0), |sampler| sampler.area())
+            .map_or(Area::zero(), |sampler| sampler.area())
     }
 
     fn sample_photon(&self, rng: &mut dyn RngCore) -> Option<PhotonSample> {

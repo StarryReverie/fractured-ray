@@ -49,7 +49,9 @@ where
         let axis = Self::select_bbox_partition_axis(&node_bbox);
         let mut partition = Self::partition_bboxes(axis, &node_bbox, bboxes);
 
-        if let Some(mid) = Self::calc_split_point(&partition, bbox_num, node_bbox.surface_area()) {
+        if let Some(mid) =
+            Self::calc_split_point(&partition, bbox_num, node_bbox.surface_area().value())
+        {
             nodes.push(BvhNode::internal(node_bbox));
             let node_id = nodes.len() - 1;
 
@@ -125,7 +127,7 @@ where
                 .or_else(|| partition[i].overall_bbox.clone());
             let surface_area = merged_bbox
                 .as_ref()
-                .map_or(Val(0.0), BoundingBox::surface_area);
+                .map_or(Val(0.0), |b| b.surface_area().value());
             cost[i] += Self::INTERSECTION_COST * Val::from(num) * surface_area / total_surface_area;
         }
 
@@ -140,7 +142,7 @@ where
                 .or_else(|| partition[i].overall_bbox.clone());
             let surface_area = merged_bbox
                 .as_ref()
-                .map_or(Val(0.0), BoundingBox::surface_area);
+                .map_or(Val(0.0), |b| b.surface_area().value());
             cost[i] += Self::INTERSECTION_COST * Val::from(num) * surface_area / total_surface_area;
         }
 

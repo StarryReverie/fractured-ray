@@ -5,7 +5,7 @@ use snafu::prelude::*;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::{Product, Vector};
-use crate::domain::math::geometry::{Distance, Normal, Point};
+use crate::domain::math::geometry::{Area, Distance, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -80,8 +80,8 @@ impl Shape for Sphere {
         RayIntersection::new(part.distance(), position, normal, side)
     }
 
-    fn area(&self) -> Val {
-        Val(4.0) * Val::PI * self.radius.powi(2)
+    fn area(&self) -> Area {
+        Area::new(Val(4.0) * Val::PI * self.radius.powi(2)).unwrap()
     }
 
     fn normal(&self, position: Point) -> Normal {

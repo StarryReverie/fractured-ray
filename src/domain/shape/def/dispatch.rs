@@ -1,8 +1,8 @@
 use enum_dispatch::enum_dispatch;
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::geometry::{Normal, Point};
-use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::math::geometry::{Area, Normal, Point};
+use crate::domain::math::numeric::DisRange;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::sampling::Sampleable;
@@ -109,7 +109,7 @@ impl<'a> Shape for RefDynShape<'a> {
         impl_dispatch!(Self, self.complete_part(part))
     }
 
-    fn area(&self) -> Val {
+    fn area(&self) -> Area {
         impl_dispatch!(Self, self.area())
     }
 

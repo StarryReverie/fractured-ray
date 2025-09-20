@@ -4,11 +4,9 @@ use std::sync::Arc;
 use getset::Getters;
 
 use crate::domain::material::primitive::Emissive;
-use crate::domain::math::geometry::{Normal, Point};
-use crate::domain::math::numeric::{DisRange, Val};
-use crate::domain::math::transformation::{
-    Rotation, Sequential, Transform, Transformation, Translation,
-};
+use crate::domain::math::geometry::{Area, Normal, Point};
+use crate::domain::math::numeric::DisRange;
+use crate::domain::math::transformation::*;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::sampling::Sampleable;
@@ -92,8 +90,8 @@ impl Shape for Instance {
         intersection_tr.transform(&self.transformation)
     }
 
-    fn area(&self) -> Val {
-        self.prototype.area()
+    fn area(&self) -> Area {
+        self.prototype.area().transform(&self.transformation)
     }
 
     fn normal(&self, position: Point) -> Normal {

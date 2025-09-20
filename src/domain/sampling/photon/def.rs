@@ -4,6 +4,7 @@ use getset::Getters;
 use rand::prelude::*;
 
 use crate::domain::color::Spectrum;
+use crate::domain::math::geometry::Area;
 use crate::domain::math::numeric::Val;
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
@@ -12,7 +13,7 @@ use crate::domain::ray::photon::PhotonRay;
 pub trait PhotonSampling: Debug + Send + Sync {
     fn radiance(&self) -> Spectrum;
 
-    fn area(&self) -> Val;
+    fn area(&self) -> Area;
 
     fn sample_photon(&self, rng: &mut dyn RngCore) -> Option<PhotonSample>;
 }

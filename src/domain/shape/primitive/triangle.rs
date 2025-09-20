@@ -5,7 +5,7 @@ use snafu::prelude::*;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Distance, Normal, Point};
+use crate::domain::math::geometry::{Area, Distance, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -118,10 +118,10 @@ impl Shape for Triangle {
         Self::complete_ray_intersection_part(part, &self.vertex0, &self.vertex1, &self.vertex2)
     }
 
-    fn area(&self) -> Val {
+    fn area(&self) -> Area {
         let side1 = self.vertex1 - self.vertex0;
         let side2 = self.vertex2 - self.vertex0;
-        Val(0.5) * side1.cross(side2).norm()
+        Area::new(Val(0.5) * side1.cross(side2).norm()).unwrap()
     }
 
     fn normal(&self, _position: Point) -> Normal {
@@ -264,7 +264,7 @@ mod tests {
             Point::new(Val(0.0), Val(0.0), Val(3.0)),
         )
         .unwrap();
-        assert_eq!(triangle.area(), Val(3.5));
+        assert_eq!(triangle.area(), Area::new(Val(3.5)).unwrap());
     }
 
     #[test]

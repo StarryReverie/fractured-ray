@@ -3,8 +3,8 @@ use std::ops::{Bound, RangeBounds};
 
 use enum_dispatch::enum_dispatch;
 
-use crate::domain::math::geometry::{Distance, Normal, Point};
-use crate::domain::math::numeric::{DisRange, Val};
+use crate::domain::math::geometry::{Area, Distance, Normal, Point};
+use crate::domain::math::numeric::DisRange;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::sampling::Sampleable;
@@ -41,7 +41,7 @@ pub trait Shape: Sampleable + Debug + Send + Sync {
 
     fn complete_part(&self, part: RayIntersectionPart) -> RayIntersection;
 
-    fn area(&self) -> Val;
+    fn area(&self) -> Area;
 
     fn normal(&self, position: Point) -> Normal;
 

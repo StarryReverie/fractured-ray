@@ -2,7 +2,7 @@ use std::ops::{Bound, RangeBounds};
 
 use getset::CopyGetters;
 
-use crate::domain::math::geometry::{Distance, Point};
+use crate::domain::math::geometry::{Area, Distance, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
@@ -45,7 +45,7 @@ impl BoundingBox {
     }
 
     #[inline]
-    pub fn surface_area(&self) -> Val {
+    pub fn surface_area(&self) -> Area {
         self.0.area()
     }
 

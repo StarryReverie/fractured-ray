@@ -96,7 +96,7 @@ mod tests {
             triangle2,
         ));
 
-        let samplers = vec![(sampler1, area1), (sampler2, area2)];
+        let samplers = vec![(sampler1, area1.value()), (sampler2, area2.value())];
         let sampler = AggregatePointSampler::new(samplers);
 
         assert_eq!(

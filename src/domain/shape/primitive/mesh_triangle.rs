@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::geometry::{Area, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::math::transformation::Transform;
 use crate::domain::ray::Ray;
@@ -72,9 +72,9 @@ impl Shape for MeshTriangle {
         }
     }
 
-    fn area(&self) -> Val {
+    fn area(&self) -> Area {
         let (v0, v1, v2) = self.get_vertices();
-        Val(0.5) * (*v1 - *v0).cross(*v2 - *v0).norm()
+        Area::new(Val(0.5) * (*v1 - *v0).cross(*v2 - *v0).norm()).unwrap()
     }
 
     fn normal(&self, _position: Point) -> Normal {

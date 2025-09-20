@@ -4,7 +4,7 @@ use getset::CopyGetters;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Distance, Normal, Point};
+use crate::domain::math::geometry::{Area, Distance, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -72,8 +72,8 @@ impl Shape for Plane {
         Self::complete_ray_intersection_part(part, &self.normal)
     }
 
-    fn area(&self) -> Val {
-        Val::INFINITY
+    fn area(&self) -> Area {
+        Area::infinity()
     }
 
     fn normal(&self, _position: Point) -> Normal {

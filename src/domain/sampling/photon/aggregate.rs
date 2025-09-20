@@ -2,6 +2,7 @@ use rand::prelude::*;
 use rand_distr::weighted::WeightedIndex;
 
 use crate::domain::color::Spectrum;
+use crate::domain::math::geometry::Area;
 use crate::domain::math::numeric::{Val, WrappedVal};
 
 use super::{EmptyPhotonSampler, PhotonSample, PhotonSampling};
@@ -39,8 +40,8 @@ impl PhotonSampling for AggregatePhotonSampler {
         unimplemented!("AggregatePhotonSampler doesn't have a unique radiance")
     }
 
-    fn area(&self) -> Val {
-        unimplemented!("AggregatePhotonSampler doesn't have a unique area")
+    fn area(&self) -> Area {
+        (self.samplers.iter()).fold(Area::zero(), |sum, s| sum + s.area())
     }
 
     fn sample_photon(&self, rng: &mut dyn RngCore) -> Option<PhotonSample> {

@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use getset::CopyGetters;
 use rand::prelude::*;
 
-use crate::domain::math::geometry::{Normal, Point};
+use crate::domain::math::geometry::{Area, Normal, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::shape::def::RefDynShape;
@@ -53,10 +53,17 @@ where
     Normal: Transform<T>,
 {
     fn transform(&self, transformation: &T) -> Self {
+        let pdf_tr = if self.pdf == Val(0.0) {
+            Val(0.0)
+        } else {
+            Area::new(self.pdf.recip())
+                .map(|a| a.recip())
+                .unwrap_or(Val(0.0))
+        };
         Self::new(
             self.point.transform(transformation),
             self.normal.transform(transformation),
-            self.pdf,
+            pdf_tr,
             self.shape_id,
         )
     }

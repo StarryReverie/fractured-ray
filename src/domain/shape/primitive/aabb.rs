@@ -4,7 +4,7 @@ use getset::CopyGetters;
 
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Distance, Normal, Point};
+use crate::domain::math::geometry::{Area, Distance, Normal, Point};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart, SurfaceSide};
@@ -90,11 +90,11 @@ impl Shape for Aabb {
         RayIntersection::new(part.distance(), position, normal, side)
     }
 
-    fn area(&self) -> Val {
+    fn area(&self) -> Area {
         let a = self.max.x() - self.min.x();
         let b = self.max.y() - self.min.y();
         let c = self.max.z() - self.min.z();
-        Val(2.0) * (a * b + a * c + b * c)
+        Area::new(Val(2.0) * (a * b + a * c + b * c)).unwrap()
     }
 
     fn normal(&self, position: Point) -> Normal {

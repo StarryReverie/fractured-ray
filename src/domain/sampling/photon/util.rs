@@ -3,7 +3,7 @@ use rand::prelude::*;
 use crate::domain::color::Spectrum;
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Vector;
-use crate::domain::math::geometry::{Direction, Frame};
+use crate::domain::math::geometry::{Area, Direction, Frame};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
 use crate::domain::ray::photon::PhotonRay;
@@ -26,8 +26,8 @@ impl PhotonSampling for EmptyPhotonSampler {
         Spectrum::zero()
     }
 
-    fn area(&self) -> Val {
-        Val(0.0)
+    fn area(&self) -> Area {
+        Area::zero()
     }
 
     fn sample_photon(&self, _rng: &mut dyn RngCore) -> Option<PhotonSample> {
@@ -42,7 +42,7 @@ where
 {
     inner: PS,
     emissive: Emissive,
-    area: Val,
+    area: Area,
 }
 
 impl<PS> PhotonSamplerAdapter<PS>
@@ -50,7 +50,7 @@ where
     PS: PointSampling,
 {
     pub fn new(inner: PS, emissive: Emissive) -> Self {
-        let area = inner.shape().map_or(Val(0.0), |shape| shape.area());
+        let area = inner.shape().map_or(Area::zero(), |shape| shape.area());
         Self {
             inner,
             emissive,
@@ -67,7 +67,7 @@ where
         self.emissive.radiance()
     }
 
-    fn area(&self) -> Val {
+    fn area(&self) -> Area {
         self.area
     }
 
