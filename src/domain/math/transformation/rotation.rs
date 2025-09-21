@@ -10,6 +10,8 @@ pub struct Rotation {
 }
 
 impl Rotation {
+    const IDENTITY_QUATERNION: Quaternion = Quaternion::new(Val(1.0), Val(0.0), Val(0.0), Val(0.0));
+
     pub fn new(init_dir: Direction, final_dir: Direction, roll: Val) -> Self {
         if let Ok(axis) = Direction::normalize(init_dir.cross(final_dir)) {
             let angle = init_dir.dot(final_dir).acos();
@@ -32,24 +34,33 @@ impl Rotation {
         Quaternion::new(ca, sa * axis.x(), sa * axis.y(), sa * axis.z())
     }
 
+    #[inline]
     pub fn quaternion(&self) -> Quaternion {
         self.quaternion
     }
 }
 
 impl Default for Rotation {
+    #[inline]
     fn default() -> Self {
-        Quaternion::new(Val(1.0), Val(0.0), Val(0.0), Val(0.0)).into()
+        Self::IDENTITY_QUATERNION.into()
     }
 }
 
 impl From<Quaternion> for Rotation {
+    #[inline]
     fn from(quaternion: Quaternion) -> Self {
         Self { quaternion }
     }
 }
 
 impl Transformation for Rotation {
+    #[inline]
+    fn is_identity(&self) -> bool {
+        self.quaternion == Self::IDENTITY_QUATERNION
+    }
+
+    #[inline]
     fn inverse(self) -> Self {
         Self {
             quaternion: self.quaternion.conjugate(),

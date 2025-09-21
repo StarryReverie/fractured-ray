@@ -103,22 +103,22 @@ impl TryFrom<Val> for Distance {
 
 impl Transform<Rotation> for Distance {
     #[inline]
-    fn transform(&self, _transformation: &Rotation) -> Self {
-        *self
+    fn transform_impl(self, _transformation: &Rotation) -> Self {
+        self
     }
 }
 
 impl Transform<Scaling> for Distance {
     #[inline]
-    fn transform(&self, transformation: &Scaling) -> Self {
+    fn transform_impl(self, transformation: &Scaling) -> Self {
         Self(self.0 * transformation.scale())
     }
 }
 
 impl Transform<Translation> for Distance {
     #[inline]
-    fn transform(&self, _transformation: &Translation) -> Self {
-        *self
+    fn transform_impl(self, _transformation: &Translation) -> Self {
+        self
     }
 }
 

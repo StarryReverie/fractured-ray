@@ -13,6 +13,10 @@ pub struct Sequential {
 }
 
 impl Transformation for Sequential {
+    fn is_identity(&self) -> bool {
+        self.rotation.is_identity() && self.translation.is_identity()
+    }
+
     fn inverse(self) -> Self {
         Self {
             rotation: self.rotation.inverse(),
@@ -27,13 +31,13 @@ where
     Self: Transform<Rotation>,
     Self: Transform<Translation>,
 {
-    fn transform(&self, transformation: &Sequential) -> Self {
+    fn transform_impl(self, transformation: &Sequential) -> Self {
         if transformation.inverted {
-            self.transform(&transformation.translation)
-                .transform(&transformation.rotation)
+            self.transform(transformation.translation())
+                .transform(transformation.rotation())
         } else {
-            self.transform(&transformation.rotation)
-                .transform(&transformation.translation)
+            self.transform(transformation.rotation())
+                .transform(transformation.translation())
         }
     }
 }

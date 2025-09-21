@@ -47,7 +47,7 @@ impl LightSampling for InstanceLightSampler {
         rng: &mut dyn RngCore,
     ) -> Option<LightSample> {
         if let Some(sampler) = &self.sampler {
-            let intersection = intersection.transform(&self.inv_transformation);
+            let intersection = intersection.clone().transform(&self.inv_transformation);
             sampler
                 .sample_light_surface(&intersection, rng)
                 .map(|sample| sample.transform(self.instance.transformation()))
@@ -58,8 +58,8 @@ impl LightSampling for InstanceLightSampler {
 
     fn pdf_light_surface(&self, intersection: &RayIntersection, ray_next: &Ray) -> Val {
         if let Some(sampler) = &self.sampler {
-            let intersection = intersection.transform(&self.inv_transformation);
-            let ray_next = ray_next.transform(&self.inv_transformation);
+            let intersection = intersection.clone().transform(&self.inv_transformation);
+            let ray_next = ray_next.clone().transform(&self.inv_transformation);
             sampler.pdf_light_surface(&intersection, &ray_next)
         } else {
             Val(0.0)
@@ -73,9 +73,9 @@ impl LightSampling for InstanceLightSampler {
         rng: &mut dyn RngCore,
     ) -> Option<LightSample> {
         if let Some(sampler) = &self.sampler {
-            let scattering = scattering.transform(&self.inv_transformation);
+            let scattering = scattering.clone().transform(&self.inv_transformation);
             let preselected_light =
-                preselected_light.map(|l| l.transform(&self.inv_transformation));
+                preselected_light.map(|l| l.clone().transform(&self.inv_transformation));
             sampler
                 .sample_light_volume(&scattering, preselected_light.as_ref(), rng)
                 .map(|sample| sample.transform(self.instance.transformation()))
@@ -86,9 +86,9 @@ impl LightSampling for InstanceLightSampler {
 
     fn pdf_light_volume(&self, ray_next: &Ray, preselected_light: Option<&PointSample>) -> Val {
         if let Some(sampler) = &self.sampler {
-            let ray_next = ray_next.transform(&self.inv_transformation);
+            let ray_next = ray_next.clone().transform(&self.inv_transformation);
             let preselected_light =
-                preselected_light.map(|l| l.transform(&self.inv_transformation));
+                preselected_light.map(|l| l.clone().transform(&self.inv_transformation));
             sampler.pdf_light_volume(&ray_next, preselected_light.as_ref())
         } else {
             Val(0.0)

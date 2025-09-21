@@ -9,7 +9,7 @@ use super::Vector;
 pub struct Quaternion(Val, Val, Val, Val);
 
 impl Quaternion {
-    pub fn new(w: Val, x: Val, y: Val, z: Val) -> Self {
+    pub const fn new(w: Val, x: Val, y: Val, z: Val) -> Self {
         Self(w, x, y, z)
     }
 

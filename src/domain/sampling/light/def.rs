@@ -138,7 +138,7 @@ where
     Ray: Transform<T>,
     Distance: Transform<T>,
 {
-    fn transform(&self, transformation: &T) -> Self {
+    fn transform_impl(self, transformation: &T) -> Self {
         LightSample::new(
             self.ray_next.transform(transformation),
             self.pdf,

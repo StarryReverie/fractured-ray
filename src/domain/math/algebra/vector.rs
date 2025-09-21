@@ -26,6 +26,11 @@ impl Vector {
     }
 
     #[inline]
+    pub fn is_zero(&self) -> bool {
+        self.0 == Val(0.0) && self.1 == Val(0.0) && self.2 == Val(0.0)
+    }
+
+    #[inline]
     pub fn x(&self) -> Val {
         self.0
     }
@@ -200,8 +205,8 @@ impl Sum for Vector {
 }
 
 impl Transform<Rotation> for Vector {
-    fn transform(&self, transformation: &Rotation) -> Self {
-        let p = Quaternion::from(*self);
+    fn transform_impl(self, transformation: &Rotation) -> Self {
+        let p = Quaternion::from(self);
         let q = transformation.quaternion();
         let q_inv = q.conjugate();
 
@@ -211,20 +216,21 @@ impl Transform<Rotation> for Vector {
 }
 
 impl Transform<Scaling> for Vector {
-    fn transform(&self, transformation: &Scaling) -> Self {
-        transformation.scale() * *self
+    fn transform_impl(self, transformation: &Scaling) -> Self {
+        transformation.scale() * self
     }
 }
 
 impl Transform<Translation> for Vector {
-    fn transform(&self, _transformation: &Translation) -> Self {
-        *self
+    fn transform_impl(self, _transformation: &Translation) -> Self {
+        self
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::math::{geometry::Direction, numeric::Val};
+    use crate::domain::math::geometry::Direction;
+    use crate::domain::math::numeric::Val;
 
     use super::*;
 

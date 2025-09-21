@@ -86,22 +86,22 @@ impl_trait_for_area!(Mul, mul, Val, Area);
 
 impl Transform<Rotation> for Area {
     #[inline]
-    fn transform(&self, _transformation: &Rotation) -> Self {
-        *self
+    fn transform_impl(self, _transformation: &Rotation) -> Self {
+        self
     }
 }
 
 impl Transform<Scaling> for Area {
     #[inline]
-    fn transform(&self, transformation: &Scaling) -> Self {
+    fn transform_impl(self, transformation: &Scaling) -> Self {
         Self(self.0 * transformation.scale().powi(2))
     }
 }
 
 impl Transform<Translation> for Area {
     #[inline]
-    fn transform(&self, _transformation: &Translation) -> Self {
-        *self
+    fn transform_impl(self, _transformation: &Translation) -> Self {
+        self
     }
 }
 

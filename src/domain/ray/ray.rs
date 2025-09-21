@@ -26,10 +26,10 @@ where
     Point: Transform<T>,
     Direction: Transform<T>,
 {
-    fn transform(&self, transformation: &T) -> Self {
+    fn transform_impl(self, transformation: &T) -> Self {
         Ray::new(
-            self.start().transform(transformation),
-            self.direction().transform(transformation),
+            self.start.transform(transformation),
+            self.direction.transform(transformation),
         )
     }
 }

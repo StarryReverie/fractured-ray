@@ -12,6 +12,8 @@ pub struct Scaling {
 }
 
 impl Scaling {
+    const IDENTITY_SCALE: Val = Val(1.0);
+
     #[inline]
     pub fn uniform(scale: Val) -> Result<Self, TryNewScalingError> {
         ensure!(scale > Val(0.0), InvalidScaleSnafu);
@@ -22,11 +24,19 @@ impl Scaling {
 impl Default for Scaling {
     #[inline]
     fn default() -> Self {
-        Self { scale: Val(1.0) }
+        Self {
+            scale: Self::IDENTITY_SCALE,
+        }
     }
 }
 
 impl Transformation for Scaling {
+    #[inline]
+    fn is_identity(&self) -> bool {
+        self.scale == Self::IDENTITY_SCALE
+    }
+
+    #[inline]
     fn inverse(self) -> Self {
         Self {
             scale: self.scale.recip(),

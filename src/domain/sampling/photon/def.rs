@@ -41,10 +41,7 @@ where
     T: AtomTransformation,
     Ray: Transform<T>,
 {
-    fn transform(&self, transformation: &T) -> Self {
-        Self::new(PhotonRay::new(
-            self.photon.ray().transform(transformation),
-            self.photon.throughput(),
-        ))
+    fn transform_impl(self, transformation: &T) -> Self {
+        Self::new(self.photon.transform(transformation))
     }
 }

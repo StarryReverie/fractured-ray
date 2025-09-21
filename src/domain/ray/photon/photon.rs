@@ -3,6 +3,7 @@ use getset::{CopyGetters, Getters};
 use crate::domain::color::Spectrum;
 use crate::domain::math::geometry::{Direction, Point};
 use crate::domain::math::numeric::Val;
+use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
 
 #[derive(Debug, Clone, PartialEq, Getters, CopyGetters)]
@@ -49,5 +50,15 @@ impl Photon {
             direction,
             throughput,
         }
+    }
+}
+
+impl<T> Transform<T> for PhotonRay
+where
+    T: AtomTransformation,
+    Ray: Transform<T>,
+{
+    fn transform_impl(self, transformation: &T) -> Self {
+        Self::new(self.ray.transform(transformation), self.throughput)
     }
 }

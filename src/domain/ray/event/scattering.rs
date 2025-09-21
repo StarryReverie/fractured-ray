@@ -24,9 +24,13 @@ impl RayScattering {
 impl<T> Transform<T> for RayScattering
 where
     T: AtomTransformation,
+    Distance: Transform<T>,
     Point: Transform<T>,
 {
-    fn transform(&self, transformation: &T) -> Self {
-        Self::new(self.distance, self.position.transform(transformation))
+    fn transform_impl(self, transformation: &T) -> Self {
+        Self::new(
+            self.distance.transform(transformation),
+            self.position.transform(transformation),
+        )
     }
 }

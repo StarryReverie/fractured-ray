@@ -69,7 +69,7 @@ where
     T: AtomTransformation,
     Point: Transform<T>,
 {
-    fn transform(&self, transformation: &T) -> Self {
+    fn transform_impl(self, transformation: &T) -> Self {
         let (min, max) = (self.min(), self.max());
         let mut c1 = Point::new(Val::INFINITY, Val::INFINITY, Val::INFINITY);
         let mut c2 = Point::new(-Val::INFINITY, -Val::INFINITY, -Val::INFINITY);

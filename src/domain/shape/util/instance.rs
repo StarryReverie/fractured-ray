@@ -66,7 +66,7 @@ impl Shape for Instance {
     fn hit_part<'a>(&self, ray: &'a Ray, range: DisRange) -> Option<RayIntersectionPart<'a>> {
         let inv_tr = self.transformation.clone().inverse();
 
-        let ray_tr = ray.transform(&inv_tr);
+        let ray_tr = ray.clone().transform(&inv_tr);
         let range_tr = DisRange::from((
             range.start_bound().map(|d| d.transform(&inv_tr)),
             range.end_bound().map(|d| d.transform(&inv_tr)),
@@ -83,7 +83,7 @@ impl Shape for Instance {
         let inv_tr = self.transformation.clone().inverse();
 
         let distance_tr = part.distance().transform(&inv_tr);
-        let ray_tr = part.ray().transform(&inv_tr);
+        let ray_tr = part.ray().clone().transform(&inv_tr);
         let part_tr = RayIntersectionPart::new(distance_tr, &ray_tr);
 
         let intersection_tr = self.prototype.complete_part(part_tr);

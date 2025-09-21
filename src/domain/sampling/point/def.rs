@@ -52,7 +52,7 @@ where
     Point: Transform<T>,
     Normal: Transform<T>,
 {
-    fn transform(&self, transformation: &T) -> Self {
+    fn transform_impl(self, transformation: &T) -> Self {
         let pdf_tr = if self.pdf == Val(0.0) {
             Val(0.0)
         } else {

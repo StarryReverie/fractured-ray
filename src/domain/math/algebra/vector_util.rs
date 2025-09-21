@@ -30,7 +30,7 @@ macro_rules! impl_common_methods_for_wrapper_vector {
             where
                 Self: Product<V, Output = $crate::domain::math::algebra::Vector>,
             {
-                self.cross(rhs).norm_squared() == Val(0.0)
+                self.cross(rhs).is_zero()
             }
         }
     };
@@ -147,12 +147,12 @@ macro_rules! impl_common_transformation_for_wrapper_vector {
             > for $type
         {
             #[inline]
-            fn transform(
-                &self,
+            fn transform_impl(
+                self,
                 transformation: &$crate::domain::math::transformation::Rotation,
             ) -> Self {
                 Self($crate::domain::math::transformation::Transform::transform(
-                    &self.0,
+                    self.0,
                     transformation,
                 ))
             }
@@ -164,11 +164,11 @@ macro_rules! impl_common_transformation_for_wrapper_vector {
             > for $type
         {
             #[inline]
-            fn transform(
-                &self,
+            fn transform_impl(
+                self,
                 _transformation: &$crate::domain::math::transformation::Scaling,
             ) -> Self {
-                *self
+                self
             }
         }
 
@@ -178,12 +178,12 @@ macro_rules! impl_common_transformation_for_wrapper_vector {
             > for $type
         {
             #[inline]
-            fn transform(
-                &self,
+            fn transform_impl(
+                self,
                 transformation: &$crate::domain::math::transformation::Translation,
             ) -> Self {
                 Self($crate::domain::math::transformation::Transform::transform(
-                    &self.0,
+                    self.0,
                     transformation,
                 ))
             }

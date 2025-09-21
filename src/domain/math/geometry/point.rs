@@ -112,20 +112,23 @@ impl Sub for Point {
 }
 
 impl Transform<Rotation> for Point {
-    fn transform(&self, transformation: &Rotation) -> Self {
+    #[inline]
+    fn transform_impl(self, transformation: &Rotation) -> Self {
         Self(self.0.transform(transformation))
     }
 }
 
 impl Transform<Scaling> for Point {
-    fn transform(&self, transformation: &Scaling) -> Self {
+    #[inline]
+    fn transform_impl(self, transformation: &Scaling) -> Self {
         Self(self.0.transform(transformation))
     }
 }
 
 impl Transform<Translation> for Point {
-    fn transform(&self, transformation: &Translation) -> Self {
-        *self + transformation.displacement()
+    #[inline]
+    fn transform_impl(self, transformation: &Translation) -> Self {
+        self + transformation.displacement()
     }
 }
 

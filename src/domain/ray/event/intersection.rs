@@ -45,15 +45,16 @@ impl RayIntersection {
 impl<T> Transform<T> for RayIntersection
 where
     T: AtomTransformation,
+    Distance: Transform<T>,
     Point: Transform<T>,
     Normal: Transform<T>,
 {
-    fn transform(&self, transformation: &T) -> Self {
+    fn transform_impl(self, transformation: &T) -> Self {
         Self::new(
-            self.distance(),
-            self.position().transform(transformation),
-            self.normal().transform(transformation),
-            self.side(),
+            self.distance.transform(transformation),
+            self.position.transform(transformation),
+            self.normal.transform(transformation),
+            self.side,
         )
     }
 }
