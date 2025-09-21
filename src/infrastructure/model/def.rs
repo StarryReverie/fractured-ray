@@ -1,10 +1,11 @@
+use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
 
 use getset::{Getters, WithSetters};
 use snafu::prelude::*;
 
-use crate::domain::material::def::MaterialKind;
+use crate::domain::material::def::{DynMaterial, MaterialKind};
 use crate::domain::math::transformation::Sequential;
 use crate::domain::scene::entity::EntitySceneBuilder;
 use crate::domain::shape::mesh::TryNewMeshError;
@@ -21,6 +22,19 @@ pub trait EntityModelLoader: Send + Sync {
 pub struct EntityModelLoaderConfiguration {
     #[getset(get = "pub", set_with = "pub")]
     transformation: Sequential,
+    #[getset(get = "pub", set_with = "pub")]
+    materials: HashMap<String, DynMaterial>,
+}
+
+impl EntityModelLoaderConfiguration {
+    pub fn add_material<S, M>(mut self, name: S, material: M) -> Self
+    where
+        S: Into<String>,
+        M: Into<DynMaterial>,
+    {
+        self.materials.insert(name.into(), material.into());
+        self
+    }
 }
 
 #[derive(Debug, Snafu)]

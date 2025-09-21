@@ -81,6 +81,7 @@ impl EntityObjModelLoader {
         &self,
         object: &Object,
         group: &Group,
+        materials: &HashMap<String, DynMaterial>,
     ) -> Result<DynMaterial, LoadEntityModelError> {
         let Some(material) = &group.material else {
             return UnspecifiedMaterialSnafu {
@@ -90,12 +91,22 @@ impl EntityObjModelLoader {
             .fail();
         };
         let material = match material {
-            ObjMaterial::Mtl(material) => material,
-            ObjMaterial::Ref(material_name) => {
-                return MissingMaterialSnafu {
-                    material_name: material_name.clone(),
+            ObjMaterial::Mtl(material) => {
+                if let Some(material) = materials.get(&material.name) {
+                    return Ok(material.clone());
+                } else {
+                    material
                 }
-                .fail();
+            }
+            ObjMaterial::Ref(material_name) => {
+                if let Some(material) = materials.get(material_name) {
+                    return Ok(material.clone());
+                } else {
+                    return MissingMaterialSnafu {
+                        material_name: material_name.clone(),
+                    }
+                    .fail();
+                };
             }
         };
 
@@ -134,7 +145,7 @@ impl EntityModelLoader for EntityObjModelLoader {
         for object in &self.obj.objects {
             for group in &object.groups {
                 let mesh = self.convert_mesh(object, group)?;
-                let material = self.convert_material(object, group)?;
+                let material = self.convert_material(object, group, config.materials())?;
                 meshes.push((mesh, material));
             }
         }
