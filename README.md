@@ -46,9 +46,9 @@ Teapot
     - [x] Triangles
   - [x] Meshes
   - [x] Instance & Transformation
-  - [ ] Volumes
+  - [x] Volumes
   - [ ] Shading Normal
-- [ ] Materials
+- [x] Materials
   - [x] Common Material Primitives
     - [x] Blurry
     - [x] Diffuse
@@ -65,9 +65,9 @@ Teapot
   - [ ] Image
 - [ ] Infrastructure
   - [x] Progress Bar
-  - [ ] CLI Options
+  - [ ] CLI
   - [ ] Description DSL
-  - [ ] External Model Import
+  - [x] External Model Import
 
 # License
 
