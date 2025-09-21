@@ -13,7 +13,9 @@ use fractured_ray::domain::scene::entity::{
 use fractured_ray::domain::scene::volume::{BvhVolumeSceneBuilder, VolumeSceneBuilder};
 use fractured_ray::domain::shape::primitive::Polygon;
 use fractured_ray::infrastructure::image::PngWriter;
-use fractured_ray::infrastructure::model::{EntityModelLoader, EntityObjModelLoader};
+use fractured_ray::infrastructure::model::{
+    EntityModelLoader, EntityModelLoaderConfiguration, EntityObjModelLoader,
+};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut scene = BvhEntitySceneBuilder::new();
@@ -108,6 +110,7 @@ fn load_box(scene: &mut dyn EntitySceneBuilder) -> Result<(), Box<dyn Error>> {
 
 fn load_teapot(scene: &mut dyn EntitySceneBuilder) -> Result<(), Box<dyn Error>> {
     let loader = EntityObjModelLoader::parse("assets/models/teapot/teapot.obj")?;
-    loader.load(scene)?;
+    let config = EntityModelLoaderConfiguration::default();
+    loader.load(scene, config)?;
     Ok(())
 }

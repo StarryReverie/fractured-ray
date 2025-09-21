@@ -8,14 +8,15 @@ use snafu::prelude::*;
 use crate::domain::material::def::DynMaterial;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{Val, WrappedVal};
+use crate::domain::math::transformation::Transformation;
 use crate::domain::scene::entity::{EntitySceneBuilder, TypedEntitySceneBuilder};
-use crate::domain::shape::mesh::MeshConstructor;
+use crate::domain::shape::mesh::{MeshConstructor, MeshInstanceConstructor};
 use crate::infrastructure::model::def::{
     InvalidMeshSnafu, MissingMaterialSnafu, UnspecifiedMaterialSnafu,
 };
 
 use super::obj_material::ObjMaterialConverterChain;
-use super::{EntityModelLoader, LoadEntityModelError};
+use super::{EntityModelLoader, EntityModelLoaderConfiguration, LoadEntityModelError};
 
 #[derive(Debug, Clone)]
 pub struct EntityObjModelLoader {
@@ -124,7 +125,11 @@ impl EntityObjModelLoader {
 }
 
 impl EntityModelLoader for EntityObjModelLoader {
-    fn load(&self, builder: &mut dyn EntitySceneBuilder) -> Result<(), LoadEntityModelError> {
+    fn load(
+        &self,
+        builder: &mut dyn EntitySceneBuilder,
+        config: EntityModelLoaderConfiguration,
+    ) -> Result<(), LoadEntityModelError> {
         let mut meshes = Vec::with_capacity(self.obj.objects.len());
         for object in &self.obj.objects {
             for group in &object.groups {
@@ -133,8 +138,16 @@ impl EntityModelLoader for EntityObjModelLoader {
                 meshes.push((mesh, material));
             }
         }
-        for (mesh, material) in meshes {
-            builder.add_constructor(mesh, material);
+        if config.transformation().is_identity() {
+            for (mesh, material) in meshes {
+                builder.add_constructor(mesh, material);
+            }
+        } else {
+            for (mesh, material) in meshes {
+                let transformation = config.transformation().clone();
+                let constructor = MeshInstanceConstructor::new(Arc::new(mesh), transformation);
+                builder.add_constructor(constructor, material);
+            }
         }
         Ok(())
     }

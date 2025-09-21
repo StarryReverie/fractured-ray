@@ -1,14 +1,26 @@
 use std::error::Error;
 use std::path::PathBuf;
 
+use getset::{Getters, WithSetters};
 use snafu::prelude::*;
 
 use crate::domain::material::def::MaterialKind;
+use crate::domain::math::transformation::Sequential;
 use crate::domain::scene::entity::EntitySceneBuilder;
 use crate::domain::shape::mesh::TryNewMeshError;
 
 pub trait EntityModelLoader: Send + Sync {
-    fn load(&self, builder: &mut dyn EntitySceneBuilder) -> Result<(), LoadEntityModelError>;
+    fn load(
+        &self,
+        builder: &mut dyn EntitySceneBuilder,
+        config: EntityModelLoaderConfiguration,
+    ) -> Result<(), LoadEntityModelError>;
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, Getters, WithSetters)]
+pub struct EntityModelLoaderConfiguration {
+    #[getset(get = "pub", set_with = "pub")]
+    transformation: Sequential,
 }
 
 #[derive(Debug, Snafu)]
