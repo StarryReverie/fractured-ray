@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::domain::math::transformation::{Rotation, Sequential, Translation};
+use crate::domain::math::transformation::{Rotation, Scaling, Sequential, Translation};
 use crate::domain::shape::mesh::MeshConstructor;
 use crate::domain::shape::util::{ShapeConstructor, ShapeContainer, ShapeId};
 
@@ -27,6 +27,13 @@ impl MeshInstanceConstructor {
 
     pub fn wrap(portotype: MeshConstructor) -> Self {
         Self::of(Arc::new(portotype))
+    }
+
+    pub fn scale(self, scaling: Scaling) -> Self {
+        Self {
+            transformation: self.transformation.with_scaling(scaling),
+            ..self
+        }
     }
 
     pub fn rotate(self, rotation: Rotation) -> Self {

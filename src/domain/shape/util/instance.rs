@@ -43,6 +43,13 @@ impl Instance {
         Self::of(Arc::new(prototype.into()))
     }
 
+    pub fn scale(self, scaling: Scaling) -> Self {
+        Self {
+            transformation: self.transformation.with_scaling(scaling),
+            ..self
+        }
+    }
+
     pub fn rotate(self, rotation: Rotation) -> Self {
         Self {
             transformation: self.transformation.with_rotation(rotation),
