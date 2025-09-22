@@ -29,8 +29,8 @@ impl MeshTriangle {
     }
 
     fn get_vertices(&self) -> (&Point, &Point, &Point) {
-        let vertices = self.data.vertices();
-        let triangles = self.data.triangles();
+        let vertices = self.data.vertices().data();
+        let triangles = self.data.vertices().triangles();
         let v0 = &vertices[triangles[self.index].0 as usize];
         let v1 = &vertices[triangles[self.index].1 as usize];
         let v2 = &vertices[triangles[self.index].2 as usize];

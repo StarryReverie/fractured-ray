@@ -31,8 +31,8 @@ impl MeshPolygon {
     }
 
     fn get_vertices(&self) -> SmallVec<[&Point; 5]> {
-        let vertices = self.data.vertices();
-        let polygons = self.data.polygons();
+        let vertices = self.data.vertices().data();
+        let polygons = self.data.vertices().polygons();
         polygons[self.index]
             .iter()
             .map(|index| &vertices[*index as usize])
@@ -106,8 +106,8 @@ impl Shape for MeshPolygon {
     }
 
     fn normal(&self, _position: Point) -> Normal {
-        let vertices = self.data.vertices();
-        let polygon = &self.data.polygons()[self.index];
+        let vertices = self.data.vertices().data();
+        let polygon = &self.data.vertices().polygons()[self.index];
         assert!(polygon.len() > 3);
         let v0 = vertices[polygon[0] as usize];
         let v1 = vertices[polygon[1] as usize];

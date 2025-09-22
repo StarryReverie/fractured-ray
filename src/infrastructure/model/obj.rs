@@ -68,12 +68,11 @@ impl EntityObjModelLoader {
             .map(|poly| &poly.0)
             .map(|indices| indices.iter().map(|i| i.0).collect())
             .collect();
-        let mesh = MeshConstructor::new_shared(vertices, vertex_indices).with_context(|_| {
-            InvalidMeshSnafu {
+        let mesh =
+            MeshConstructor::new(vertices, vertex_indices).with_context(|_| InvalidMeshSnafu {
                 path: self.path.clone(),
                 mesh_name: Self::generate_mesh_name(object, group),
-            }
-        })?;
+            })?;
         Ok(mesh)
     }
 
