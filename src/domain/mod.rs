@@ -9,3 +9,4 @@ pub mod renderer;
 pub mod sampling;
 pub mod scene;
 pub mod shape;
+pub mod texture;
