@@ -6,6 +6,7 @@ use snafu::prelude::*;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::transformation::Sequential;
 use crate::domain::shape::primitive::{Polygon, Triangle, TryNewPolygonError, TryNewTriangleError};
+use crate::domain::texture::def::UvCoordinate;
 
 pub type TriangleIndices = (u32, u32, u32);
 pub type PolygonIndices = SmallVec<[u32; 5]>;
@@ -13,13 +14,19 @@ pub type PolygonIndices = SmallVec<[u32; 5]>;
 #[derive(Debug, Clone)]
 pub struct MeshData {
     vertices: MeshDataComponent<Point>,
+    textures: Option<MeshDataComponent<UvCoordinate>>,
     transformation: Option<Sequential>,
 }
 
 impl MeshData {
-    pub fn new(vertices: MeshDataComponent<Point>, transformation: Option<Sequential>) -> Self {
+    pub fn new(
+        vertices: MeshDataComponent<Point>,
+        textures: Option<MeshDataComponent<UvCoordinate>>,
+        transformation: Option<Sequential>,
+    ) -> Self {
         Self {
             vertices,
+            textures,
             transformation,
         }
     }
@@ -27,6 +34,11 @@ impl MeshData {
     #[inline]
     pub fn vertices(&self) -> &MeshDataComponent<Point> {
         &self.vertices
+    }
+
+    #[inline]
+    pub fn textures(&self) -> Option<&MeshDataComponent<UvCoordinate>> {
+        self.textures.as_ref()
     }
 
     #[inline]
@@ -82,12 +94,10 @@ impl MeshDataComponent<Point> {
     where
         V: Into<Arc<[Point]>>,
     {
-        let data = vertices.into();
-
-        let triangles = Self::create_triangles(&data, &indices)?.into();
-        let polygons = Self::create_polygons(&data, &indices)?.into();
-
-        Ok(Self::new_impl(data, triangles, polygons))
+        let vertices = vertices.into();
+        let triangles = Self::create_triangles(&vertices, &indices)?.into();
+        let polygons = Self::create_polygons(&vertices, &indices)?.into();
+        Ok(Self::new_impl(vertices, triangles, polygons))
     }
 
     fn create_triangles(
@@ -108,6 +118,7 @@ impl MeshDataComponent<Point> {
             assert!(triangle.len() == 3);
             res.push((triangle[0] as u32, triangle[1] as u32, triangle[2] as u32));
         }
+        res.shrink_to_fit();
         Ok(res)
     }
 
@@ -126,12 +137,66 @@ impl MeshDataComponent<Point> {
 
             res.push(polygon.iter().map(|&i| i as u32).collect());
         }
+        res.shrink_to_fit();
+        Ok(res)
+    }
+}
+
+impl MeshDataComponent<UvCoordinate> {
+    pub fn new<U>(
+        uvs: U,
+        indices: Vec<Vec<usize>>,
+        num_triangles: usize,
+        num_polygons: usize,
+    ) -> Result<Self, TryAddMeshUvCoordinateError>
+    where
+        U: Into<Arc<[UvCoordinate]>>,
+    {
+        let uvs = uvs.into();
+        let triangles = Self::create_triangles_uv(&uvs, &indices, num_triangles)?.into();
+        let polygons = Self::create_polygons_uv(&uvs, &indices, num_polygons)?.into();
+        Ok(Self::new_impl(uvs, triangles, polygons))
+    }
+
+    fn create_triangles_uv(
+        uvs: &[UvCoordinate],
+        indices: &[Vec<usize>],
+        expected_num: usize,
+    ) -> Result<Vec<TriangleIndices>, TryAddMeshUvCoordinateError> {
+        let mut res = Vec::with_capacity(indices.len());
+        for (face, triangle) in indices.iter().enumerate().filter(|(_, s)| s.len() == 3) {
+            if let Some(index) = triangle.iter().cloned().find(|&index| index >= uvs.len()) {
+                return OutOfBoundUvSnafu { face, index }.fail();
+            }
+
+            assert!(triangle.len() == 3);
+            res.push((triangle[0] as u32, triangle[1] as u32, triangle[2] as u32));
+        }
+        ensure!(res.len() == expected_num, MismatchedNumberUvSnafu);
+        res.shrink_to_fit();
+        Ok(res)
+    }
+
+    fn create_polygons_uv(
+        uvs: &[UvCoordinate],
+        indices: &[Vec<usize>],
+        expected_num: usize,
+    ) -> Result<Vec<PolygonIndices>, TryAddMeshUvCoordinateError> {
+        let mut res = Vec::with_capacity(indices.len());
+        for (face, polygon) in indices.iter().enumerate().filter(|(_, s)| s.len() != 3) {
+            if let Some(index) = polygon.iter().cloned().find(|&index| index >= uvs.len()) {
+                return OutOfBoundUvSnafu { face, index }.fail();
+            }
+
+            res.push(polygon.iter().map(|&i| i as u32).collect());
+        }
+        ensure!(res.len() == expected_num, MismatchedNumberUvSnafu);
+        res.shrink_to_fit();
         Ok(res)
     }
 }
 
 #[derive(Debug, Snafu, Clone, PartialEq, Eq)]
-#[snafu(visibility(pub(super)))]
 #[non_exhaustive]
 pub enum TryNewMeshError {
     #[snafu(display("index {index} for vertex in face {face} is out of bound"))]
@@ -146,4 +211,14 @@ pub enum TryNewMeshError {
         face: usize,
         source: TryNewPolygonError,
     },
+}
+
+#[derive(Debug, Snafu, Clone, PartialEq, Eq)]
+#[snafu(context(suffix(UvSnafu)))]
+#[non_exhaustive]
+pub enum TryAddMeshUvCoordinateError {
+    #[snafu(display("the number of UV coordinates is not same as vertices"))]
+    MismatchedNumber,
+    #[snafu(display("index {index} for UV coordinate in face {face} is out of bound"))]
+    OutOfBound { face: usize, index: usize },
 }

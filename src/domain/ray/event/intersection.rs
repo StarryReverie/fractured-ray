@@ -3,6 +3,7 @@ use getset::CopyGetters;
 use crate::domain::math::geometry::{Direction, Distance, Normal, Point};
 use crate::domain::math::transformation::{AtomTransformation, Transform};
 use crate::domain::ray::Ray;
+use crate::domain::texture::def::UvCoordinate;
 
 #[derive(Debug, Clone, PartialEq, CopyGetters)]
 #[getset(get_copy = "pub")]
@@ -22,6 +23,7 @@ impl<'a> RayIntersectionPart<'a> {
 pub struct RayIntersection {
     distance: Distance,
     position: Point,
+    uv: Option<UvCoordinate>,
     normal: Normal,
     side: SurfaceSide,
 }
@@ -31,9 +33,16 @@ impl RayIntersection {
         Self {
             distance,
             position,
+            uv: None,
             normal,
             side,
         }
+    }
+
+    #[inline]
+    pub fn with_uv(self, uv: UvCoordinate) -> Self {
+        let uv = Some(uv);
+        Self { uv, ..self }
     }
 
     #[inline]
@@ -50,12 +59,17 @@ where
     Normal: Transform<T>,
 {
     fn transform_impl(self, transformation: &T) -> Self {
-        Self::new(
+        let res = Self::new(
             self.distance.transform(transformation),
             self.position.transform(transformation),
             self.normal.transform(transformation),
             self.side,
-        )
+        );
+        if let Some(uv) = self.uv {
+            res.with_uv(uv)
+        } else {
+            res
+        }
     }
 }
 

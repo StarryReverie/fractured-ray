@@ -8,8 +8,6 @@ use crate::domain::math::numeric::DisRange;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, RayIntersectionPart};
 use crate::domain::sampling::Sampleable;
-use crate::domain::shape::primitive::*;
-use crate::domain::shape::util::Instance;
 
 use super::{BoundingBox, DynShape};
 

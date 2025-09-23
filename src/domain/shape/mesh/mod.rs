@@ -3,5 +3,5 @@ mod data;
 mod instance;
 
 pub use constructor::MeshConstructor;
-pub use data::{MeshData, MeshDataComponent, TryNewMeshError};
+pub use data::{MeshData, MeshDataComponent, TryAddMeshUvCoordinateError, TryNewMeshError};
 pub use instance::MeshInstanceConstructor;

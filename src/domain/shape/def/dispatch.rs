@@ -39,7 +39,7 @@ macro_rules! impl_from_ref_for_variant {
     };
 }
 
-#[enum_dispatch(Shape)]
+#[enum_dispatch(Shape, Sampleable)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DynShape {
     Aabb(Aabb),
@@ -55,24 +55,6 @@ pub enum DynShape {
 impl<'a> From<&'a DynShape> for RefDynShape<'a> {
     fn from(value: &'a DynShape) -> Self {
         impl_dispatch!(DynShape, value.into())
-    }
-}
-
-impl Sampleable for DynShape {
-    fn get_point_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn PointSampling>> {
-        impl_dispatch!(Self, self.get_point_sampler(shape_id))
-    }
-
-    fn get_light_sampler(&self, shape_id: ShapeId) -> Option<Box<dyn LightSampling>> {
-        impl_dispatch!(Self, self.get_light_sampler(shape_id))
-    }
-
-    fn get_photon_sampler(
-        &self,
-        shape_id: ShapeId,
-        emissive: Emissive,
-    ) -> Option<Box<dyn PhotonSampling>> {
-        impl_dispatch!(Self, self.get_photon_sampler(shape_id, emissive))
     }
 }
 

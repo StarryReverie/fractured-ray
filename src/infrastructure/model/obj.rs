@@ -67,7 +67,7 @@ impl EntityObjModelLoader {
         let vertex_indices = (group.polys.iter())
             .map(|poly| &poly.0)
             .map(|indices| indices.iter().map(|i| i.0).collect())
-            .collect();
+            .collect::<Vec<_>>();
         let mesh =
             MeshConstructor::new(vertices, vertex_indices).with_context(|_| InvalidMeshSnafu {
                 path: self.path.clone(),
