@@ -11,10 +11,12 @@ use crate::domain::math::numeric::{Val, WrappedVal};
 use crate::domain::math::transformation::Transformation;
 use crate::domain::scene::entity::{EntitySceneBuilder, TypedEntitySceneBuilder};
 use crate::domain::shape::mesh::{MeshConstructor, MeshInstanceConstructor};
+use crate::domain::texture::def::UvCoordinate;
 use crate::infrastructure::model::def::{
     InvalidMeshSnafu, MissingMaterialSnafu, UnspecifiedMaterialSnafu,
 };
 
+use super::def::InvalidMeshUvCoordinateSnafu;
 use super::obj_material::ObjMaterialConverterChain;
 use super::{EntityModelLoader, EntityModelLoaderConfiguration, LoadEntityModelError};
 
@@ -23,6 +25,7 @@ pub struct EntityObjModelLoader {
     obj: ObjData,
     path: Option<PathBuf>,
     vertices: Arc<[Point]>,
+    uvs: Arc<[UvCoordinate]>,
     converter: ObjMaterialConverterChain,
     material_cache: Arc<RwLock<HashMap<String, DynMaterial>>>,
 }
@@ -48,11 +51,17 @@ impl EntityObjModelLoader {
             .map(|[x, y, z]| Point::new(x, y, z))
             .collect::<Vec<_>>()
             .into();
+        let uvs = (obj.texture.iter())
+            .map(Self::map_f32_pair)
+            .map(|[u, v]| UvCoordinate::clamp(u, v))
+            .collect::<Vec<_>>()
+            .into();
 
         Self {
             obj,
             path,
             vertices,
+            uvs,
             converter: ObjMaterialConverterChain::new(),
             material_cache: Arc::new(RwLock::new(HashMap::new())),
         }
@@ -73,6 +82,23 @@ impl EntityObjModelLoader {
                 path: self.path.clone(),
                 mesh_name: Self::generate_mesh_name(object, group),
             })?;
+
+        let uvs = Arc::clone(&self.uvs);
+        let uv_indices = (group.polys.iter())
+            .map(|poly| &poly.0)
+            .map(|indices| indices.iter().flat_map(|i| i.1).collect::<Vec<_>>())
+            .filter(|indices| !indices.is_empty())
+            .collect::<Vec<_>>();
+        let mesh = if uv_indices.is_empty() {
+            mesh
+        } else {
+            mesh.with_uvs(uvs, uv_indices)
+                .with_context(|_| InvalidMeshUvCoordinateSnafu {
+                    path: self.path.clone(),
+                    mesh_name: Self::generate_mesh_name(object, group),
+                })?
+        };
+
         Ok(mesh)
     }
 
@@ -127,6 +153,12 @@ impl EntityObjModelLoader {
         let y = Val(y as WrappedVal);
         let z = Val(z as WrappedVal);
         [x, y, z]
+    }
+
+    fn map_f32_pair(&[u, v]: &[f32; 2]) -> [Val; 2] {
+        let u = Val(u as WrappedVal);
+        let v = Val(v as WrappedVal);
+        [u, v]
     }
 
     fn generate_mesh_name(object: &Object, group: &Group) -> String {

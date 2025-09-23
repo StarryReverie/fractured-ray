@@ -15,6 +15,11 @@ impl UvCoordinate {
     }
 
     #[inline]
+    pub fn clamp(u: Val, v: Val) -> Self {
+        Self(u.clamp(Val(0.0), Val(1.0)), v.clamp(Val(0.0), Val(1.0)))
+    }
+
+    #[inline]
     pub fn u(&self) -> Val {
         self.0
     }

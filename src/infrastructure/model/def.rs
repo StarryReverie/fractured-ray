@@ -8,7 +8,7 @@ use snafu::prelude::*;
 use crate::domain::material::def::{DynMaterial, MaterialKind};
 use crate::domain::math::transformation::Sequential;
 use crate::domain::scene::entity::EntitySceneBuilder;
-use crate::domain::shape::mesh::TryNewMeshError;
+use crate::domain::shape::mesh::{TryAddMeshUvCoordinateError, TryNewMeshError};
 
 pub trait EntityModelLoader: Send + Sync {
     fn load(
@@ -49,6 +49,15 @@ pub enum LoadEntityModelError {
         path: Option<PathBuf>,
         mesh_name: String,
         source: TryNewMeshError,
+    },
+    #[snafu(display(
+        "encountered invalid UV coordinate in mesh `{mesh_name}` from `{}`",
+        display_optional_path(path)
+    ))]
+    InvalidMeshUvCoordinate {
+        path: Option<PathBuf>,
+        mesh_name: String,
+        source: TryAddMeshUvCoordinateError,
     },
     #[snafu(display(
         "parameters of material {material_name} ({material_kind:?}) are incorrectly configured"
