@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::domain::color::{Albedo, Spectrum};
+use crate::domain::color::Spectrum;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::Product;
 use crate::domain::math::geometry::Direction;
@@ -12,14 +12,20 @@ use crate::domain::renderer::{
     Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
 };
 use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
+use crate::domain::texture::def::DynAlbedoTexture;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Diffuse {
-    albedo: Albedo,
+    albedo: DynAlbedoTexture,
 }
 
 impl Diffuse {
-    pub fn new(albedo: Albedo) -> Self {
+    #[inline]
+    pub fn new<T>(albedo: T) -> Self
+    where
+        T: Into<DynAlbedoTexture>,
+    {
+        let albedo = albedo.into();
         Self { albedo }
     }
 }
@@ -80,8 +86,9 @@ impl BsdfMaterial for Diffuse {
         intersection: &RayIntersection,
         dir_in: Direction,
     ) -> Spectrum {
+        let albedo = self.albedo.lookup_at(intersection);
         if intersection.normal().dot(dir_in) > Val(0.0) {
-            Val::FRAC_1_PI * self.albedo
+            Val::FRAC_1_PI * albedo
         } else {
             Spectrum::zero()
         }
@@ -100,7 +107,7 @@ impl BsdfSampling for Diffuse {
 
         let ray_next = intersection.spawn(direction);
         let pdf = self.pdf_bsdf(ray, intersection, &ray_next);
-        BsdfSample::new(ray_next, self.albedo.into(), pdf)
+        BsdfSample::new(ray_next, self.albedo.lookup_at(intersection).into(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {

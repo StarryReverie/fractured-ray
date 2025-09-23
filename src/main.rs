@@ -61,7 +61,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Point::new(Val(0.0), Val(0.0), Val(-2.0)),
             Normal::y_direction(),
         ),
-        Specular::new((Albedo::WHITE * Val(0.4)).into()),
+        Specular::new(Albedo::from(Albedo::WHITE * Val(0.4))),
     );
     builder.add(
         Plane::new(

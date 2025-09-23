@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use snafu::prelude::*;
 
-use crate::domain::color::{Albedo, Spectrum};
+use crate::domain::color::Spectrum;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
@@ -11,19 +11,23 @@ use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::util as ray_util;
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
+use crate::domain::texture::def::DynAlbedoTexture;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Refractive {
-    albedo: Albedo,
+    albedo: DynAlbedoTexture,
     refractive_index: Val,
 }
 
 impl Refractive {
-    pub fn new(albedo: Albedo, refractive_index: Val) -> Result<Self, TryNewRefractiveError> {
+    pub fn new<T>(albedo: T, refractive_index: Val) -> Result<Self, TryNewRefractiveError>
+    where
+        T: Into<DynAlbedoTexture>,
+    {
         ensure!(refractive_index > Val(0.0), InvalidRefractiveIndexSnafu);
 
         Ok(Self {
-            albedo,
+            albedo: albedo.into(),
             refractive_index,
         })
     }
@@ -82,7 +86,7 @@ impl BsdfSampling for Refractive {
         };
         let (ray_next, _) = ray_util::fresnel_refract(ray, intersection, ri, rng);
         let pdf = self.pdf_bsdf(ray, intersection, &ray_next);
-        BsdfSample::new(ray_next, self.albedo.into(), pdf)
+        BsdfSample::new(ray_next, self.albedo.lookup_at(intersection).into(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {
@@ -99,6 +103,8 @@ pub enum TryNewRefractiveError {
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::color::Albedo;
+
     use super::*;
 
     #[test]

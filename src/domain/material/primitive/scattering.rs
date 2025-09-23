@@ -20,11 +20,11 @@ use crate::domain::sampling::coefficient::{
     BsdfSample, BsdfSampling, BssrdfDiffusionSample, BssrdfDirectionSample, BssrdfSampling,
 };
 use crate::domain::scene::entity::EntityScene;
+use crate::domain::texture::def::DynAlbedoTexture;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Scattering {
-    albedo: Albedo,
-    scattering_distance: Spectrum,
+    albedo: DynAlbedoTexture,
     refractive_index: Val,
     mean_free_path: Val,
 }
@@ -35,36 +35,41 @@ impl Scattering {
     const MAX_RADIUS_CDF: Val = Val(0.999);
     const IGNORE_BACK_THRESHOLD: Val = Val(0.01);
 
-    pub fn new(
-        albedo: Albedo,
+    pub fn new<T>(
+        albedo: T,
         mean_free_path: Val,
         refractive_index: Val,
-    ) -> Result<Self, TryNewScatteringError> {
+    ) -> Result<Self, TryNewScatteringError>
+    where
+        T: Into<DynAlbedoTexture>,
+    {
         ensure!(mean_free_path > Val(0.0), InvalidMeanFreePathSnafu);
         ensure!(refractive_index > Val(0.0), InvalidRefractiveIndexSnafu);
 
-        let scattering_distance = Spectrum::new(
-            Self::calc_scattering_distance(albedo.red(), mean_free_path),
-            Self::calc_scattering_distance(albedo.green(), mean_free_path),
-            Self::calc_scattering_distance(albedo.blue(), mean_free_path),
-        );
         Ok(Self {
-            albedo,
-            scattering_distance,
+            albedo: albedo.into(),
             refractive_index,
             mean_free_path,
         })
     }
 
-    fn calc_scattering_distance(albedo: Val, mean_free_path: Val) -> Val {
+    fn calc_scattering_distance(albedo: Albedo, mean_free_path: Val) -> Spectrum {
+        Spectrum::new(
+            Self::calc_scattering_distance_single(albedo.red(), mean_free_path),
+            Self::calc_scattering_distance_single(albedo.green(), mean_free_path),
+            Self::calc_scattering_distance_single(albedo.blue(), mean_free_path),
+        )
+    }
+
+    fn calc_scattering_distance_single(albedo: Val, mean_free_path: Val) -> Val {
         let scaling_factor = Val(1.9) - albedo + Val(3.5) * (albedo - Val(0.8)).powi(2);
         mean_free_path / scaling_factor
     }
 
-    fn calc_normalized_diffusion(&self, d: Val, radius: Val) -> Spectrum {
+    fn calc_normalized_diffusion(&self, albedo: Albedo, d: Val, radius: Val) -> Spectrum {
         let exp_13 = (-radius / (Val(3.0) * d)).exp();
         let exp_sum = exp_13 * (Val(1.0) + exp_13.powi(2));
-        self.albedo * (Val(8.0) * Val::PI * radius * d).recip() * exp_sum
+        albedo * (Val(8.0) * Val::PI * radius * d).recip() * exp_sum
     }
 
     fn generate_normailzed_diffusion_radius(d: Val, rng: &mut dyn RngCore) -> Option<Val> {
@@ -155,6 +160,7 @@ impl Scattering {
         state: RtState,
         ray: &Ray,
         intersection: &RayIntersection,
+        albedo: Albedo,
     ) -> Contribution {
         let cos = intersection.normal().dot(-ray.direction());
         if Val(context.rng().random()) < self.calc_transmittance(cos) {
@@ -164,12 +170,12 @@ impl Scattering {
             let back = self.determine_back_face(scene, ray, intersection, *context.rng());
 
             if let Some((ray_back, intersection_back)) = back {
-                self.shade_back_face(context, state_next, &ray_back, &intersection_back)
+                self.shade_back_face(context, state_next, &ray_back, &intersection_back, albedo)
             } else {
                 self.shade_impl(context, state_next, ray, intersection)
             }
         } else {
-            let specular = Specular::new(self.albedo);
+            let specular = Specular::new(albedo);
             specular.shade(context, state, ray, intersection)
         }
     }
@@ -180,8 +186,9 @@ impl Scattering {
         state: RtState,
         ray: &Ray,
         intersection: &RayIntersection,
+        albedo: Albedo,
     ) -> Contribution {
-        let adapter = BackFaceTransmissionAdapter::new(self);
+        let adapter = BackFaceTransmissionAdapter::new(self, albedo);
         let state_next = state.with_visible(false);
         adapter.shade(context, state_next, ray, intersection)
     }
@@ -192,6 +199,7 @@ impl Scattering {
         state: PmState,
         photon: &PhotonRay,
         intersection: &RayIntersection,
+        albedo: Albedo,
     ) {
         let cos = intersection.normal().dot(-photon.direction());
         if Val(context.rng().random()) < self.calc_transmittance(cos) {
@@ -204,12 +212,12 @@ impl Scattering {
 
             if let Some((ray_back, intersection_back)) = back {
                 let photon_back = PhotonRay::new(ray_back, photon.throughput());
-                self.receive_back_face(context, state, &photon_back, &intersection_back);
+                self.receive_back_face(context, state, &photon_back, &intersection_back, albedo);
             } else {
                 self.receive_impl(context, state, photon, intersection);
             }
         } else {
-            let specular = Specular::new(self.albedo);
+            let specular = Specular::new(albedo);
             specular.receive(context, state, photon, intersection);
         }
     }
@@ -220,8 +228,9 @@ impl Scattering {
         state: PmState,
         photon: &PhotonRay,
         intersection: &RayIntersection,
+        albedo: Albedo,
     ) {
-        let adapter = BackFaceTransmissionAdapter::new(self);
+        let adapter = BackFaceTransmissionAdapter::new(self, albedo);
         adapter.receive(context, state, photon, intersection);
     }
 
@@ -273,10 +282,11 @@ impl Material for Scattering {
         ray: &Ray,
         intersection: &RayIntersection,
     ) -> Contribution {
+        let albedo = self.albedo.lookup_at(intersection);
         if intersection.side() == SurfaceSide::Front {
-            self.shade_front_face(context, state, ray, intersection)
+            self.shade_front_face(context, state, ray, intersection, albedo)
         } else {
-            self.shade_back_face(context, state, ray, intersection)
+            self.shade_back_face(context, state, ray, intersection, albedo)
         }
     }
 
@@ -287,10 +297,11 @@ impl Material for Scattering {
         photon: &PhotonRay,
         intersection: &RayIntersection,
     ) {
+        let albedo = self.albedo.lookup_at(intersection);
         if intersection.side() == SurfaceSide::Front {
-            self.receive_front_face(context, state, photon, intersection);
+            self.receive_front_face(context, state, photon, intersection, albedo)
         } else {
-            self.receive_back_face(context, state, photon, intersection);
+            self.receive_back_face(context, state, photon, intersection, albedo);
         }
     }
 }
@@ -319,7 +330,10 @@ impl BssrdfSampling for Scattering {
         intersection_out: &RayIntersection,
         rng: &mut dyn RngCore,
     ) -> Option<BssrdfDiffusionSample> {
-        let d = self.scattering_distance.channel(rng.random_range(0..2));
+        let albedo = self.albedo.lookup_at(intersection_out);
+        let scattering_distance = Self::calc_scattering_distance(albedo, self.mean_free_path);
+
+        let d = scattering_distance.channel(rng.random_range(0..2));
         let radius = Self::generate_normailzed_diffusion_radius(d, rng)?;
         let phi = Val(2.0) * Val::PI * Val(rng.random());
 
@@ -332,7 +346,7 @@ impl BssrdfSampling for Scattering {
         )?;
 
         let distance = (intersection_in.position() - intersection_out.position()).norm();
-        let bssrdf_diffusion = self.calc_normalized_diffusion(d, distance);
+        let bssrdf_diffusion = self.calc_normalized_diffusion(albedo, d, distance);
         let pdf = self.pdf_bssrdf_diffusion(intersection_out, &intersection_in);
         Some(BssrdfDiffusionSample::new(
             distance,
@@ -347,6 +361,9 @@ impl BssrdfSampling for Scattering {
         intersection_out: &RayIntersection,
         intersection_in: &RayIntersection,
     ) -> Val {
+        let albedo = self.albedo.lookup_at(intersection_out);
+        let scattering_distance = Self::calc_scattering_distance(albedo, self.mean_free_path);
+
         let normal = intersection_out.normal();
         let mut frame = PositionedFrame::new(intersection_out.position(), normal);
 
@@ -357,7 +374,7 @@ impl BssrdfSampling for Scattering {
             let cos = intersection_in.normal().dot(frame.normal()).max(Val(0.0));
 
             for channel in 0..3 {
-                let d = self.scattering_distance.channel(channel);
+                let d = scattering_distance.channel(channel);
                 pdf += Self::calc_normailzed_diffusion_pdf(d, radius)
                     * cos
                     * Self::PROJECTION_AXIS_PROB[axis]
@@ -413,11 +430,12 @@ pub enum TryNewScatteringError {
 #[derive(Debug, Clone, PartialEq)]
 struct BackFaceTransmissionAdapter<'a> {
     inner: &'a Scattering,
+    albedo: Albedo,
 }
 
 impl<'a> BackFaceTransmissionAdapter<'a> {
-    fn new(inner: &'a Scattering) -> Self {
-        Self { inner }
+    fn new(inner: &'a Scattering, albedo: Albedo) -> Self {
+        Self { inner, albedo }
     }
 }
 
@@ -462,7 +480,7 @@ impl<'a> BsdfMaterial for BackFaceTransmissionAdapter<'a> {
         intersection: &RayIntersection,
         dir_in: Direction,
     ) -> Spectrum {
-        self.inner.albedo * self.inner.bssrdf_direction(intersection, dir_in)
+        self.albedo * self.inner.bssrdf_direction(intersection, dir_in)
     }
 }
 
@@ -478,7 +496,7 @@ impl<'a> BsdfSampling for BackFaceTransmissionAdapter<'a> {
             .dot(sample.ray_next().direction())
             .abs();
         let pdf = sample.pdf();
-        let coefficient = self.inner.albedo * sample.bssrdf_direction() * cos / pdf;
+        let coefficient = self.albedo * sample.bssrdf_direction() * cos / pdf;
         BsdfSample::new(sample.into_ray_next(), coefficient, pdf)
     }
 

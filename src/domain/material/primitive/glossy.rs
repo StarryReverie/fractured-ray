@@ -7,16 +7,17 @@ use crate::domain::math::algebra::{Product, Vector};
 use crate::domain::math::geometry::{Direction, Frame, Normal};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
-use crate::domain::ray::event::{RayIntersection, SurfaceSide};
+use crate::domain::ray::event::RayIntersection;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::util as ray_util;
 use crate::domain::renderer::{
     Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
 };
 use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
+use crate::domain::texture::def::DynAlbedoTexture;
 
 pub(super) trait MicrofacetMaterial: Material {
-    fn r0(&self, side: SurfaceSide) -> Spectrum;
+    fn r0(&self, intersection: &RayIntersection) -> Spectrum;
 
     fn alpha(&self) -> Val;
 
@@ -58,8 +59,8 @@ pub(super) trait MicrofacetMaterial: Material {
         Normal::normalize(mn).unwrap()
     }
 
-    fn calc_reflectance(&self, cos: Val, side: SurfaceSide) -> Spectrum {
-        let r0 = self.r0(side);
+    fn calc_reflectance(&self, cos: Val, intersection: &RayIntersection) -> Spectrum {
+        let r0 = self.r0(intersection);
         r0 + (Spectrum::broadcast(Val(1.0)) - r0) * (Val(1.0) - cos).powi(5)
     }
 
@@ -87,14 +88,18 @@ pub(super) trait MicrofacetMaterial: Material {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Glossy {
-    r0: Spectrum,
+    albedo: DynAlbedoTexture,
+    metalness: Val,
     alpha: Val,
 }
 
 impl Glossy {
     const DIELECTRIC_R0: Spectrum = Spectrum::broadcast(Val(0.04));
 
-    pub fn new(albedo: Albedo, metalness: Val, roughness: Val) -> Result<Self, TryNewGlossyError> {
+    pub fn new<T>(albedo: T, metalness: Val, roughness: Val) -> Result<Self, TryNewGlossyError>
+    where
+        T: Into<DynAlbedoTexture>,
+    {
         ensure!(
             Val(0.0) <= metalness && metalness <= Val(1.0),
             InvalidMetalnessSnafu
@@ -104,9 +109,11 @@ impl Glossy {
             InvalidRoughnessSnafu
         );
 
-        let r0 = Spectrum::lerp(Self::DIELECTRIC_R0, albedo.into(), metalness);
-        let alpha = roughness.powi(2);
-        Ok(Self { r0, alpha })
+        Ok(Self {
+            albedo: albedo.into(),
+            metalness,
+            alpha: roughness.powi(2),
+        })
     }
 
     pub fn lookup(
@@ -118,7 +125,6 @@ impl Glossy {
             InvalidRoughnessSnafu
         );
 
-        let alpha = roughness.powi(2);
         let (r0_r, r0_g, r0_b) = match predefinition {
             GlossyPredefinition::Aluminum => (0.913, 0.922, 0.924),
             GlossyPredefinition::Brass => (0.910, 0.778, 0.423),
@@ -134,8 +140,8 @@ impl Glossy {
             GlossyPredefinition::Titanium => (0.542, 0.497, 0.449),
             GlossyPredefinition::Zinc => (0.664, 0.824, 0.850),
         };
-        let r0 = Spectrum::new(Val(r0_r), Val(r0_g), Val(r0_b));
-        Ok(Self { r0, alpha })
+        let albedo = Albedo::new(Val(r0_r), Val(r0_g), Val(r0_b)).unwrap();
+        Self::new(albedo, Val(1.0), roughness)
     }
 }
 
@@ -175,8 +181,9 @@ impl Material for Glossy {
 
 impl MicrofacetMaterial for Glossy {
     #[inline]
-    fn r0(&self, _side: SurfaceSide) -> Spectrum {
-        self.r0
+    fn r0(&self, intersection: &RayIntersection) -> Spectrum {
+        let albedo = self.albedo.lookup_at(intersection).into();
+        Spectrum::lerp(Self::DIELECTRIC_R0, albedo, self.metalness)
     }
 
     #[inline]
@@ -196,7 +203,7 @@ impl BsdfMaterial for Glossy {
         if normal.dot(dir_in) > Val(0.0) {
             let mn = Normal::normalize(dir_out + dir_in).unwrap();
 
-            let reflectance = self.calc_reflectance(dir_in.dot(mn), intersection.side());
+            let reflectance = self.calc_reflectance(dir_in.dot(mn), intersection);
             let ndf = self.calc_ndf(normal, mn);
             let g2 = self.calc_g2(dir_out, dir_in, normal);
             let (cos, cos_next) = (dir_out.dot(normal), dir_in.dot(normal));
@@ -222,7 +229,7 @@ impl BsdfSampling for Glossy {
         let ray_next = ray_util::reflect_microfacet(ray, intersection, mn);
         let dir_next = ray_next.direction();
 
-        let reflectance = self.calc_reflectance(dir.dot(mn), intersection.side());
+        let reflectance = self.calc_reflectance(dir.dot(mn), intersection);
         let g2 = self.calc_g2(dir, dir_next, normal);
         let g1 = self.calc_g1(dir, normal);
         let coefficient = reflectance * g2 / g1;

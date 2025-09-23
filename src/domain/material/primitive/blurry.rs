@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use snafu::prelude::*;
 
-use crate::domain::color::{Albedo, Spectrum};
+use crate::domain::color::Spectrum;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::algebra::Product;
 use crate::domain::math::geometry::{Direction, Normal};
@@ -14,29 +14,33 @@ use crate::domain::renderer::{
     Contribution, PmContext, PmState, RtContext, RtState, StoragePolicy,
 };
 use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
+use crate::domain::texture::def::DynAlbedoTexture;
 
 use super::MicrofacetMaterial;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Blurry {
-    albedo: Albedo,
+    albedo: DynAlbedoTexture,
     refractive_index: Val,
     alpha: Val,
 }
 
 impl Blurry {
-    pub fn new(
-        albedo: Albedo,
+    pub fn new<T>(
+        albedo: T,
         refractive_index: Val,
         roughness: Val,
-    ) -> Result<Self, TryNewBlurryError> {
+    ) -> Result<Self, TryNewBlurryError>
+    where
+        T: Into<DynAlbedoTexture>,
+    {
         ensure!(refractive_index > Val(0.0), InvalidRefractiveIndexSnafu);
         ensure!(
             Val(0.0) < roughness && roughness <= Val(1.0),
             InvalidRoughnessSnafu,
         );
         Ok(Self {
-            albedo,
+            albedo: albedo.into(),
             refractive_index,
             alpha: roughness.powi(2),
         })
@@ -86,8 +90,8 @@ impl Material for Blurry {
 }
 
 impl MicrofacetMaterial for Blurry {
-    fn r0(&self, side: SurfaceSide) -> Spectrum {
-        let ri = if side == SurfaceSide::Front {
+    fn r0(&self, intersection: &RayIntersection) -> Spectrum {
+        let ri = if intersection.side() == SurfaceSide::Front {
             self.refractive_index
         } else {
             self.refractive_index.recip()
@@ -117,20 +121,21 @@ impl BsdfMaterial for Blurry {
                 return Spectrum::zero();
             };
 
-            let reflectance = self.calc_reflectance(dir_out.dot(mn), side);
+            let reflectance = self.calc_reflectance(dir_out.dot(mn), intersection);
             let reflectance = reflectance.channel(0).min(Val(1.0));
 
             let ndf = self.calc_ndf(normal, mn);
             let g2 = self.calc_g2(dir_out, dir_in, normal);
             let (cos, cos_next) = (dir_out.dot(normal), dir_in.dot(normal));
 
-            self.albedo * (reflectance * ndf * g2) / (Val(4.0) * cos * cos_next).abs()
+            let albedo = self.albedo.lookup_at(intersection);
+            albedo * (reflectance * ndf * g2) / (Val(4.0) * cos * cos_next).abs()
         } else {
             let Ok(mn) = Normal::normalize(-dir_out - ri * dir_in) else {
                 return Spectrum::zero();
             };
 
-            let reflectance = self.calc_reflectance(dir_out.dot(mn), side);
+            let reflectance = self.calc_reflectance(dir_out.dot(mn), intersection);
             let transmittance = Val(1.0) - reflectance.channel(0).min(Val(1.0));
 
             let ndf = self.calc_ndf(normal, mn);
@@ -140,7 +145,8 @@ impl BsdfMaterial for Blurry {
 
             let cos_term = ((cos_mn * cos_mn_next) / (cos * cos_next)).abs();
             let denominator = (cos_mn.abs() / ri + cos_mn_next.abs()).powi(2);
-            self.albedo * cos_term * transmittance * ndf * g2 / denominator
+            let albedo = self.albedo.lookup_at(intersection);
+            albedo * cos_term * transmittance * ndf * g2 / denominator
         }
     }
 }
@@ -165,11 +171,13 @@ impl BsdfSampling for Blurry {
         let g2 = self.calc_g2(dir, dir_next, normal);
         let g1 = self.calc_g1(dir, normal);
         let coefficient = if scatter_kind.is_reflective() {
-            self.albedo * g2 / g1
+            let albedo = self.albedo.lookup_at(intersection);
+            albedo * g2 / g1
         } else {
+            let albedo = self.albedo.lookup_at(intersection);
             let (o_mn, i_mn) = (mn.dot(dir).abs(), mn.dot(dir_next).abs());
             let extra = o_mn.abs() * i_mn.abs() * Val(4.0) / (o_mn / ri + i_mn).powi(2);
-            self.albedo * extra * g2 / g1
+            albedo * extra * g2 / g1
         };
 
         let ndf = self.calc_ndf(normal, mn);
@@ -201,7 +209,7 @@ impl BsdfSampling for Blurry {
             (mn, false)
         };
 
-        let reflectance = self.calc_reflectance(dir.dot(normal), side);
+        let reflectance = self.calc_reflectance(dir.dot(normal), intersection);
         let reflectance = reflectance.channel(0).min(Val(1.0));
 
         let g1 = self.calc_g1(dir, normal);
@@ -226,6 +234,8 @@ pub enum TryNewBlurryError {
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::color::Albedo;
+
     use super::*;
 
     #[test]

@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::domain::color::{Albedo, Spectrum};
+use crate::domain::color::Spectrum;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
@@ -10,14 +10,19 @@ use crate::domain::ray::photon::PhotonRay;
 use crate::domain::ray::util as ray_util;
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
 use crate::domain::sampling::coefficient::{BsdfSample, BsdfSampling};
+use crate::domain::texture::def::DynAlbedoTexture;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Specular {
-    albedo: Albedo,
+    albedo: DynAlbedoTexture,
 }
 
 impl Specular {
-    pub fn new(albedo: Albedo) -> Self {
+    pub fn new<T>(albedo: T) -> Self
+    where
+        T: Into<DynAlbedoTexture>,
+    {
+        let albedo = albedo.into();
         Self { albedo }
     }
 }
@@ -70,7 +75,7 @@ impl BsdfSampling for Specular {
     ) -> BsdfSample {
         let direction = ray_util::reflect(ray, intersection);
         let pdf = self.pdf_bsdf(ray, intersection, &direction);
-        BsdfSample::new(direction, self.albedo.into(), pdf)
+        BsdfSample::new(direction, self.albedo.lookup_at(intersection).into(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {

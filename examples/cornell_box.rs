@@ -151,13 +151,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Specular Ball
     builder.add(
         Sphere::new(Point::new(Val(400.0), Val(90.0), Val(180.0)), Val(90.0))?,
-        Specular::new((Albedo::WHITE * Val(0.8)).into()),
+        Specular::new(Albedo::from(Albedo::WHITE * Val(0.8))),
     );
 
     // Refractive Ball
     builder.add(
         Sphere::new(Point::new(Val(185.0), Val(240.0), Val(169.5)), Val(75.0))?,
-        Refractive::new((Albedo::WHITE * Val(0.8)).into(), Val(1.5))?,
+        Refractive::new(Albedo::from(Albedo::WHITE * Val(0.8)), Val(1.5))?,
     );
 
     let scene = builder.build();
