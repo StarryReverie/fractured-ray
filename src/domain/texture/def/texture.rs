@@ -23,4 +23,5 @@ pub trait Texture: Send + Sync {
 pub enum TextureKind {
     Checkerboard,
     Constant,
+    VisibleNormal,
 }

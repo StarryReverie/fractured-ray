@@ -12,6 +12,7 @@ use super::{Texture, TextureKind, UvCoordinate};
 pub enum DynTexture {
     Checkerboard(Checkerboard),
     Constant(Constant),
+    VisibleNormal(VisibieNormal),
 }
 
 impl<S> From<S> for DynTexture
@@ -47,7 +48,10 @@ impl DynAlbedoTexture {
 
     #[inline]
     pub fn lookup_at(&self, intersection: &RayIntersection) -> Albedo {
-        self.lookup(intersection.position(), intersection.uv())
+        match self {
+            Self::Constant(albedo) => *albedo,
+            Self::Dyn(s) => Albedo::clamp(s.lookup_at(intersection)),
+        }
     }
 }
 
