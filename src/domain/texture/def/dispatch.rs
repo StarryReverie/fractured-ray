@@ -3,20 +3,24 @@ use enum_dispatch::enum_dispatch;
 use crate::domain::color::{Albedo, Spectrum};
 use crate::domain::math::geometry::Point;
 use crate::domain::ray::event::RayIntersection;
-use crate::domain::texture::primitive::Constant;
+use crate::domain::texture::primitive::*;
 
 use super::{Texture, TextureKind, UvCoordinate};
 
 #[enum_dispatch(Texture)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DynTexture {
+    Checkerboard(Checkerboard),
     Constant(Constant),
 }
 
-impl From<Spectrum> for DynTexture {
+impl<S> From<S> for DynTexture
+where
+    S: Into<Spectrum>,
+{
     #[inline]
-    fn from(value: Spectrum) -> Self {
-        Self::Constant(value.into())
+    fn from(value: S) -> Self {
+        Self::Constant(Constant::new(value.into()))
     }
 }
 
@@ -47,13 +51,6 @@ impl DynAlbedoTexture {
     }
 }
 
-impl From<Albedo> for DynAlbedoTexture {
-    #[inline]
-    fn from(value: Albedo) -> Self {
-        Self::Constant(value)
-    }
-}
-
 impl<T> From<T> for DynAlbedoTexture
 where
     T: Into<DynTexture>,
@@ -61,10 +58,6 @@ where
     fn from(value: T) -> Self {
         match value.into() {
             DynTexture::Constant(albedo) => Self::Constant(Albedo::clamp(albedo.value())),
-            #[expect(
-                unreachable_patterns,
-                reason = "currently there is only one texture variant"
-            )]
             texture => Self::Dyn(Box::new(texture)),
         }
     }

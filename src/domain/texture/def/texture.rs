@@ -21,5 +21,6 @@ pub trait Texture: Send + Sync {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TextureKind {
+    Checkerboard,
     Constant,
 }
