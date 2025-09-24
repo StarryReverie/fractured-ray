@@ -14,19 +14,19 @@ pub type PolygonIndices = SmallVec<[u32; 5]>;
 #[derive(Debug, Clone)]
 pub struct MeshData {
     vertices: MeshDataComponent<Point>,
-    textures: Option<MeshDataComponent<UvCoordinate>>,
+    uvs: Option<MeshDataComponent<UvCoordinate>>,
     transformation: Option<Sequential>,
 }
 
 impl MeshData {
     pub fn new(
         vertices: MeshDataComponent<Point>,
-        textures: Option<MeshDataComponent<UvCoordinate>>,
+        uvs: Option<MeshDataComponent<UvCoordinate>>,
         transformation: Option<Sequential>,
     ) -> Self {
         Self {
             vertices,
-            textures,
+            uvs,
             transformation,
         }
     }
@@ -37,8 +37,8 @@ impl MeshData {
     }
 
     #[inline]
-    pub fn textures(&self) -> Option<&MeshDataComponent<UvCoordinate>> {
-        self.textures.as_ref()
+    pub fn uvs(&self) -> Option<&MeshDataComponent<UvCoordinate>> {
+        self.uvs.as_ref()
     }
 
     #[inline]

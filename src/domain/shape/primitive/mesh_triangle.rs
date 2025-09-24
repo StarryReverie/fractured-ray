@@ -14,6 +14,7 @@ use crate::domain::sampling::point::PointSampling;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
 use crate::domain::shape::mesh::MeshData;
 use crate::domain::shape::util::ShapeId;
+use crate::domain::texture::def::{UvCoordinate, UvCoordinateInterpolation};
 
 use super::Triangle;
 
@@ -35,6 +36,16 @@ impl MeshTriangle {
         let v1 = &vertices[triangles[self.index].1 as usize];
         let v2 = &vertices[triangles[self.index].2 as usize];
         (v0, v1, v2)
+    }
+
+    fn get_uvs(&self) -> Option<(UvCoordinate, UvCoordinate, UvCoordinate)> {
+        let uv_component = self.data.uvs()?;
+        let uvs = uv_component.data();
+        let triangle = &uv_component.triangles()[self.index];
+        let uv0 = uvs[triangle.0 as usize];
+        let uv1 = uvs[triangle.1 as usize];
+        let uv2 = uvs[triangle.2 as usize];
+        Some((uv0, uv1, uv2))
     }
 
     fn to_triangle(&self) -> Triangle {
@@ -66,9 +77,31 @@ impl Shape for MeshTriangle {
         let (v0, v1, v2) = self.get_vertices();
         if let Some(tr) = self.data.transformation() {
             let (v0_tr, v1_tr, v2_tr) = (v0.transform(tr), v1.transform(tr), v2.transform(tr));
-            Triangle::complete_ray_intersection_part(part, &v0_tr, &v1_tr, &v2_tr)
+            let res = Triangle::complete_ray_intersection_part(part, &v0_tr, &v1_tr, &v2_tr);
+
+            if let Some((uv0, uv1, uv2)) = self.get_uvs() {
+                let uv = UvCoordinateInterpolation::new()
+                    .push(v0_tr, uv0)
+                    .push(v1_tr, uv1)
+                    .push(v2_tr, uv2)
+                    .interpolate(res.position());
+                res.with_uv(uv)
+            } else {
+                res
+            }
         } else {
-            Triangle::complete_ray_intersection_part(part, v0, v1, v2)
+            let res = Triangle::complete_ray_intersection_part(part, v0, v1, v2);
+
+            if let Some((uv0, uv1, uv2)) = self.get_uvs() {
+                let uv = UvCoordinateInterpolation::new()
+                    .push(*v0, uv0)
+                    .push(*v1, uv1)
+                    .push(*v2, uv2)
+                    .interpolate(res.position());
+                res.with_uv(uv)
+            } else {
+                res
+            }
         }
     }
 

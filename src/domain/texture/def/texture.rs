@@ -24,4 +24,5 @@ pub enum TextureKind {
     Checkerboard,
     Constant,
     VisibleNormal,
+    VIsibleUvCoordinate,
 }

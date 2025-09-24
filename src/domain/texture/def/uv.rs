@@ -67,16 +67,26 @@ impl UvCoordinateInterpolation {
         let (vtx1, uv1) = self.vertices[1];
         let (vtx2, uv2) = self.vertices[2];
 
-        let area0 = (vtx1 - position).cross(vtx2 - position).norm();
-        let area1 = (vtx0 - position).cross(vtx2 - position).norm();
-        let area2 = (vtx0 - position).cross(vtx1 - position).norm();
+        let vec1 = vtx1 - vtx0;
+        let vec2 = vtx2 - vtx0;
+        let basis1 = vec1;
+        let basis2_proj = (vec2.dot(vec1) / vec1.norm_squared()) * vec1;
+        let basis2 = vec2 - basis2_proj;
 
-        let area = area0 + area1 + area2;
-        let (w0, w1, w2) = (area0 / area, area1 / area, area2 / area);
+        let proj_fract = (basis2_proj.norm_squared() / basis1.norm_squared()).sqrt();
+        let uv_basis1 = (uv1.u() - uv0.u(), uv1.v() - uv0.v());
+        let uv_basis2_proj = (uv_basis1.0 * proj_fract, uv_basis1.1 * proj_fract);
+        let uv_basis2 = (
+            uv2.u() - uv0.u() - uv_basis2_proj.0,
+            uv2.v() - uv0.v() - uv_basis2_proj.1,
+        );
 
-        let u = (uv0.u() * w0 + uv1.u() * w1 + uv2.u() * w2).clamp(Val(0.0), Val(1.0));
-        let v = (uv0.v() * w0 + uv1.v() * w1 + uv2.v() * w2).clamp(Val(0.0), Val(1.0));
-        UvCoordinate(u, v)
+        let pos = position - vtx0;
+        let w1 = pos.dot(basis1) / basis1.norm_squared();
+        let w2 = pos.dot(basis2) / basis2.norm_squared();
+        let u = uv0.u() + w1 * uv_basis1.0 + w2 * uv_basis2.0;
+        let v = uv0.v() + w1 * uv_basis1.1 + w2 * uv_basis2.1;
+        UvCoordinate::clamp(u, v)
     }
 }
 
@@ -98,7 +108,7 @@ mod tests {
 
     #[test]
     fn uv_coordinate_interpolation_interpolate_succeeds() {
-        let uv = UvCoordinateInterpolation::new()
+        let interpolation = UvCoordinateInterpolation::new()
             .push(
                 Point::new(Val(0.0), Val(0.0), Val(0.0)),
                 UvCoordinate::new(Val(0.0), Val(0.0)).unwrap(),
@@ -110,8 +120,12 @@ mod tests {
             .push(
                 Point::new(Val(0.0), Val(1.0), Val(0.0)),
                 UvCoordinate::new(Val(0.0), Val(1.0)).unwrap(),
-            )
-            .interpolate(Point::new(Val(1.0), Val(0.5), Val(0.0)));
+            );
+
+        let uv = interpolation.interpolate(Point::new(Val(1.0), Val(0.5), Val(0.0)));
         assert_eq!(uv, UvCoordinate::new(Val(0.5), Val(0.5)).unwrap());
+
+        let uv = interpolation.interpolate(Point::new(Val(2.0), Val(1.0), Val(0.0)));
+        assert_eq!(uv, UvCoordinate::new(Val(1.0), Val(1.0)).unwrap());
     }
 }

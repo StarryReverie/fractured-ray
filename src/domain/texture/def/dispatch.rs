@@ -13,6 +13,7 @@ pub enum DynTexture {
     Checkerboard(Checkerboard),
     Constant(Constant),
     VisibleNormal(VisibieNormal),
+    VisibleUvCoordinate(VisibleUvCoordinate),
 }
 
 impl<S> From<S> for DynTexture

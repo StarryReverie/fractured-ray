@@ -16,6 +16,7 @@ use crate::domain::sampling::point::PointSampling;
 use crate::domain::shape::def::{BoundingBox, Shape, ShapeKind};
 use crate::domain::shape::mesh::MeshData;
 use crate::domain::shape::util::ShapeId;
+use crate::domain::texture::def::{UvCoordinate, UvCoordinateInterpolation};
 
 use super::Polygon;
 
@@ -33,10 +34,20 @@ impl MeshPolygon {
     fn get_vertices(&self) -> SmallVec<[&Point; 5]> {
         let vertices = self.data.vertices().data();
         let polygons = self.data.vertices().polygons();
-        polygons[self.index]
-            .iter()
+        (polygons[self.index].iter())
             .map(|index| &vertices[*index as usize])
-            .collect::<SmallVec<[_; 5]>>()
+            .collect()
+    }
+
+    fn get_uvs(&self) -> Option<(UvCoordinate, UvCoordinate, UvCoordinate)> {
+        let uv_component = self.data.uvs()?;
+        let uvs = uv_component.data();
+        let polygon = &uv_component.polygons()[self.index];
+        assert!(polygon.len() >= 3);
+        let uv0 = uvs[polygon[0] as usize];
+        let uv1 = uvs[polygon[1] as usize];
+        let uv2 = uvs[polygon[2] as usize];
+        Some((uv0, uv1, uv2))
     }
 
     fn to_polygon(&self) -> Polygon {
@@ -85,9 +96,31 @@ impl Shape for MeshPolygon {
 
         if let Some(tr) = self.data.transformation() {
             let normal_tr = normal.transform(tr);
-            Polygon::complete_ray_intersection_part(part, &normal_tr)
+            let res = Polygon::complete_ray_intersection_part(part, &normal_tr);
+
+            if let Some((uv0, uv1, uv2)) = self.get_uvs() {
+                let uv = UvCoordinateInterpolation::new()
+                    .push(vertices[0].transform(tr), uv0)
+                    .push(vertices[1].transform(tr), uv1)
+                    .push(vertices[2].transform(tr), uv2)
+                    .interpolate(res.position());
+                res.with_uv(uv)
+            } else {
+                res
+            }
         } else {
-            Polygon::complete_ray_intersection_part(part, &normal)
+            let res = Polygon::complete_ray_intersection_part(part, &normal);
+
+            if let Some((uv0, uv1, uv2)) = self.get_uvs() {
+                let uv = UvCoordinateInterpolation::new()
+                    .push(*vertices[0], uv0)
+                    .push(*vertices[1], uv1)
+                    .push(*vertices[2], uv2)
+                    .interpolate(res.position());
+                res.with_uv(uv)
+            } else {
+                res
+            }
         }
     }
 
