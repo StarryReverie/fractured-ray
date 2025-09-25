@@ -1,7 +1,6 @@
 use rand::prelude::*;
 use rand_distr::weighted::WeightedIndex;
 
-use crate::domain::color::Spectrum;
 use crate::domain::math::geometry::Area;
 use crate::domain::math::numeric::{Val, WrappedVal};
 
@@ -20,7 +19,7 @@ impl AggregatePhotonSampler {
             samplers.push(Box::new(EmptyPhotonSampler::new()));
         }
         let weights = (samplers.iter())
-            .map(|sampler| sampler.radiance().norm() * sampler.area())
+            .map(|sampler| sampler.area().value())
             .map(|weight| weight.0.max(Val::PRECISION))
             .collect::<Vec<_>>();
         let index_sampler = WeightedIndex::new(weights).unwrap();
@@ -36,10 +35,6 @@ impl AggregatePhotonSampler {
 }
 
 impl PhotonSampling for AggregatePhotonSampler {
-    fn radiance(&self) -> Spectrum {
-        unimplemented!("AggregatePhotonSampler doesn't have a unique radiance")
-    }
-
     fn area(&self) -> Area {
         (self.samplers.iter()).fold(Area::zero(), |sum, s| sum + s.area())
     }
@@ -54,6 +49,7 @@ impl PhotonSampling for AggregatePhotonSampler {
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::color::Spectrum;
     use crate::domain::material::primitive::Emissive;
     use crate::domain::math::geometry::{Point, SpreadAngle};
     use crate::domain::sampling::photon::PhotonSamplerAdapter;
@@ -93,8 +89,8 @@ mod tests {
         let sampler = AggregatePhotonSampler::new(vec![sampler1, sampler2]);
 
         let photon = sampler.sample_photon(&mut rand::rng()).unwrap();
-        assert_eq!(photon.photon().throughput().red(), Val::PI);
-        assert_eq!(photon.photon().throughput().green(), Val::PI);
-        assert_eq!(photon.photon().throughput().blue(), Val::PI);
+        assert_eq!(photon.photon().throughput().red(), Val(2.5) * Val::PI);
+        assert_eq!(photon.photon().throughput().green(), Val(2.5) * Val::PI);
+        assert_eq!(photon.photon().throughput().blue(), Val(2.5) * Val::PI);
     }
 }

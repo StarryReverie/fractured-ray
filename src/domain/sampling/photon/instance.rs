@@ -1,6 +1,5 @@
 use rand::prelude::*;
 
-use crate::domain::color::Spectrum;
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::geometry::Area;
 use crate::domain::math::transformation::{Sequential, Transform};
@@ -27,12 +26,6 @@ impl InstancePhotonSampler {
 }
 
 impl PhotonSampling for InstancePhotonSampler {
-    fn radiance(&self) -> Spectrum {
-        self.sampler
-            .as_ref()
-            .map_or(Spectrum::zero(), |sampler| sampler.radiance())
-    }
-
     fn area(&self) -> Area {
         self.sampler
             .as_ref()

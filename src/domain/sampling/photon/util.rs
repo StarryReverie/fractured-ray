@@ -3,9 +3,10 @@ use rand::prelude::*;
 use crate::domain::color::Spectrum;
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Vector;
-use crate::domain::math::geometry::{Area, Direction, Frame};
+use crate::domain::math::geometry::{Area, Direction, Distance, Frame};
 use crate::domain::math::numeric::Val;
 use crate::domain::ray::Ray;
+use crate::domain::ray::event::RayIntersectionPart;
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::sampling::point::PointSampling;
 use crate::domain::shape::def::Shape;
@@ -22,10 +23,6 @@ impl EmptyPhotonSampler {
 }
 
 impl PhotonSampling for EmptyPhotonSampler {
-    fn radiance(&self) -> Spectrum {
-        Spectrum::zero()
-    }
-
     fn area(&self) -> Area {
         Area::zero()
     }
@@ -63,10 +60,6 @@ impl<PS> PhotonSampling for PhotonSamplerAdapter<PS>
 where
     PS: PointSampling,
 {
-    fn radiance(&self) -> Spectrum {
-        self.emissive.radiance()
-    }
-
     fn area(&self) -> Area {
         self.area
     }
@@ -96,8 +89,16 @@ where
             (dir, Val::FRAC_1_PI / sin2_beam)
         };
 
+        let tmp_ray = Ray::new(point, -dir);
+        let part = RayIntersectionPart::new(Distance::zero(), &tmp_ray);
+        let intersection = self.inner.shape()?.complete_part(part);
+        let radiance = self.emissive.radiance(&intersection);
+        if radiance == Spectrum::zero() {
+            return None;
+        }
+
         let ray = Ray::new(point, dir);
-        let throughput = self.radiance() / (pdf_point * pdf_dir_div_cos);
+        let throughput = radiance / (pdf_point * pdf_dir_div_cos);
         let photon = PhotonRay::new(ray, throughput);
         Some(PhotonSample::new(photon))
     }
@@ -105,6 +106,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::color::Spectrum;
     use crate::domain::math::geometry::{Point, SpreadAngle};
     use crate::domain::sampling::point::TrianglePointSampler;
     use crate::domain::shape::def::ShapeKind;

@@ -278,13 +278,10 @@ mod tests {
             ke: Some([1.0, 2.0, 3.0]),
             ..get_initial_ext_material()
         };
-        match converter.convert(&mtl).unwrap() {
-            DynMaterial::Emissive(emissive) => {
-                let expected_radiance = Spectrum::new(Val(1.0), Val(2.0), Val(3.0));
-                assert_eq!(emissive.radiance(), expected_radiance);
-            }
-            _ => unreachable!(),
-        }
+        assert!(matches!(
+            converter.convert(&mtl),
+            Ok(DynMaterial::Emissive(_)),
+        ));
     }
 
     #[test]

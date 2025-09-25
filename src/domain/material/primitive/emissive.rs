@@ -3,13 +3,12 @@ use getset::CopyGetters;
 use crate::domain::color::Spectrum;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Product;
-use crate::domain::math::geometry::{Point, SpreadAngle};
-use crate::domain::math::numeric::Val;
+use crate::domain::math::geometry::SpreadAngle;
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::{RayIntersection, SurfaceSide};
 use crate::domain::ray::photon::PhotonRay;
 use crate::domain::renderer::{Contribution, PmContext, PmState, RtContext, RtState};
-use crate::domain::texture::def::{DynTexture, Texture, UvCoordinate};
+use crate::domain::texture::def::{DynTexture, Texture};
 
 #[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
 pub struct Emissive {
@@ -30,11 +29,8 @@ impl Emissive {
     }
 
     #[inline]
-    pub fn radiance(&self) -> Spectrum {
-        self.radiance.lookup(
-            Point::new(Val(0.0), Val(0.0), Val(0.0)),
-            Some(UvCoordinate::new(Val(0.0), Val(0.0)).unwrap()),
-        )
+    pub fn radiance(&self, intersection: &RayIntersection) -> Spectrum {
+        self.radiance.lookup_at(intersection)
     }
 }
 
