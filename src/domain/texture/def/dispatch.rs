@@ -11,6 +11,7 @@ use super::{Texture, TextureKind};
 pub enum DynTexture {
     Checkerboard(Checkerboard),
     Constant(Constant),
+    Noise(Noise),
     VisibleNormal(VisibieNormal),
     VisibleUvCoordinate(VisibleUvCoordinate),
 }
