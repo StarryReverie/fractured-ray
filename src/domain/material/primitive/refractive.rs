@@ -86,7 +86,7 @@ impl BsdfSampling for Refractive {
         };
         let (ray_next, _) = ray_util::fresnel_refract(ray, intersection, ri, rng);
         let pdf = self.pdf_bsdf(ray, intersection, &ray_next);
-        BsdfSample::new(ray_next, self.albedo.lookup_at(intersection).into(), pdf)
+        BsdfSample::new(ray_next, self.albedo.lookup(intersection).into(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {

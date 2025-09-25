@@ -182,7 +182,7 @@ impl Material for Glossy {
 impl MicrofacetMaterial for Glossy {
     #[inline]
     fn r0(&self, intersection: &RayIntersection) -> Spectrum {
-        let albedo = self.albedo.lookup_at(intersection).into();
+        let albedo = self.albedo.lookup(intersection).into();
         Spectrum::lerp(Self::DIELECTRIC_R0, albedo, self.metalness)
     }
 

@@ -30,7 +30,7 @@ impl Emissive {
 
     #[inline]
     pub fn radiance(&self, intersection: &RayIntersection) -> Spectrum {
-        self.radiance.lookup_at(intersection)
+        self.radiance.lookup(intersection)
     }
 }
 
@@ -49,11 +49,11 @@ impl Material for Emissive {
         if state.skip_emissive() || intersection.side() == SurfaceSide::Back {
             Contribution::new()
         } else if self.beam_angle.is_hemisphere() {
-            Contribution::from_light(self.radiance.lookup_at(intersection))
+            Contribution::from_light(self.radiance.lookup(intersection))
         } else {
             let cos = intersection.normal().dot(-ray.direction());
             if cos >= self.beam_angle.cos_half() {
-                Contribution::from_light(self.radiance.lookup_at(intersection))
+                Contribution::from_light(self.radiance.lookup(intersection))
             } else {
                 Contribution::new()
             }

@@ -75,7 +75,7 @@ impl BsdfSampling for Specular {
     ) -> BsdfSample {
         let direction = ray_util::reflect(ray, intersection);
         let pdf = self.pdf_bsdf(ray, intersection, &direction);
-        BsdfSample::new(direction, self.albedo.lookup_at(intersection).into(), pdf)
+        BsdfSample::new(direction, self.albedo.lookup(intersection).into(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, _intersection: &RayIntersection, _ray_next: &Ray) -> Val {

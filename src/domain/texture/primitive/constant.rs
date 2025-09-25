@@ -1,8 +1,8 @@
 use getset::CopyGetters;
 
 use crate::domain::color::Spectrum;
-use crate::domain::math::geometry::Point;
-use crate::domain::texture::def::{Texture, TextureKind, UvCoordinate};
+use crate::domain::ray::event::RayIntersection;
+use crate::domain::texture::def::{Texture, TextureKind};
 
 #[derive(Debug, Clone, PartialEq, Eq, CopyGetters)]
 #[getset(get_copy = "pub")]
@@ -29,7 +29,7 @@ impl Texture for Constant {
     }
 
     #[inline]
-    fn lookup(&self, _position: Point, _uv: Option<UvCoordinate>) -> Spectrum {
+    fn lookup(&self, _intersection: &RayIntersection) -> Spectrum {
         self.value
     }
 }

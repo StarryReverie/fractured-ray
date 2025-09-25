@@ -128,7 +128,7 @@ impl BsdfMaterial for Blurry {
             let g2 = self.calc_g2(dir_out, dir_in, normal);
             let (cos, cos_next) = (dir_out.dot(normal), dir_in.dot(normal));
 
-            let albedo = self.albedo.lookup_at(intersection);
+            let albedo = self.albedo.lookup(intersection);
             albedo * (reflectance * ndf * g2) / (Val(4.0) * cos * cos_next).abs()
         } else {
             let Ok(mn) = Normal::normalize(-dir_out - ri * dir_in) else {
@@ -145,7 +145,7 @@ impl BsdfMaterial for Blurry {
 
             let cos_term = ((cos_mn * cos_mn_next) / (cos * cos_next)).abs();
             let denominator = (cos_mn.abs() / ri + cos_mn_next.abs()).powi(2);
-            let albedo = self.albedo.lookup_at(intersection);
+            let albedo = self.albedo.lookup(intersection);
             albedo * cos_term * transmittance * ndf * g2 / denominator
         }
     }
@@ -171,10 +171,10 @@ impl BsdfSampling for Blurry {
         let g2 = self.calc_g2(dir, dir_next, normal);
         let g1 = self.calc_g1(dir, normal);
         let coefficient = if scatter_kind.is_reflective() {
-            let albedo = self.albedo.lookup_at(intersection);
+            let albedo = self.albedo.lookup(intersection);
             albedo * g2 / g1
         } else {
-            let albedo = self.albedo.lookup_at(intersection);
+            let albedo = self.albedo.lookup(intersection);
             let (o_mn, i_mn) = (mn.dot(dir).abs(), mn.dot(dir_next).abs());
             let extra = o_mn.abs() * i_mn.abs() * Val(4.0) / (o_mn / ri + i_mn).powi(2);
             albedo * extra * g2 / g1

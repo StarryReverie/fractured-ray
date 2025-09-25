@@ -1,9 +1,9 @@
 use snafu::prelude::*;
 
 use crate::domain::color::Spectrum;
-use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::Val;
-use crate::domain::texture::def::{DynTexture, Texture, TextureKind, UvCoordinate};
+use crate::domain::ray::event::RayIntersection;
+use crate::domain::texture::def::{DynTexture, Texture, TextureKind};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Checkerboard {
@@ -36,14 +36,15 @@ impl Texture for Checkerboard {
         TextureKind::Checkerboard
     }
 
-    fn lookup(&self, position: Point, uv: Option<UvCoordinate>) -> Spectrum {
+    fn lookup(&self, intersection: &RayIntersection) -> Spectrum {
+        let position = intersection.position();
         let x = usize::from((self.frequency * position.x()).floor());
         let y = usize::from((self.frequency * position.y()).floor());
         let z = usize::from((self.frequency * position.z()).floor());
         if (x + y + z) % 2 == 0 {
-            self.texture0.lookup(position, uv)
+            self.texture0.lookup(intersection)
         } else {
-            self.texture1.lookup(position, uv)
+            self.texture1.lookup(intersection)
         }
     }
 }

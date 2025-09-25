@@ -86,7 +86,7 @@ impl BsdfMaterial for Diffuse {
         intersection: &RayIntersection,
         dir_in: Direction,
     ) -> Spectrum {
-        let albedo = self.albedo.lookup_at(intersection);
+        let albedo = self.albedo.lookup(intersection);
         if intersection.normal().dot(dir_in) > Val(0.0) {
             Val::FRAC_1_PI * albedo
         } else {
@@ -107,7 +107,7 @@ impl BsdfSampling for Diffuse {
 
         let ray_next = intersection.spawn(direction);
         let pdf = self.pdf_bsdf(ray, intersection, &ray_next);
-        BsdfSample::new(ray_next, self.albedo.lookup_at(intersection).into(), pdf)
+        BsdfSample::new(ray_next, self.albedo.lookup(intersection).into(), pdf)
     }
 
     fn pdf_bsdf(&self, _ray: &Ray, intersection: &RayIntersection, ray_next: &Ray) -> Val {

@@ -282,7 +282,7 @@ impl Material for Scattering {
         ray: &Ray,
         intersection: &RayIntersection,
     ) -> Contribution {
-        let albedo = self.albedo.lookup_at(intersection);
+        let albedo = self.albedo.lookup(intersection);
         if intersection.side() == SurfaceSide::Front {
             self.shade_front_face(context, state, ray, intersection, albedo)
         } else {
@@ -297,7 +297,7 @@ impl Material for Scattering {
         photon: &PhotonRay,
         intersection: &RayIntersection,
     ) {
-        let albedo = self.albedo.lookup_at(intersection);
+        let albedo = self.albedo.lookup(intersection);
         if intersection.side() == SurfaceSide::Front {
             self.receive_front_face(context, state, photon, intersection, albedo)
         } else {
@@ -330,7 +330,7 @@ impl BssrdfSampling for Scattering {
         intersection_out: &RayIntersection,
         rng: &mut dyn RngCore,
     ) -> Option<BssrdfDiffusionSample> {
-        let albedo = self.albedo.lookup_at(intersection_out);
+        let albedo = self.albedo.lookup(intersection_out);
         let scattering_distance = Self::calc_scattering_distance(albedo, self.mean_free_path);
 
         let d = scattering_distance.channel(rng.random_range(0..2));
@@ -361,7 +361,7 @@ impl BssrdfSampling for Scattering {
         intersection_out: &RayIntersection,
         intersection_in: &RayIntersection,
     ) -> Val {
-        let albedo = self.albedo.lookup_at(intersection_out);
+        let albedo = self.albedo.lookup(intersection_out);
         let scattering_distance = Self::calc_scattering_distance(albedo, self.mean_free_path);
 
         let normal = intersection_out.normal();

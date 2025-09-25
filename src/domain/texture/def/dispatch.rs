@@ -1,11 +1,10 @@
 use enum_dispatch::enum_dispatch;
 
 use crate::domain::color::{Albedo, Spectrum};
-use crate::domain::math::geometry::Point;
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::texture::primitive::*;
 
-use super::{Texture, TextureKind, UvCoordinate};
+use super::{Texture, TextureKind};
 
 #[enum_dispatch(Texture)]
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,18 +39,11 @@ impl DynAlbedoTexture {
         }
     }
 
-    pub fn lookup(&self, position: Point, uv: Option<UvCoordinate>) -> Albedo {
-        match self {
-            Self::Constant(albedo) => *albedo,
-            Self::Dyn(s) => Albedo::clamp(s.lookup(position, uv)),
-        }
-    }
-
     #[inline]
-    pub fn lookup_at(&self, intersection: &RayIntersection) -> Albedo {
+    pub fn lookup(&self, intersection: &RayIntersection) -> Albedo {
         match self {
             Self::Constant(albedo) => *albedo,
-            Self::Dyn(s) => Albedo::clamp(s.lookup_at(intersection)),
+            Self::Dyn(s) => Albedo::clamp(s.lookup(intersection)),
         }
     }
 }
