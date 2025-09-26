@@ -1,6 +1,6 @@
 use std::io::{BufWriter, Result as IoResult, Write};
 
-use crate::domain::color::ExternalColor;
+use crate::domain::color::external::SRgbColor;
 use crate::domain::image::Image;
 
 #[derive(Debug)]
@@ -35,7 +35,7 @@ where
                 let color = image
                     .get(row, column)
                     .expect("row and column should not be out of bound");
-                let color = ExternalColor::from(color);
+                let color = SRgbColor::from(color);
                 write!(
                     self.writer,
                     "{} {} {} ",

@@ -1,6 +1,6 @@
 use getset::CopyGetters;
 
-use crate::domain::color::Spectrum;
+use crate::domain::color::core::Spectrum;
 use crate::domain::material::def::{Material, MaterialKind};
 use crate::domain::math::algebra::Product;
 use crate::domain::math::geometry::SpreadAngle;

@@ -1,6 +1,6 @@
 use enum_dispatch::enum_dispatch;
 
-use crate::domain::color::Spectrum;
+use crate::domain::color::core::Spectrum;
 use crate::domain::medium::primitive::{HenyeyGreenstein, Isotropic, Vacuum};
 use crate::domain::ray::Ray;
 use crate::domain::ray::event::RaySegment;

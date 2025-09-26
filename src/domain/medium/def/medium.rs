@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::domain::color::Spectrum;
+use crate::domain::color::core::Spectrum;
 use crate::domain::math::geometry::Direction;
 use crate::domain::medium::primitive::*;
 use crate::domain::ray::Ray;

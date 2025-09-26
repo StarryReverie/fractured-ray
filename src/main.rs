@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
-use fractured_ray::domain::color::{Albedo, Spectrum};
+use fractured_ray::domain::color::core::{Albedo, Spectrum};
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::Vector;
 use fractured_ray::domain::math::geometry::{Direction, Distance, Normal, Point, SpreadAngle};

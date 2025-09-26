@@ -1,7 +1,7 @@
 use getset::Getters;
 
 use crate::domain::camera::Resolution;
-use crate::domain::color::Spectrum;
+use crate::domain::color::core::Spectrum;
 use crate::domain::math::numeric::Val;
 
 #[derive(Debug, Clone, PartialEq, Getters)]

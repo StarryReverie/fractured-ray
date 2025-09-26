@@ -4,7 +4,7 @@ use enum_dispatch::enum_dispatch;
 use obj::Material as ExtMaterial;
 use snafu::prelude::*;
 
-use crate::domain::color::{Albedo, Spectrum};
+use crate::domain::color::core::{Albedo, Spectrum};
 use crate::domain::material::def::{DynMaterial, MaterialKind};
 use crate::domain::material::primitive::*;
 use crate::domain::math::geometry::SpreadAngle;

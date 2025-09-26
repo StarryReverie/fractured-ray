@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use snafu::prelude::*;
 
-use crate::domain::color::{Albedo, Spectrum};
+use crate::domain::color::core::{Albedo, Spectrum};
 use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
 use crate::domain::medium::def::{HomogeneousMedium, HomogeneousMediumExt, Medium, MediumKind};

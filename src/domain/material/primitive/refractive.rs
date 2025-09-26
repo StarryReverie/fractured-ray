@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use snafu::prelude::*;
 
-use crate::domain::color::Spectrum;
+use crate::domain::color::core::Spectrum;
 use crate::domain::material::def::{BsdfMaterial, BsdfMaterialExt, Material, MaterialKind};
 use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::Val;
@@ -103,7 +103,7 @@ pub enum TryNewRefractiveError {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::color::Albedo;
+    use crate::domain::color::core::Albedo;
 
     use super::*;
 

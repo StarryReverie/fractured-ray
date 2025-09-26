@@ -7,7 +7,7 @@ use rayon::prelude::*;
 use snafu::prelude::*;
 
 use crate::domain::camera::{Camera, Offset};
-use crate::domain::color::Spectrum;
+use crate::domain::color::core::Spectrum;
 use crate::domain::image::Image;
 use crate::domain::material::def::{FluxEstimation, Material, RefDynMaterial};
 use crate::domain::math::geometry::Direction;

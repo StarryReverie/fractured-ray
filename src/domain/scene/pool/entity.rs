@@ -56,7 +56,7 @@ impl EntityContainer for EntityPool {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::color::Albedo;
+    use crate::domain::color::core::Albedo;
     use crate::domain::material::def::{Material, MaterialKind};
     use crate::domain::material::primitive::Diffuse;
     use crate::domain::math::geometry::Point;

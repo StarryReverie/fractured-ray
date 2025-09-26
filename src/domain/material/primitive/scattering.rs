@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use snafu::prelude::*;
 
-use crate::domain::color::{Albedo, Spectrum};
+use crate::domain::color::core::{Albedo, Color, Spectrum};
 use crate::domain::material::def::{
     BsdfMaterial, BsdfMaterialExt, BssrdfMaterial, BssrdfMaterialExt, Material, MaterialKind,
 };

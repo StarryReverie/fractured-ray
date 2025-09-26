@@ -2,7 +2,7 @@ use std::io::{BufWriter, Result as IoResult, Write};
 
 use png::{BitDepth, ColorType, Encoder, SrgbRenderingIntent};
 
-use crate::domain::color::ExternalColor;
+use crate::domain::color::external::SRgbColor;
 use crate::domain::image::Image;
 
 #[derive(Debug)]
@@ -49,7 +49,7 @@ where
                 let color = image
                     .get(row, column)
                     .expect("row and column should not be out of bound");
-                let color = ExternalColor::from(color);
+                let color = SRgbColor::from(color);
                 data.push(color.red());
                 data.push(color.green());
                 data.push(color.blue());

@@ -5,6 +5,8 @@ use getset::CopyGetters;
 
 use crate::domain::math::numeric::Val;
 
+use super::Color;
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct Spectrum {
@@ -34,11 +36,6 @@ impl Spectrum {
     }
 
     #[inline]
-    pub fn lerp(a: Self, b: Self, t: Val) -> Self {
-        a * (Val(1.0) - t) + b * t
-    }
-
-    #[inline]
     pub fn norm(&self) -> Val {
         (self.red.powi(2) + self.green.powi(2) + self.blue.powi(2)).sqrt()
     }
@@ -50,6 +47,28 @@ impl Spectrum {
             2 => self.blue,
             _ => panic!("channel index out of range"),
         }
+    }
+}
+
+impl Color for Spectrum {
+    #[inline]
+    fn red(&self) -> Val {
+        self.red
+    }
+
+    #[inline]
+    fn green(&self) -> Val {
+        self.green
+    }
+
+    #[inline]
+    fn blue(&self) -> Val {
+        self.blue
+    }
+
+    #[inline]
+    fn lerp(a: Self, b: Self, t: Val) -> Self {
+        a * (Val(1.0) - t) + b * t
     }
 }
 

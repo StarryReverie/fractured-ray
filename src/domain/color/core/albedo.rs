@@ -4,7 +4,7 @@ use snafu::prelude::*;
 
 use crate::domain::math::numeric::Val;
 
-use super::Spectrum;
+use super::{Color, Spectrum};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Albedo(Spectrum);
@@ -41,23 +41,30 @@ impl Albedo {
     }
 
     #[inline]
-    pub fn red(&self) -> Val {
+    pub fn to_spectrum(&self) -> Spectrum {
+        self.0
+    }
+}
+
+impl Color for Albedo {
+    #[inline]
+    fn red(&self) -> Val {
         self.0.red()
     }
 
     #[inline]
-    pub fn green(&self) -> Val {
+    fn green(&self) -> Val {
         self.0.green()
     }
 
     #[inline]
-    pub fn blue(&self) -> Val {
+    fn blue(&self) -> Val {
         self.0.blue()
     }
 
     #[inline]
-    pub fn to_spectrum(&self) -> Spectrum {
-        self.0
+    fn lerp(a: Self, b: Self, t: Val) -> Self {
+        Self(Spectrum::lerp(a.0, b.0, t))
     }
 }
 

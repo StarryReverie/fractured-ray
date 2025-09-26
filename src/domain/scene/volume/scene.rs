@@ -201,7 +201,7 @@ impl VolumeScene for BvhVolumeScene {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::color::{Albedo, Spectrum};
+    use crate::domain::color::core::{Albedo, Spectrum};
     use crate::domain::math::geometry::Point;
     use crate::domain::medium::primitive::Isotropic;
     use crate::domain::shape::primitive::Aabb;

@@ -1,18 +1,17 @@
 use getset::CopyGetters;
 
+use crate::domain::color::core::Spectrum;
 use crate::domain::math::numeric::Val;
-
-use super::Spectrum;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, CopyGetters)]
 #[getset(get_copy = "pub")]
-pub struct ExternalColor {
+pub struct SRgbColor {
     red: u8,
     green: u8,
     blue: u8,
 }
 
-impl ExternalColor {
+impl SRgbColor {
     fn encode_gamma(linear: Val) -> Val {
         if linear <= Val(0.0031308) {
             Val(12.92) * linear
@@ -22,12 +21,12 @@ impl ExternalColor {
     }
 }
 
-impl From<Spectrum> for ExternalColor {
+impl From<Spectrum> for SRgbColor {
     fn from(value: Spectrum) -> Self {
         let red = Val(256.0) * Self::encode_gamma(value.red()).clamp(Val(0.0), Val(0.999));
         let green = Val(256.0) * Self::encode_gamma(value.green()).clamp(Val(0.0), Val(0.999));
         let blue = Val(256.0) * Self::encode_gamma(value.blue()).clamp(Val(0.0), Val(0.999));
-        ExternalColor {
+        SRgbColor {
             red: red.into(),
             green: green.into(),
             blue: blue.into(),

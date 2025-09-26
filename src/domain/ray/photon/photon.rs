@@ -1,6 +1,6 @@
 use getset::{CopyGetters, Getters};
 
-use crate::domain::color::Spectrum;
+use crate::domain::color::core::Spectrum;
 use crate::domain::math::geometry::{Direction, Point};
 use crate::domain::math::numeric::Val;
 use crate::domain::math::transformation::{AtomTransformation, Transform};

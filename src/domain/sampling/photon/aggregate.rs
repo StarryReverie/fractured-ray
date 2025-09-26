@@ -49,7 +49,7 @@ impl PhotonSampling for AggregatePhotonSampler {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::color::Spectrum;
+    use crate::domain::color::core::Spectrum;
     use crate::domain::material::primitive::Emissive;
     use crate::domain::math::geometry::{Point, SpreadAngle};
     use crate::domain::sampling::photon::PhotonSamplerAdapter;

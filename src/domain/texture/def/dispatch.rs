@@ -1,6 +1,6 @@
 use enum_dispatch::enum_dispatch;
 
-use crate::domain::color::{Albedo, Spectrum};
+use crate::domain::color::core::{Albedo, Spectrum};
 use crate::domain::ray::event::RayIntersection;
 use crate::domain::texture::primitive::*;
 

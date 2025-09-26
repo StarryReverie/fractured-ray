@@ -3,7 +3,7 @@ use std::ops::{Add, AddAssign, Mul, MulAssign};
 use getset::CopyGetters;
 use rand::prelude::*;
 
-use crate::domain::color::Spectrum;
+use crate::domain::color::core::Spectrum;
 use crate::domain::math::algebra::Product;
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;

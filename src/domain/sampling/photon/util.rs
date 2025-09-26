@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-use crate::domain::color::Spectrum;
+use crate::domain::color::core::Spectrum;
 use crate::domain::material::primitive::Emissive;
 use crate::domain::math::algebra::Vector;
 use crate::domain::math::geometry::{Area, Direction, Distance, Frame};
@@ -106,7 +106,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::color::Spectrum;
+    use crate::domain::color::core::Spectrum;
     use crate::domain::math::geometry::{Point, SpreadAngle};
     use crate::domain::sampling::point::TrianglePointSampler;
     use crate::domain::shape::def::ShapeKind;
