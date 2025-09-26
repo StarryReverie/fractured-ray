@@ -2,8 +2,9 @@ use getset::Getters;
 
 use crate::domain::camera::Resolution;
 use crate::domain::color::core::Spectrum;
-use crate::domain::image::BlockedArray;
 use crate::domain::math::numeric::Val;
+
+use super::BlockedArray;
 
 #[derive(Debug, Clone, PartialEq, Eq, Getters)]
 pub struct Image {

@@ -1,7 +1,7 @@
 use std::io::{BufWriter, Result as IoResult, Write};
 
 use crate::domain::color::external::SRgbColor;
-use crate::domain::image::Image;
+use crate::domain::image::core::Image;
 
 #[derive(Debug)]
 pub struct PpmWriter<W>

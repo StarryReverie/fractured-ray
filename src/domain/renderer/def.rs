@@ -1,7 +1,7 @@
 use std::ops::{Add, Mul};
 
 use crate::domain::color::core::Spectrum;
-use crate::domain::image::Image;
+use crate::domain::image::core::Image;
 use crate::domain::material::def::{FluxEstimation, RefDynMaterial};
 use crate::domain::math::numeric::{DisRange, Val};
 use crate::domain::ray::Ray;
