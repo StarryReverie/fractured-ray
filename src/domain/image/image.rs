@@ -4,53 +4,77 @@ use crate::domain::camera::Resolution;
 use crate::domain::color::core::Spectrum;
 use crate::domain::math::numeric::Val;
 
-#[derive(Debug, Clone, PartialEq, Getters)]
+#[derive(Debug, Clone, PartialEq, Eq, Getters)]
 pub struct Image {
     #[getset(get = "pub")]
     resolution: Resolution,
     data: Vec<Spectrum>,
-    count: Vec<usize>,
 }
 
 impl Image {
     pub fn new(resolution: Resolution) -> Self {
-        let width = resolution.width();
-        let height = resolution.height();
+        let len = resolution.width() * resolution.height();
+        let data = vec![Spectrum::zero(); len];
+        Self { resolution, data }
+    }
 
-        let mut data = Vec::new();
-        data.resize(width * height, Spectrum::zero());
+    #[inline]
+    pub fn get(&self, row: usize, column: usize) -> Option<Spectrum> {
+        self.locate_index(row, column).map(|index| self.data[index])
+    }
 
-        let mut count = Vec::new();
-        count.resize(width * height, 1);
+    #[inline]
+    pub fn get_mut(&mut self, row: usize, column: usize) -> Option<&mut Spectrum> {
+        self.locate_index(row, column)
+            .and_then(|index| self.data.get_mut(index))
+    }
 
-        Self {
-            resolution,
-            data,
-            count,
+    pub fn set(&mut self, row: usize, column: usize, color: Spectrum) -> bool {
+        if let Some(index) = self.locate_index(row, column) {
+            self.data[index] = color;
+            true
+        } else {
+            false
         }
     }
 
-    pub fn get(&self, row: usize, column: usize) -> Option<Spectrum> {
-        if self.contains_index(row, column) {
-            self.data
-                .get(row * self.resolution.width() + column)
-                .cloned()
-        } else {
-            None
+    fn locate_index(&self, row: usize, column: usize) -> Option<usize> {
+        if !(0..self.resolution.height()).contains(&row) {
+            return None;
         }
+        if !(0..self.resolution.width()).contains(&column) {
+            return None;
+        }
+        Some(row * self.resolution.width() + column)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImageAccumulator {
+    image: Image,
+    count: Vec<usize>,
+}
+
+impl ImageAccumulator {
+    pub fn new(image: Image) -> Self {
+        let count = vec![1; image.resolution().width() * image.resolution().height()];
+        Self { image, count }
+    }
+
+    #[inline]
+    pub fn resolution(&self) -> &Resolution {
+        self.image.resolution()
+    }
+
+    #[inline]
+    pub fn get(&self, row: usize, column: usize) -> Option<Spectrum> {
+        self.image.get(row, column)
     }
 
     pub fn record(&mut self, row: usize, column: usize, color: Spectrum) -> bool {
-        if self.contains_index(row, column) {
-            let index = row * self.resolution.width() + column;
-            let count = self
-                .count
-                .get_mut(index)
-                .expect("row and column should not be out of bound");
-            let entry = self
-                .data
-                .get_mut(index)
-                .expect("row and column should not be out of bound");
+        if let Some(index) = self.image.locate_index(row, column) {
+            let count = self.count.get_mut(index).unwrap();
+            let entry = self.image.get_mut(row, column).unwrap();
             *entry = *entry * (Val::from(*count) / (Val::from(*count) + Val::from(1.0)))
                 + color * (Val::from(1.0) / (Val::from(*count) + Val::from(1.0)));
             *count += 1;
@@ -60,8 +84,8 @@ impl Image {
         }
     }
 
-    fn contains_index(&self, row: usize, column: usize) -> bool {
-        (0..self.resolution.height()).contains(&row)
-            && (0..self.resolution.width()).contains(&column)
+    #[inline]
+    pub fn into_inner(self) -> Image {
+        self.image
     }
 }

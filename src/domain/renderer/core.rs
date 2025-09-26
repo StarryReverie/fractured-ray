@@ -8,7 +8,7 @@ use snafu::prelude::*;
 
 use crate::domain::camera::{Camera, Offset};
 use crate::domain::color::core::Spectrum;
-use crate::domain::image::Image;
+use crate::domain::image::{Image, ImageAccumulator};
 use crate::domain::material::def::{FluxEstimation, Material, RefDynMaterial};
 use crate::domain::math::geometry::Direction;
 use crate::domain::math::numeric::{DisRange, Val};
@@ -134,7 +134,9 @@ impl CoreRenderer {
 
 impl Renderer for CoreRenderer {
     fn render(&self) -> Image {
-        let mut image = Image::new(self.camera.resolution().clone());
+        let image = Image::new(self.camera.resolution().clone());
+        let mut image = ImageAccumulator::new(image);
+
         let height = image.resolution().height();
         let width = image.resolution().width();
 
@@ -167,7 +169,7 @@ impl Renderer for CoreRenderer {
             }
         }
 
-        image
+        image.into_inner()
     }
 
     fn trace<'a>(

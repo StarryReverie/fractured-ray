@@ -1,3 +1,3 @@
 mod image;
 
-pub use image::Image;
+pub use image::{ImageAccumulator, Image};
