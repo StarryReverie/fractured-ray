@@ -39,17 +39,21 @@ Teapot
   - [x] Multiple Importance Sampling
   - [x] Stochastic Progressive Photon Mapping
 - [ ] Shapes
-  - [x] Common Shape Primitives
+  - [x] Primitives
     - [x] Planes
     - [x] Polygons
     - [x] Spheres
     - [x] Triangles
   - [x] Meshes
   - [x] Instance & Transformation
-  - [x] Volumes
   - [ ] Shading Normal
+  - [x] Entity Scene
+- [ ] Volumes
+  - [x] Volume Scene
+  - [x] Single Scattering
+  - [x] Multiple Scattering
 - [x] Materials
-  - [x] Common Material Primitives
+  - [x] Primitives
     - [x] Blurry
     - [x] Diffuse
     - [x] Emissive
@@ -58,18 +62,35 @@ Teapot
     - [x] Refractive
     - [x] Scattering
     - [x] Specular
+- [x] Medium
+  - [x] Primitive
+    - [x] Isotropic
+    - [x] Henyey-Greenstein
+    - [x] Vaccum
 - [ ] Textures
-  - [ ] Colors
-  - [ ] Checker Board
-  - [ ] Simplex Noise
-  - [ ] Image
+  - [ ] Primitives
+    - [x] Constant
+    - [x] Checkerboard
+    - [ ] Image
+    - [x] Noise
+    - [x] Normal Visualization
+    - [x] UV Visualization
+  - [ ] Noise Generation
+    - [x] Perlin Noise
+    - [x] Fractal Brownian Motion
+    - [ ] Domain Wrapping
+  - [ ] UV Mapping
+    - [ ] Planar
+    - [ ] Spherical
+    - [ ] Cylindrical
+    - [x] UV Unwrapping
 - [ ] Infrastructure
   - [x] Progress Bar
   - [ ] CLI
   - [ ] Description DSL
   - [x] External Model Import
 
-# License
+## License
 
 Copyright (C) 2025 Justin Chen
 
