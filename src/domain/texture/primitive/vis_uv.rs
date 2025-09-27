@@ -16,7 +16,7 @@ impl VisibleUvCoordinate {
 impl Texture for VisibleUvCoordinate {
     #[inline]
     fn kind(&self) -> TextureKind {
-        TextureKind::VIsibleUvCoordinate
+        TextureKind::VisibleUvCoordinate
     }
 
     #[inline]
