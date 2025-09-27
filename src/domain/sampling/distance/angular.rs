@@ -84,7 +84,7 @@ mod tests {
         );
         assert_eq!(
             sampler.pdf_distance(&ray, &segment, Distance::new(Val(1.0)).unwrap()),
-            Val(0.63661977),
+            Val(2.0) / Val::PI,
         );
         assert_eq!(
             sampler.pdf_distance(&ray, &segment, Distance::new(Val(0.2)).unwrap()),

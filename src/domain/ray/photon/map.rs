@@ -249,13 +249,11 @@ mod tests {
         );
         assert!(
             res.iter()
-                .find(|p| p.position() == Point::new(Val(0.0), Val(0.0), Val(0.0)))
-                .is_some()
+                .any(|p| p.position() == Point::new(Val(0.0), Val(0.0), Val(0.0)))
         );
         assert!(
             res.iter()
-                .find(|p| p.position() == Point::new(Val(4.0), Val(0.0), Val(0.0)))
-                .is_some()
+                .any(|p| p.position() == Point::new(Val(4.0), Val(0.0), Val(0.0)))
         );
     }
 
@@ -276,13 +274,11 @@ mod tests {
         );
         assert!(
             res.iter()
-                .find(|p| p.position() == Point::new(Val(0.0), Val(0.0), Val(0.0)))
-                .is_some()
+                .any(|p| p.position() == Point::new(Val(0.0), Val(0.0), Val(0.0)))
         );
         assert!(
             res.iter()
-                .find(|p| p.position() == Point::new(Val(4.0), Val(0.0), Val(0.0)))
-                .is_some()
+                .any(|p| p.position() == Point::new(Val(4.0), Val(0.0), Val(0.0)))
         );
     }
 

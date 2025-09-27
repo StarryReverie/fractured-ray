@@ -153,14 +153,14 @@ impl ImageResource for PpmImageResource {
         let height = image.resolution().height();
 
         writeln!(buffer, "P3").unwrap();
-        writeln!(buffer, "{} {}", width, height).unwrap();
+        writeln!(buffer, "{width} {height}").unwrap();
         writeln!(buffer, "255").unwrap();
 
         for row in 0..height {
             for column in 0..width {
                 let color = SRgbColor::from(image.get(row, column).unwrap());
                 let (r, g, b) = (color.red(), color.green(), color.blue());
-                write!(buffer, "{} {} {} ", r, g, b).unwrap();
+                write!(buffer, "{r} {g} {b} ").unwrap();
             }
             writeln!(buffer).unwrap();
         }
