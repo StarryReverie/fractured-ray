@@ -1,8 +1,8 @@
 use std::error::Error;
-use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::core::{Albedo, Spectrum};
+use fractured_ray::domain::image::external::ImageResource;
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::algebra::Vector;
 use fractured_ray::domain::math::geometry::{Direction, Distance, Normal, Point, SpreadAngle};
@@ -15,7 +15,7 @@ use fractured_ray::domain::scene::entity::{
 use fractured_ray::domain::scene::volume::{BvhVolumeSceneBuilder, VolumeSceneBuilder};
 use fractured_ray::domain::shape::mesh::{MeshConstructor, MeshInstanceConstructor};
 use fractured_ray::domain::shape::primitive::{Plane, Polygon, Sphere};
-use fractured_ray::infrastructure::image::PngWriter;
+use fractured_ray::infrastructure::image::PngImageResource;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let camera = Camera::new(
@@ -129,7 +129,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         CoreRendererConfiguration::default().with_iterations(16),
     )?;
     let image = renderer.render();
-    PngWriter::new(File::create("output/image.png")?).write(image)?;
+    PngImageResource::new("output/teapot.png").save(&image)?;
 
     Ok(())
 }

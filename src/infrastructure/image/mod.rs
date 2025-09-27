@@ -1,5 +1,5 @@
-mod png_writer;
-mod ppm_writer;
+mod png;
+mod ppm;
 
-pub use png_writer::PngWriter;
-pub use ppm_writer::PpmWriter;
+pub use png::PngImageResource;
+pub use ppm::PpmImageResource;

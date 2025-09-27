@@ -1,8 +1,8 @@
 use std::error::Error;
-use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::core::{Albedo, Spectrum};
+use fractured_ray::domain::image::external::ImageResource;
 use fractured_ray::domain::material::primitive::{Diffuse, Emissive, Refractive, Specular};
 use fractured_ray::domain::math::geometry::{Direction, Distance, Point, SpreadAngle};
 use fractured_ray::domain::math::numeric::Val;
@@ -16,7 +16,7 @@ use fractured_ray::domain::scene::volume::{
 };
 use fractured_ray::domain::shape::mesh::MeshConstructor;
 use fractured_ray::domain::shape::primitive::{Aabb, Polygon, Sphere};
-use fractured_ray::infrastructure::image::PngWriter;
+use fractured_ray::infrastructure::image::PngImageResource;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let camera = Camera::new(
@@ -190,7 +190,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         CoreRendererConfiguration::default().with_iterations(16),
     )?;
     let image = renderer.render();
-    PngWriter::new(File::create("output/cornell-box.png")?).write(image)?;
+    PngImageResource::new("output/cornell-box.png").save(&image)?;
 
     Ok(())
 }

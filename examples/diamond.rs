@@ -1,8 +1,8 @@
 use std::error::Error;
-use std::fs::File;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::core::{Albedo, Spectrum};
+use fractured_ray::domain::image::external::ImageResource;
 use fractured_ray::domain::material::primitive::{
     Emissive, Glossy, GlossyPredefinition, Refractive,
 };
@@ -20,7 +20,7 @@ use fractured_ray::domain::scene::volume::{
 };
 use fractured_ray::domain::shape::mesh::{MeshConstructor, MeshInstanceConstructor};
 use fractured_ray::domain::shape::primitive::{Aabb, Plane, Polygon};
-use fractured_ray::infrastructure::image::PngWriter;
+use fractured_ray::infrastructure::image::PngImageResource;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut scene = BvhEntitySceneBuilder::new();
@@ -91,7 +91,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     let image = renderer.render();
-    PngWriter::new(File::create("output/diamond.png")?).write(image)?;
+    PngImageResource::new("output/teapot.png").save(&image)?;
 
     Ok(())
 }

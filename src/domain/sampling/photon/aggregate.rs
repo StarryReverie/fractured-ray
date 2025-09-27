@@ -84,7 +84,7 @@ mod tests {
                 )
                 .unwrap(),
             ),
-            Emissive::new(Spectrum::broadcast(Val(0.25)), SpreadAngle::hemisphere()),
+            Emissive::new(Spectrum::broadcast(Val(1.0)), SpreadAngle::hemisphere()),
         ));
         let sampler = AggregatePhotonSampler::new(vec![sampler1, sampler2]);
 

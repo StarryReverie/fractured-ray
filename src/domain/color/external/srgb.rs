@@ -12,11 +12,23 @@ pub struct SRgbColor {
 }
 
 impl SRgbColor {
+    pub fn new(red: u8, green: u8, blue: u8) -> Self {
+        Self { red, green, blue }
+    }
+
     fn encode_gamma(linear: Val) -> Val {
         if linear <= Val(0.0031308) {
             Val(12.92) * linear
         } else {
             linear.powf(Val(1.0 / 2.4)).mul_add(Val(1.055), Val(-0.055))
+        }
+    }
+
+    fn decode_gamma(srgb: Val) -> Val {
+        if srgb <= Val(0.04045) {
+            srgb / Val(12.92)
+        } else {
+            ((srgb + Val(0.055)) / Val(1.055)).powf(Val(2.4))
         }
     }
 }
@@ -31,5 +43,14 @@ impl From<Spectrum> for SRgbColor {
             green: green.into(),
             blue: blue.into(),
         }
+    }
+}
+
+impl From<SRgbColor> for Spectrum {
+    fn from(value: SRgbColor) -> Self {
+        let red = SRgbColor::decode_gamma(Val::from(value.red) / Val(255.0));
+        let green = SRgbColor::decode_gamma(Val::from(value.green) / Val(255.0));
+        let blue = SRgbColor::decode_gamma(Val::from(value.blue) / Val(255.0));
+        Spectrum::new(red, green, blue)
     }
 }
