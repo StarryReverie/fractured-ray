@@ -68,10 +68,10 @@ Teapot
     - [x] Henyey-Greenstein
     - [x] Vaccum
 - [ ] Textures
-  - [ ] Primitives
+  - [x] Primitives
     - [x] Constant
     - [x] Checkerboard
-    - [ ] Image
+    - [x] Image
     - [x] Noise
     - [x] Normal Visualization
     - [x] UV Visualization
