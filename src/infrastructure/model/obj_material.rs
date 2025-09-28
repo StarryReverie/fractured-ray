@@ -292,7 +292,7 @@ fn get_texture(
     let ks = constant.map(map_f32_array);
 
     match (map_ks, ks) {
-        (Some(map_ks), _) => Some(Ok(map_ks.into())),
+        (Some(map_ks), _) => Some(Ok(map_ks)),
         (_, Some(ks)) => {
             let res = Spectrum::new(ks[0], ks[1], ks[2]);
             Some(Ok(DynTexture::from(res)))

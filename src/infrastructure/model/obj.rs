@@ -64,8 +64,8 @@ impl EntityObjModelLoader {
 
         let image_registry: Arc<dyn ImageRegistry> = if let Some(path) = path.as_ref() {
             let dir = path.parent().unwrap();
-            let proxy = DirectoryImageRegistryProxy::new(image_registry, &dir)
-                .expect(&format!("`{}` should be a valid directory", dir.display()));
+            let proxy = DirectoryImageRegistryProxy::new(image_registry, dir)
+                .unwrap_or_else(|_| panic!("`{}` should be a valid directory", dir.display()));
             Arc::new(proxy)
         } else {
             image_registry
