@@ -5,6 +5,7 @@ use std::sync::{Arc, RwLock};
 use obj::{Group, MtlLibsLoadError, Obj, ObjData, ObjError, ObjMaterial, Object};
 use snafu::prelude::*;
 
+use crate::domain::image::external::ImageRegistry;
 use crate::domain::material::def::DynMaterial;
 use crate::domain::math::geometry::Point;
 use crate::domain::math::numeric::{Val, WrappedVal};
@@ -12,6 +13,7 @@ use crate::domain::math::transformation::Transformation;
 use crate::domain::scene::entity::{EntitySceneBuilder, TypedEntitySceneBuilder};
 use crate::domain::shape::mesh::{MeshConstructor, MeshInstanceConstructor};
 use crate::domain::texture::def::UvCoordinate;
+use crate::infrastructure::image::DirectoryImageRegistryProxy;
 use crate::infrastructure::model::def::{
     InvalidMeshSnafu, MissingMaterialSnafu, UnspecifiedMaterialSnafu,
 };
@@ -31,21 +33,24 @@ pub struct EntityObjModelLoader {
 }
 
 impl EntityObjModelLoader {
-    pub fn in_memory(obj: ObjData) -> Self {
-        Self::new(obj, None)
+    pub fn in_memory(obj: ObjData, image_registry: Arc<dyn ImageRegistry>) -> Self {
+        Self::new(obj, None, image_registry)
     }
 
-    pub fn parse<P>(path: P) -> Result<Self, ParseObjModelError>
+    pub fn parse<P>(
+        path: P,
+        image_registry: Arc<dyn ImageRegistry>,
+    ) -> Result<Self, ParseObjModelError>
     where
         P: AsRef<Path>,
     {
         let path = path.as_ref();
         let mut obj = Obj::load(path).context(LoadObjSnafu { path })?;
         obj.load_mtls().context(LoadMtlSnafu { path })?;
-        Ok(Self::new(obj.data, Some(path.into())))
+        Ok(Self::new(obj.data, Some(path.into()), image_registry))
     }
 
-    fn new(obj: ObjData, path: Option<PathBuf>) -> Self {
+    fn new(obj: ObjData, path: Option<PathBuf>, image_registry: Arc<dyn ImageRegistry>) -> Self {
         let vertices = (obj.position.iter())
             .map(Self::map_f32_array)
             .map(|[x, y, z]| Point::new(x, y, z))
@@ -57,12 +62,21 @@ impl EntityObjModelLoader {
             .collect::<Vec<_>>()
             .into();
 
+        let image_registry: Arc<dyn ImageRegistry> = if let Some(path) = path.as_ref() {
+            let dir = path.parent().unwrap();
+            let proxy = DirectoryImageRegistryProxy::new(image_registry, &dir)
+                .expect(&format!("`{}` should be a valid directory", dir.display()));
+            Arc::new(proxy)
+        } else {
+            image_registry
+        };
+
         Self {
             obj,
             path,
             vertices,
             uvs,
-            converter: ObjMaterialConverterChain::new(),
+            converter: ObjMaterialConverterChain::new(image_registry),
             material_cache: Arc::new(RwLock::new(HashMap::new())),
         }
     }

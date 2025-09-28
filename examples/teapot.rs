@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::sync::Arc;
 
 use fractured_ray::domain::camera::{Camera, Resolution};
 use fractured_ray::domain::color::core::{Albedo, Spectrum};
@@ -12,7 +13,7 @@ use fractured_ray::domain::scene::entity::{
 };
 use fractured_ray::domain::scene::volume::{BvhVolumeSceneBuilder, VolumeSceneBuilder};
 use fractured_ray::domain::shape::primitive::Polygon;
-use fractured_ray::infrastructure::image::PngImageResource;
+use fractured_ray::infrastructure::image::{FileSystemImageRegistry, PngImageResource};
 use fractured_ray::infrastructure::model::{
     EntityModelLoader, EntityModelLoaderConfiguration, EntityObjModelLoader,
 };
@@ -109,7 +110,10 @@ fn load_box(scene: &mut dyn EntitySceneBuilder) -> Result<(), Box<dyn Error>> {
 }
 
 fn load_teapot(scene: &mut dyn EntitySceneBuilder) -> Result<(), Box<dyn Error>> {
-    let loader = EntityObjModelLoader::parse("assets/models/teapot/teapot.obj")?;
+    let loader = EntityObjModelLoader::parse(
+        "assets/models/teapot/teapot.obj",
+        Arc::new(FileSystemImageRegistry::new()),
+    )?;
     let config = EntityModelLoaderConfiguration::default();
     loader.load(scene, config)?;
     Ok(())
