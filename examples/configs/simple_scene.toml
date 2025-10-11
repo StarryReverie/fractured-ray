@@ -1,0 +1,132 @@
+# Simple scene with different materials and textures
+
+[renderer]
+iterations = 8
+spp_per_iteration = 4
+max_depth = 12
+max_invisible_depth = 4
+photons_global = 100000
+photons_caustic = 500000
+initial_num_nearest = 100
+background_color = [0.1, 0.1, 0.15]
+
+[camera]
+position = [0.0, 5.0, 20.0]
+direction = [0.0, 0.0, -1.0]
+aperture = 0.05
+focal_length = 0.1
+
+[camera.resolution]
+width = 800
+aspect = [16, 9]
+
+# Reusable Textures
+[textures.checker]
+type = "checkerboard"
+color1 = [0.9, 0.9, 0.9]
+color2 = [0.2, 0.2, 0.2]
+scale = 2.0
+
+[textures.white]
+type = "constant"
+color = [1.0, 1.0, 1.0]
+
+[textures.red]
+type = "constant"
+color = [1.0, 0.3, 0.3]
+
+[textures.blue]
+type = "constant"
+color = [0.3, 0.3, 1.0]
+
+# Reusable Materials
+[materials.checker_floor]
+type = "diffuse"
+albedo = { texture = "checker" }
+
+[materials.glossy_iron]
+type = "glossy"
+predefinition = "iron"
+roughness = 0.2
+
+[materials.glossy_gold]
+type = "glossy"
+predefinition = "gold"
+roughness = 0.15
+
+[materials.glass_sphere]
+type = "refractive"
+albedo = { texture = "white" }
+ior = 1.5
+
+[materials.mirror_sphere]
+type = "specular"
+albedo = { texture = "white" }
+
+[materials.diffuse_red]
+type = "diffuse"
+albedo = { texture = "red" }
+
+[materials.diffuse_blue]
+type = "diffuse"
+albedo = { texture = "blue" }
+
+[materials.ceiling_light]
+type = "emissive"
+radiance = { type = "constant", color = [8.0, 8.0, 7.0] }
+beam_angle = "hemisphere"
+
+# Entities
+# Floor with checker pattern
+[[entities]]
+shape = { type = "plane", point = [0.0, 0.0, 0.0], normal = [0.0, 1.0, 0.0] }
+material = { material = "checker_floor" }
+
+# Ceiling light
+[[entities]]
+shape = { type = "polygon", points = [
+    [3.0, 9.99, -3.0],
+    [3.0, 9.99, 3.0],
+    [-3.0, 9.99, 3.0],
+    [-3.0, 9.99, -3.0]
+]}
+material = { material = "ceiling_light" }
+
+# Glass sphere
+[[entities]]
+shape = { type = "sphere", center = [-3.0, 1.5, 0.0], radius = 1.5 }
+material = { material = "glass_sphere" }
+
+# Mirror sphere
+[[entities]]
+shape = { type = "sphere", center = [0.0, 1.0, 0.0], radius = 1.0 }
+material = { material = "mirror_sphere" }
+
+# Iron sphere
+[[entities]]
+shape = { type = "sphere", center = [3.0, 0.8, 0.0], radius = 0.8 }
+material = { material = "glossy_iron" }
+
+# Red cube (using AABB)
+[[entities]]
+shape = { type = "aabb", min = [5.0, 0.0, -1.0], max = [7.0, 2.0, 1.0] }
+material = { material = "diffuse_red" }
+
+# Blue triangle
+[[entities]]
+shape = { type = "triangle", vertices = [
+    [-6.0, 0.0, 0.0],
+    [-5.0, 3.0, 0.0],
+    [-4.0, 0.0, 0.0]
+]}
+material = { material = "diffuse_blue" }
+
+# Back wall
+[[entities]]
+shape = { type = "polygon", points = [
+    [10.0, 0.0, -10.0],
+    [-10.0, 0.0, -10.0],
+    [-10.0, 10.0, -10.0],
+    [10.0, 10.0, -10.0]
+]}
+material = { type = "diffuse", albedo = { type = "constant", color = [0.8, 0.8, 0.8] } }

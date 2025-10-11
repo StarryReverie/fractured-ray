@@ -1,0 +1,71 @@
+# Example configuration with external model loading
+
+[renderer]
+iterations = 24
+spp_per_iteration = 4
+max_depth = 12
+max_invisible_depth = 4
+photons_global = 200000
+photons_caustic = 0
+initial_num_nearest = 100
+background_color = [0.01, 0.01, 0.01]
+
+[camera]
+position = [0.0, 5.0, 19.7]
+direction = [0.0, 0.0, -1.0]
+aperture = 0.025
+focal_length = 0.035
+
+[camera.resolution]
+width = 800
+aspect = [1, 1]
+
+# Materials
+[materials.light]
+type = "emissive"
+radiance = { type = "constant", color = [9.0, 8.5, 8.0] }
+beam_angle = "hemisphere"
+
+[materials.floor]
+type = "glossy"
+predefinition = "aluminum"
+roughness = 0.3
+
+[materials.wall]
+type = "diffuse"
+albedo = { type = "constant", color = [0.8, 0.8, 0.8] }
+
+# Entities
+# Ceiling light
+[[entities]]
+shape = { type = "polygon", points = [
+    [1.2, 9.9999, -0.9],
+    [1.2, 9.9999, 0.9],
+    [-1.2, 9.9999, 0.9],
+    [-1.2, 9.9999, -0.9]
+]}
+material = { material = "light" }
+
+# Floor
+[[entities]]
+shape = { type = "polygon", points = [
+    [5.0, 0.0, -5.0],
+    [5.0, 0.0, 5.0],
+    [-5.0, 0.0, 5.0],
+    [-5.0, 0.0, -5.0]
+]}
+material = { material = "floor" }
+
+# Back wall
+[[entities]]
+shape = { type = "polygon", points = [
+    [5.0, 0.0, -5.0],
+    [-5.0, 0.0, -5.0],
+    [-5.0, 10.0, -5.0],
+    [5.0, 10.0, -5.0]
+]}
+material = { material = "wall" }
+
+# External Models
+[[models]]
+path = "assets/models/teapot/teapot.obj"

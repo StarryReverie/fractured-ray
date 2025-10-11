@@ -1,0 +1,136 @@
+# Cornell Box Example Configuration
+
+[renderer]
+iterations = 16
+spp_per_iteration = 4
+max_depth = 12
+max_invisible_depth = 4
+photons_global = 200000
+photons_caustic = 1000000
+initial_num_nearest = 100
+
+[camera]
+position = [278.0, 273.0, -800.0]
+direction = [0.0, 0.0, 1.0]
+aperture = 0.025
+focal_length = 0.035
+
+[camera.resolution]
+width = 800
+aspect = [1, 1]
+
+# Reusable Materials
+[materials.white_diffuse]
+type = "diffuse"
+albedo = { type = "constant", color = [1.0, 1.0, 1.0] }
+
+[materials.red_diffuse]
+type = "diffuse"
+albedo = { type = "constant", color = [1.0, 0.0, 0.0] }
+
+[materials.green_diffuse]
+type = "diffuse"
+albedo = { type = "constant", color = [0.0, 1.0, 0.0] }
+
+[materials.light]
+type = "emissive"
+radiance = { type = "constant", color = [9.0, 8.5, 4.0] }
+beam_angle = "hemisphere"
+
+[materials.specular_ball]
+type = "specular"
+albedo = { type = "constant", color = [0.8, 0.8, 0.8] }
+
+[materials.refractive_ball]
+type = "refractive"
+albedo = { type = "constant", color = [0.8, 0.8, 0.8] }
+ior = 1.5
+
+# Entities (shapes + materials)
+# Light
+[[entities]]
+shape = { type = "polygon", points = [
+    [343.0, 548.799, 227.0],
+    [343.0, 548.799, 332.0],
+    [213.0, 548.799, 332.0],
+    [213.0, 548.799, 227.0]
+]}
+material = { material = "light" }
+
+# Floor
+[[entities]]
+shape = { type = "polygon", points = [
+    [552.8, 0.0, 0.0],
+    [0.0, 0.0, 0.0],
+    [0.0, 0.0, 559.2],
+    [549.6, 0.0, 559.2]
+]}
+material = { material = "white_diffuse" }
+
+# Ceiling
+[[entities]]
+shape = { type = "polygon", points = [
+    [556.0, 548.8, 0.0],
+    [556.0, 548.8, 559.2],
+    [0.0, 548.8, 559.2],
+    [0.0, 548.8, 0.0]
+]}
+material = { material = "white_diffuse" }
+
+# Left Wall (Red)
+[[entities]]
+shape = { type = "polygon", points = [
+    [549.6, 0.0, 0.0],
+    [549.6, 0.0, 559.2],
+    [556.0, 548.8, 559.2],
+    [556.0, 548.8, 0.0]
+]}
+material = { material = "red_diffuse" }
+
+# Right Wall (Green)
+[[entities]]
+shape = { type = "polygon", points = [
+    [0.0, 0.0, 559.2],
+    [0.0, 0.0, 0.0],
+    [0.0, 548.8, 0.0],
+    [0.0, 548.8, 559.2]
+]}
+material = { material = "green_diffuse" }
+
+# Back Wall
+[[entities]]
+shape = { type = "polygon", points = [
+    [549.6, 0.0, 559.2],
+    [0.0, 0.0, 559.2],
+    [0.0, 548.8, 559.2],
+    [556.0, 548.8, 559.2]
+]}
+material = { material = "white_diffuse" }
+
+# Specular Ball
+[[entities]]
+shape = { type = "sphere", center = [400.0, 90.0, 180.0], radius = 90.0 }
+material = { material = "specular_ball" }
+
+# Refractive Ball
+[[entities]]
+shape = { type = "sphere", center = [185.0, 240.0, 169.5], radius = 75.0 }
+material = { material = "refractive_ball" }
+
+# Volumes
+[mediums.hg_medium]
+type = "henyey_greenstein"
+albedo = [1.0, 1.0, 1.0]
+mean_free_path = [300.0, 300.0, 300.0]
+g = 0.3
+
+[mediums.vacuum]
+type = "vacuum"
+
+[[volumes]]
+shape = { type = "aabb", min = [0.0, 0.0, 0.0], max = [600.0, 600.0, 800.0] }
+medium = { medium = "hg_medium" }
+
+[[volumes]]
+shape = { type = "sphere", center = [185.0, 240.0, 169.5], radius = 75.0 }
+medium = { medium = "vacuum" }

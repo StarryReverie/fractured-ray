@@ -251,6 +251,7 @@ enum TomlMaterial {
     },
     Mixed {
         materials: Vec<TomlMaterialRef>,
+        #[allow(dead_code)]
         weights: Vec<f64>,
     },
 }
